@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0e14">
+    <title>GOD — Tactical Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #141a24;
+            --bg-tertiary: #1a222e;
+            --accent-cyan: #00d4ff;
+            --accent-orange: #ff6b35;
+            --accent-green: #00ff88;
+            --accent-red: #ff3366;
+            --accent-yellow: #ffd93d;
+            --accent-purple: #a855f7;
+            --text-primary: #e8f0f8;
+            --text-secondary: #7a8ba8;
+            --border-glow: rgba(0, 212, 255, 0.3);
+            --grid-line: rgba(0, 212, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            overflow-x: hidden;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        html {
+            height: -webkit-fill-available;
+        }
+
+        /* Scanline effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.1) 2px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Grid background */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-glow);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 20px var(--accent-cyan);
+            animation: headerGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes headerGlow {
+            from { text-shadow: 0 0 10px var(--accent-cyan); }
+            to { text-shadow: 0 0 30px var(--accent-cyan), 0 0 60px var(--accent-cyan); }
+        }
+
+        .header .subtitle {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        /* Profile Selector */
+        .profile-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .profile-header label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+        }
+
+        .profile-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--accent-cyan);
+            background: transparent;
+            color: var(--accent-cyan);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover, .btn-icon:active {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        .btn-icon.danger {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .btn-icon.danger:hover {
+            background: var(--accent-red);
+            color: var(--bg-primary);
+        }
+
+        .btn-icon.small {
+            width: 24px;
+            height: 24px;
+            font-size: 0.9rem;
+        }
+
+        .profile-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .profile-select:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--border-glow);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            color: var(--bg-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Sections */
+        .section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: linear-gradient(90deg, var(--bg-tertiary), transparent);
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .section-title.orange {
+            color: var(--accent-orange);
+        }
+
+        .section-title.purple {
+            color: var(--accent-purple);
+        }
+
+        .section-content {
+            padding: 14px;
+        }
+
+        /* Counter (generic) */
+        .counter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .counter-btn {
+            width: 48px;
+            height: 48px;
+            border: 2px solid var(--accent-orange);
+            background: transparent;
+            color: var(--accent-orange);
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .counter-btn:hover, .counter-btn:active {
+            background: var(--accent-orange);
+            color: var(--bg-primary);
+            transform: scale(1.1);
+        }
+
+        .counter-btn.red {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .counter-btn.red:hover, .counter-btn.red:active {
+            background: var(--accent-red);
+            color: var(--bg-primary);
+        }
+
+        .counter-btn.purple {
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .counter-btn.purple:hover, .counter-btn.purple:active {
+            background: var(--accent-purple);
+            color: var(--bg-primary);
+        }
+
+        .counter-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent-orange);
+            text-shadow: 0 0 20px var(--accent-orange);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .counter-value.red {
+            color: var(--accent-red);
+            text-shadow: 0 0 20px var(--accent-red);
+        }
+
+        .counter-value.purple {
+            color: var(--accent-purple);
+            text-shadow: 0 0 20px var(--accent-purple);
+        }
+
+        .counter-value.high {
+            animation: counterPulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes counterPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        /* Actions Grid */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 12px 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            position: relative;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        .action-btn.selected {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            color: var(--bg-primary);
+            border-color: transparent;
+            font-weight: bold;
+        }
+
+        .action-btn .action-type {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 4px;
+        }
+
+        .action-btn.selected .action-type {
+            color: var(--bg-primary);
+            opacity: 0.7;
+        }
+
+        /* Category Headers */
+        .action-category {
+            grid-column: 1 / -1;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            color: var(--accent-yellow);
+            letter-spacing: 1px;
+            padding: 8px 0 4px;
+            border-bottom: 1px solid var(--border-glow);
+            margin-top: 8px;
+        }
+
+        .action-category:first-child {
+            margin-top: 0;
+        }
+
+        /* Custom Actions */
+        .custom-action-input {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .custom-action-input input {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .custom-action-input input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .btn-add {
+            padding: 10px 16px;
+            background: var(--accent-cyan);
+            border: none;
+            border-radius: 4px;
+            color: var(--bg-primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Custom action button with delete */
+        .custom-action-btn {
+            position: relative;
+        }
+
+        .custom-action-btn .delete-custom {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-red);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .custom-action-btn:hover .delete-custom,
+        .custom-action-btn .delete-custom:focus {
+            opacity: 1;
+        }
+
+        /* Selected Actions Display */
+        .selected-actions {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-glow);
+        }
+
+        .selected-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .selected-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .selected-action-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .selected-action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .selected-action-name {
+            color: var(--accent-cyan);
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .selected-action-remove {
+            background: none;
+            border: none;
+            color: var(--accent-red);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 4px;
+        }
+
+        /* Coord input in selected action */
+        .coord-input-inline {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .coord-input-inline label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            width: 100%;
+            margin-bottom: 4px;
+        }
+
+        .coord-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .coord-input-wrapper:focus-within {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .coord-sector {
+            width: 50px;
+            padding: 8px;
+            background: transparent;
+            border: none;
+            color: var(--accent-green);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .coord-sector:focus {
+            outline: none;
+        }
+
+        .coord-bracket {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .coord-cell {
+            width: 30px;
+            padding: 8px 4px;
+            background: transparent;
+            border: none;
+            color: var(--accent-green);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .coord-cell:focus {
+            outline: none;
+        }
+
+        .coord-add-btn {
+            padding: 8px 12px;
+            background: var(--accent-green);
+            border: none;
+            border-radius: 4px;
+            color: var(--bg-primary);
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .coord-skip-btn {
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--text-secondary);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .coord-skip-btn:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+
+        .coord-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .coord-tag {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .coord-tag .remove {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .coord-tag .remove:hover {
+            opacity: 1;
+        }
+
+        /* Movement section */
+        .movement-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-glow);
+        }
+
+        .movement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .movement-label {
+            font-size: 0.7rem;
+            color: var(--accent-yellow);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* Status Effects */
+        .status-effects-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 40px;
+        }
+
+        .status-effect-tag {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-purple);
+            color: var(--accent-purple);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-effect-tag .remove {
+            cursor: pointer;
+            color: var(--accent-red);
+            font-weight: bold;
+        }
+
+        .control-effects .status-effect-tag {
+            border-color: var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+
+        .no-effects {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+
+        /* Log Section */
+        .log-container {
+            max-height: 200px;
+            overflow-y: auto;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-glow);
+            font-size: 0.75rem;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: var(--accent-cyan);
+            font-size: 0.65rem;
+        }
+
+        .log-profile {
+            color: var(--accent-yellow);
+            font-weight: bold;
+        }
+
+        .log-actions {
+            color: var(--accent-green);
+        }
+
+        .log-coords {
+            color: var(--text-secondary);
+        }
+
+        /* Bottom Actions */
+        .bottom-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, var(--bg-primary), var(--bg-primary) 80%, transparent);
+            padding: 16px 12px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .btn-primary {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            border: none;
+            border-radius: 6px;
+            color: var(--bg-primary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            flex: 1;
+            max-width: 140px;
+        }
+
+        .btn-primary:hover, .btn-primary:active {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px var(--accent-cyan);
+        }
+
+        .btn-secondary {
+            padding: 12px 14px;
+            background: transparent;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 6px;
+            color: var(--accent-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 100px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        .btn-danger {
+            padding: 12px 12px;
+            background: transparent;
+            border: 2px solid var(--accent-red);
+            border-radius: 6px;
+            color: var(--accent-red);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 90px;
+        }
+
+        .btn-danger:hover {
+            background: var(--accent-red);
+            color: var(--bg-primary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 90%;
+            width: 360px;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--accent-cyan);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 16px;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 300;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Round indicator */
+        .round-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .round-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--accent-yellow);
+            background: transparent;
+            color: var(--accent-yellow);
+            border-radius: 4px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .round-btn:hover {
+            background: var(--accent-yellow);
+            color: var(--bg-primary);
+        }
+
+        .round-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--accent-yellow);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* Sector grid visualization */
+        .sector-grid-hint {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            justify-content: center;
+        }
+
+        .sector-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            width: 54px;
+        }
+
+        .sector-cell {
+            width: 16px;
+            height: 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .help-text {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-cyan);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>GOD</h1>
+            <div class="subtitle">▸ TACTICAL PLANNER ◂</div>
+        </header>
+
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <div class="profile-header">
+                <label>ПРОФИЛЬ ЮНИТА</label>
+                <div class="profile-controls">
+                    <button class="btn-icon" onclick="openNewProfileModal()" title="Добавить профиль">+</button>
+                    <button class="btn-icon danger" onclick="deleteCurrentProfile()" title="Удалить профиль">×</button>
+                </div>
+            </div>
+            <select class="profile-select" id="profileSelect" onchange="loadProfile()">
+                <option value="default">— Персонаж 1 —</option>
+            </select>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="planning" onclick="switchTab('planning')">Планирование</button>
+            <button class="tab-btn" data-tab="status" onclick="switchTab('status')">Статус</button>
+        </div>
+
+        <!-- Planning Tab -->
+        <div class="tab-content active" id="tab-planning">
+            <!-- Round Counter -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title">Раунд</span>
+                </div>
+                <div class="section-content">
+                    <div class="round-indicator">
+                        <button class="round-btn" onclick="changeRound(-1)">−</button>
+                        <span class="round-value" id="roundValue">1</span>
+                        <button class="round-btn" onclick="changeRound(1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title">Действия</span>
+                </div>
+                <div class="section-content">
+                    <div class="actions-grid" id="actionsGrid">
+                        <!-- Атака -->
+                        <div class="action-category">▸ КЛЮЧЕВОЕ - АТАКА</div>
+                        <button class="action-btn" data-action="melee" onclick="toggleAction(this)">
+                            Ближний бой
+                            <span class="action-type">Ключевое</span>
+                        </button>
+                        <button class="action-btn" data-action="ranged" onclick="toggleAction(this)">
+                            Дальний бой
+                            <span class="action-type">Ключевое</span>
+                        </button>
+                        <button class="action-btn" data-action="aoe" onclick="toggleAction(this)">
+                            AoE-атака
+                            <span class="action-type">Ключевое</span>
+                        </button>
+
+                        <!-- Контроль -->
+                        <div class="action-category">▸ КЛЮЧЕВОЕ - КОНТРОЛЬ</div>
+                        <button class="action-btn" data-action="push" onclick="toggleAction(this)">
+                            Толчок
+                            <span class="action-type">Ключевое</span>
+                        </button>
+                        <button class="action-btn" data-action="grab" onclick="toggleAction(this)">
+                            Захват
+                            <span class="action-type">Ключевое</span>
+                        </button>
+                        <button class="action-btn" data-action="trip" onclick="toggleAction(this)">
+                            Подсечка
+                            <span class="action-type">Ключевое</span>
+                        </button>
+                        <button class="action-btn" data-action="distract" onclick="toggleAction(this)">
+                            Отвлечение
+                            <span class="action-type">Ключевое</span>
+                        </button>
+                        <button class="action-btn" data-action="stabilize" onclick="toggleAction(this)">
+                            Стабилизация
+                            <span class="action-type">Ключевое</span>
+                        </button>
+                        <button class="action-btn" data-action="interact" onclick="toggleAction(this)">
+                            Взаимодействие
+                            <span class="action-type">Ключевое</span>
+                        </button>
+
+                        <!-- Фокус -->
+                        <div class="action-category">▸ ФОКУС</div>
+                        <button class="action-btn" data-action="focus" onclick="toggleAction(this)">
+                            Фокусирование
+                            <span class="action-type">Фокус</span>
+                        </button>
+                        <button class="action-btn" data-action="reload" onclick="toggleAction(this)">
+                            Перезарядка
+                            <span class="action-type">Фокус</span>
+                        </button>
+                        <button class="action-btn" data-action="switch" onclick="toggleAction(this)">
+                            Смена оружия
+                            <span class="action-type">Фокус</span>
+                        </button>
+                        <button class="action-btn" data-action="aim" onclick="toggleAction(this)">
+                            Прицеливание
+                            <span class="action-type">Фокус</span>
+                        </button>
+                        <button class="action-btn" data-action="assess" onclick="toggleAction(this)">
+                            Оценить врага
+                            <span class="action-type">Фокус</span>
+                        </button>
+                        <button class="action-btn" data-action="chase" onclick="toggleAction(this)">
+                            Преследование
+                            <span class="action-type">Фокус</span>
+                        </button>
+
+                        <!-- Форсирование -->
+                        <div class="action-category">▸ ФОРСИРОВАНИЕ</div>
+                        <button class="action-btn" data-action="dash" onclick="toggleAction(this)">
+                            Рывок
+                            <span class="action-type">Вместо всего</span>
+                        </button>
+
+                        <!-- Движение -->
+                        <div class="action-category">▸ ДВИЖЕНИЕ</div>
+                        <button class="action-btn" data-action="move" onclick="toggleAction(this)">
+                            Перемещение
+                            <span class="action-type">Часть движ.</span>
+                        </button>
+                        <button class="action-btn" data-action="standup" onclick="toggleAction(this)">
+                            Встать
+                            <span class="action-type">Часть движ.</span>
+                        </button>
+                        <button class="action-btn" data-action="escape" onclick="toggleAction(this)">
+                            Выйти из захвата
+                            <span class="action-type">Часть движ.</span>
+                        </button>
+                        <button class="action-btn" data-action="hide" onclick="toggleAction(this)">
+                            Скрыться
+                            <span class="action-type">Часть движ.</span>
+                        </button>
+                    </div>
+
+                    <!-- Custom Actions -->
+                    <div class="custom-action-input">
+                        <input type="text" id="customActionInput" placeholder="Своё действие..." onkeypress="handleCustomActionKeypress(event)">
+                        <button class="btn-add" onclick="addCustomAction()">+</button>
+                    </div>
+
+                    <!-- Selected Actions Display -->
+                    <div class="selected-actions" id="selectedActionsDisplay" style="display: none;">
+                        <div class="selected-label">ВЫБРАННЫЕ ДЕЙСТВИЯ:</div>
+                        <div class="selected-list" id="selectedList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title">Лог действий</span>
+                    <button class="btn-icon" onclick="clearLog()" title="Очистить лог">⌫</button>
+                </div>
+                <div class="section-content">
+                    <div class="log-container" id="logContainer">
+                        <div class="log-entry" style="color: var(--text-secondary); text-align: center;">
+                            Лог пуст
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Tab -->
+        <div class="tab-content" id="tab-status">
+            <!-- Neurofriction -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title orange">Нейрофрикция</span>
+                </div>
+                <div class="section-content">
+                    <div class="counter">
+                        <button class="counter-btn" onclick="changeNeurofriction(-1)">−</button>
+                        <span class="counter-value" id="neurofrictionValue">0</span>
+                        <button class="counter-btn" onclick="changeNeurofriction(1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Received Damage -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title" style="color: var(--accent-red);">Полученный урон (за раунд)</span>
+                </div>
+                <div class="section-content">
+                    <div class="counter">
+                        <button class="counter-btn red" onclick="changeDamage(-1)">−</button>
+                        <span class="counter-value red" id="damageValue">0</span>
+                        <button class="counter-btn red" onclick="changeDamage(1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Effects -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title purple">Статусные эффекты</span>
+                </div>
+                <div class="section-content">
+                    <div class="custom-action-input">
+                        <input type="text" id="statusEffectInput" placeholder="Название эффекта..." onkeypress="handleStatusEffectKeypress(event)">
+                        <button class="btn-add" onclick="addStatusEffect()">+</button>
+                    </div>
+                    <div class="status-effects-list" id="statusEffectsList" style="margin-top: 12px;">
+                        <span class="no-effects">Нет активных эффектов</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Effects -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title" style="color: var(--accent-yellow);">Эффекты контроля</span>
+                </div>
+                <div class="section-content">
+                    <div class="custom-action-input">
+                        <input type="text" id="controlEffectInput" placeholder="Название эффекта..." onkeypress="handleControlEffectKeypress(event)">
+                        <button class="btn-add" onclick="addControlEffect()">+</button>
+                    </div>
+                    <div class="status-effects-list control-effects" id="controlEffectsList" style="margin-top: 12px;">
+                        <span class="no-effects">Нет эффектов контроля</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="bottom-actions">
+        <button class="btn-danger" onclick="clearAll()">ОЧИСТИТЬ</button>
+        <button class="btn-secondary" onclick="resetPlan()">СБРОС</button>
+        <button class="btn-primary" onclick="confirmPlan()">ПОДТВЕРДИТЬ</button>
+    </div>
+
+    <!-- New Profile Modal -->
+    <div class="modal-overlay" id="newProfileModal">
+        <div class="modal">
+            <h3>НОВЫЙ ПРОФИЛЬ</h3>
+            <input type="text" id="newProfileName" placeholder="Имя юнита...">
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeModal('newProfileModal')">Отмена</button>
+                <button class="btn-primary" onclick="createProfile()">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">Сохранено</div>
+
+    <script>
+        // State
+        let profiles = JSON.parse(localStorage.getItem('sa_profiles')) || {
+            default: { name: 'Персонаж 1', neurofriction: 0, damage: 0, statusEffects: [], customActions: [] }
+        };
+        let currentProfile = 'default';
+        let selectedActions = []; // {action: string, coords: string[]}
+        let currentRound = 1;
+        let actionLog = JSON.parse(localStorage.getItem('sa_log')) || [];
+        let currentTab = 'planning';
+
+        // Migrate old profiles (stress -> neurofriction)
+        Object.keys(profiles).forEach(key => {
+            const p = profiles[key];
+            if (p.stress !== undefined && p.neurofriction === undefined) {
+                p.neurofriction = p.stress;
+                delete p.stress;
+            }
+            if (p.damage === undefined) p.damage = 0;
+            if (p.statusEffects === undefined) p.statusEffects = [];
+            if (p.controlEffects === undefined) p.controlEffects = [];
+        });
+
+        // Action labels
+        const actionLabels = {
+            melee: 'Ближний бой',
+            ranged: 'Дальний бой',
+            aoe: 'AoE-атака',
+            push: 'Толчок',
+            grab: 'Захват',
+            trip: 'Подсечка',
+            distract: 'Отвлечение',
+            reload: 'Перезарядка',
+            switch: 'Смена оружия',
+            aim: 'Прицеливание',
+            assess: 'Оценить врага',
+            chase: 'Преследование',
+            focus: 'Фокусирование',
+            stabilize: 'Стабилизация',
+            interact: 'Взаимодействие',
+            complex_interact: 'Сложное взаимод.',
+            complex_ability: 'Сложная способность',
+            dash: 'Рывок',
+            move: 'Перемещение',
+            standup: 'Встать',
+            escape: 'Выйти из захвата',
+            hide: 'Скрыться'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProfileSelect();
+            loadProfile();
+            renderLog();
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `tab-${tabName}`);
+            });
+        }
+
+        // Profile Management
+        function renderProfileSelect() {
+            const select = document.getElementById('profileSelect');
+            select.innerHTML = '';
+            Object.keys(profiles).forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `— ${profiles[key].name} —`;
+                select.appendChild(option);
+            });
+            select.value = currentProfile;
+        }
+
+        function loadProfile() {
+            currentProfile = document.getElementById('profileSelect').value;
+            const profile = profiles[currentProfile];
+            
+            // Load status values
+            document.getElementById('neurofrictionValue').textContent = profile.neurofriction || 0;
+            document.getElementById('damageValue').textContent = profile.damage || 0;
+            updateNeurofrictionDisplay();
+            updateDamageDisplay();
+            renderStatusEffects();
+            renderControlEffects();
+            
+            // Reset selections
+            selectedActions = [];
+            
+            renderSelectedActions();
+            renderCustomActions();
+            
+            // Clear action buttons
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+        }
+
+        function openNewProfileModal() {
+            document.getElementById('newProfileModal').classList.add('active');
+            document.getElementById('newProfileName').focus();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function createProfile() {
+            const name = document.getElementById('newProfileName').value.trim();
+            if (!name) return;
+            
+            const key = 'profile_' + Date.now();
+            profiles[key] = { name, neurofriction: 0, damage: 0, statusEffects: [], controlEffects: [], customActions: [] };
+            saveProfiles();
+            
+            currentProfile = key;
+            renderProfileSelect();
+            document.getElementById('profileSelect').value = key;
+            loadProfile();
+            
+            closeModal('newProfileModal');
+            document.getElementById('newProfileName').value = '';
+            showToast('Профиль создан');
+        }
+
+        function deleteCurrentProfile() {
+            if (currentProfile === 'default') {
+                showToast('Нельзя удалить базовый профиль');
+                return;
+            }
+            
+            if (confirm(`Удалить профиль "${profiles[currentProfile].name}"?`)) {
+                delete profiles[currentProfile];
+                saveProfiles();
+                currentProfile = 'default';
+                renderProfileSelect();
+                loadProfile();
+                showToast('Профиль удалён');
+            }
+        }
+
+        function saveProfiles() {
+            localStorage.setItem('sa_profiles', JSON.stringify(profiles));
+        }
+
+        // Neurofriction
+        function changeNeurofriction(delta) {
+            const profile = profiles[currentProfile];
+            profile.neurofriction = Math.max(0, (profile.neurofriction || 0) + delta);
+            document.getElementById('neurofrictionValue').textContent = profile.neurofriction;
+            updateNeurofrictionDisplay();
+            saveProfiles();
+        }
+
+        function updateNeurofrictionDisplay() {
+            const el = document.getElementById('neurofrictionValue');
+            const value = parseInt(el.textContent);
+            if (value >= 5) {
+                el.classList.add('high');
+            } else {
+                el.classList.remove('high');
+            }
+        }
+
+        // Damage
+        function changeDamage(delta) {
+            const profile = profiles[currentProfile];
+            profile.damage = Math.max(0, (profile.damage || 0) + delta);
+            document.getElementById('damageValue').textContent = profile.damage;
+            updateDamageDisplay();
+            saveProfiles();
+        }
+
+        function updateDamageDisplay() {
+            const el = document.getElementById('damageValue');
+            const value = parseInt(el.textContent);
+            if (value >= 3) {
+                el.classList.add('high');
+            } else {
+                el.classList.remove('high');
+            }
+        }
+
+        // Status Effects
+        function handleStatusEffectKeypress(event) {
+            if (event.key === 'Enter') {
+                addStatusEffect();
+            }
+        }
+
+        function addStatusEffect() {
+            const input = document.getElementById('statusEffectInput');
+            const value = input.value.trim();
+            
+            if (!value) return;
+            
+            const profile = profiles[currentProfile];
+            if (!profile.statusEffects) profile.statusEffects = [];
+            
+            profile.statusEffects.push(value);
+            saveProfiles();
+            
+            input.value = '';
+            renderStatusEffects();
+            showToast('Эффект добавлен');
+        }
+
+        function removeStatusEffect(index) {
+            const profile = profiles[currentProfile];
+            profile.statusEffects.splice(index, 1);
+            saveProfiles();
+            renderStatusEffects();
+        }
+
+        function renderStatusEffects() {
+            const container = document.getElementById('statusEffectsList');
+            const profile = profiles[currentProfile];
+            const effects = profile.statusEffects || [];
+            
+            if (effects.length === 0) {
+                container.innerHTML = '<span class="no-effects">Нет активных эффектов</span>';
+                return;
+            }
+            
+            container.innerHTML = effects.map((effect, i) => 
+                `<div class="status-effect-tag">${effect}<span class="remove" onclick="removeStatusEffect(${i})">×</span></div>`
+            ).join('');
+        }
+
+        // Control Effects
+        function handleControlEffectKeypress(event) {
+            if (event.key === 'Enter') {
+                addControlEffect();
+            }
+        }
+
+        function addControlEffect() {
+            const input = document.getElementById('controlEffectInput');
+            const value = input.value.trim();
+            
+            if (!value) return;
+            
+            const profile = profiles[currentProfile];
+            if (!profile.controlEffects) profile.controlEffects = [];
+            
+            profile.controlEffects.push(value);
+            saveProfiles();
+            
+            input.value = '';
+            renderControlEffects();
+            showToast('Эффект контроля добавлен');
+        }
+
+        function removeControlEffect(index) {
+            const profile = profiles[currentProfile];
+            profile.controlEffects.splice(index, 1);
+            saveProfiles();
+            renderControlEffects();
+        }
+
+        function renderControlEffects() {
+            const container = document.getElementById('controlEffectsList');
+            const profile = profiles[currentProfile];
+            const effects = profile.controlEffects || [];
+            
+            if (effects.length === 0) {
+                container.innerHTML = '<span class="no-effects">Нет эффектов контроля</span>';
+                return;
+            }
+            
+            container.innerHTML = effects.map((effect, i) => 
+                `<div class="status-effect-tag">${effect}<span class="remove" onclick="removeControlEffect(${i})">×</span></div>`
+            ).join('');
+        }
+
+        // Round
+        function changeRound(delta) {
+            currentRound = Math.max(1, currentRound + delta);
+            document.getElementById('roundValue').textContent = currentRound;
+            
+            // Reset damage on new round
+            if (delta > 0) {
+                const profile = profiles[currentProfile];
+                profile.damage = 0;
+                document.getElementById('damageValue').textContent = 0;
+                updateDamageDisplay();
+                saveProfiles();
+            }
+        }
+
+        // Coordinate input handling
+        function handleSectorInput(input, nextInputId) {
+            const value = input.value.toUpperCase();
+            input.value = value;
+            
+            // After 2+ characters, auto-focus to cell input
+            if (value.length >= 2) {
+                const nextInput = document.getElementById(nextInputId);
+                if (nextInput) {
+                    nextInput.focus();
+                }
+            }
+        }
+
+        function handleCellInput(input) {
+            // Only allow 1-9
+            input.value = input.value.replace(/[^1-9]/g, '');
+        }
+
+        // Actions
+        function toggleAction(btn) {
+            const action = btn.dataset.action;
+            
+            if (btn.classList.contains('selected')) {
+                btn.classList.remove('selected');
+                selectedActions = selectedActions.filter(a => a.action !== action);
+            } else {
+                btn.classList.add('selected');
+                selectedActions.push({ action, coords: [] });
+            }
+            
+            renderSelectedActions();
+        }
+
+        function handleCustomActionKeypress(event) {
+            if (event.key === 'Enter') {
+                addCustomAction();
+            }
+        }
+
+        function addCustomAction() {
+            const input = document.getElementById('customActionInput');
+            const value = input.value.trim();
+            
+            if (!value) return;
+            
+            const profile = profiles[currentProfile];
+            if (!profile.customActions) profile.customActions = [];
+            
+            if (!profile.customActions.includes(value)) {
+                profile.customActions.push(value);
+                saveProfiles();
+            }
+            
+            // Also select this action
+            const actionKey = 'custom:' + value;
+            if (!selectedActions.find(a => a.action === actionKey)) {
+                selectedActions.push({ action: actionKey, coords: [] });
+            }
+            
+            input.value = '';
+            
+            renderCustomActions();
+            renderSelectedActions();
+        }
+
+        function deleteCustomAction(actionName, event) {
+            event.stopPropagation();
+            
+            if (!confirm(`Удалить способность "${actionName}"?`)) return;
+            
+            const profile = profiles[currentProfile];
+            profile.customActions = profile.customActions.filter(a => a !== actionName);
+            saveProfiles();
+            
+            // Also remove from selected if present
+            const actionKey = 'custom:' + actionName;
+            selectedActions = selectedActions.filter(a => a.action !== actionKey);
+            
+            renderCustomActions();
+            renderSelectedActions();
+            showToast('Способность удалена');
+        }
+
+        function renderCustomActions() {
+            const profile = profiles[currentProfile];
+            const grid = document.getElementById('actionsGrid');
+            
+            // Remove existing custom elements
+            grid.querySelectorAll('.custom-action-btn, .custom-category').forEach(el => el.remove());
+            
+            if (profile.customActions && profile.customActions.length > 0) {
+                const category = document.createElement('div');
+                category.className = 'action-category custom-category';
+                category.textContent = '▸ СВОИ СПОСОБНОСТИ';
+                grid.appendChild(category);
+                
+                profile.customActions.forEach(action => {
+                    const btn = document.createElement('button');
+                    btn.className = 'action-btn custom-action-btn';
+                    btn.dataset.action = 'custom:' + action;
+                    
+                    const isSelected = selectedActions.find(a => a.action === 'custom:' + action);
+                    if (isSelected) btn.classList.add('selected');
+                    
+                    btn.innerHTML = `
+                        ${action}
+                        <span class="action-type">Своё</span>
+                        <button class="delete-custom" onclick="deleteCustomAction('${action.replace(/'/g, "\\'")}', event)" title="Удалить">×</button>
+                    `;
+                    btn.onclick = (e) => {
+                        if (!e.target.classList.contains('delete-custom')) {
+                            toggleAction(btn);
+                        }
+                    };
+                    
+                    grid.appendChild(btn);
+                });
+            }
+        }
+
+        function renderSelectedActions() {
+            const display = document.getElementById('selectedActionsDisplay');
+            const list = document.getElementById('selectedList');
+            
+            if (selectedActions.length === 0) {
+                display.style.display = 'none';
+                return;
+            }
+            
+            display.style.display = 'block';
+            
+            list.innerHTML = selectedActions.map((item, index) => {
+                const label = getActionLabel(item.action);
+                const coordsHtml = item.coords.map((c, ci) => 
+                    `<span class="coord-tag">${c}<span class="remove" onclick="removeActionCoord(${index}, ${ci})">×</span></span>`
+                ).join('');
+                
+                return `
+                    <div class="selected-action-item">
+                        <div class="selected-action-header">
+                            <span class="selected-action-name">${label}</span>
+                            <button class="selected-action-remove" onclick="removeSelectedAction(${index})">×</button>
+                        </div>
+                        <div class="coord-input-inline">
+                            <label>Цель (координаты)</label>
+                            <div class="coord-input-wrapper">
+                                <input type="text" class="coord-sector" id="actionSector${index}" placeholder="A1" maxlength="10" oninput="handleSectorInput(this, 'actionCell${index}')">
+                                <span class="coord-bracket">(</span>
+                                <input type="text" class="coord-cell" id="actionCell${index}" placeholder="5" maxlength="1" oninput="handleCellInput(this)">
+                                <span class="coord-bracket">)</span>
+                            </div>
+                            <button class="coord-add-btn" onclick="addActionCoord(${index})">+</button>
+                            <button class="coord-skip-btn" onclick="skipActionCoord(${index})">Без цели</button>
+                        </div>
+                        <div class="coord-tags">${coordsHtml}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addActionCoord(actionIndex) {
+            const sectorInput = document.getElementById(`actionSector${actionIndex}`);
+            const cellInput = document.getElementById(`actionCell${actionIndex}`);
+            
+            const sector = sectorInput.value.trim().toUpperCase();
+            const cell = cellInput.value.trim();
+            
+            if (!sector) {
+                showToast('Введите сектор');
+                sectorInput.focus();
+                return;
+            }
+            
+            let coord = sector;
+            if (cell) {
+                coord += `(${cell})`;
+            }
+            
+            selectedActions[actionIndex].coords.push(coord);
+            sectorInput.value = '';
+            cellInput.value = '';
+            sectorInput.focus();
+            
+            renderSelectedActions();
+        }
+
+        function skipActionCoord(actionIndex) {
+            // Just clear inputs and show feedback
+            const sectorInput = document.getElementById(`actionSector${actionIndex}`);
+            const cellInput = document.getElementById(`actionCell${actionIndex}`);
+            sectorInput.value = '';
+            cellInput.value = '';
+            showToast('Цель пропущена');
+        }
+
+        function removeActionCoord(actionIndex, coordIndex) {
+            selectedActions[actionIndex].coords.splice(coordIndex, 1);
+            renderSelectedActions();
+        }
+
+        function removeSelectedAction(index) {
+            const action = selectedActions[index].action;
+            selectedActions.splice(index, 1);
+            
+            // Deselect button
+            const btn = document.querySelector(`[data-action="${action}"]`);
+            if (btn) btn.classList.remove('selected');
+            
+            renderSelectedActions();
+        }
+
+        function getActionLabel(action) {
+            if (action.startsWith('custom:')) {
+                return action.replace('custom:', '');
+            }
+            return actionLabels[action] || action;
+        }
+
+        // Plan Management
+        function confirmPlan() {
+            if (selectedActions.length === 0) {
+                showToast('Нечего сохранять');
+                return;
+            }
+            
+            const profile = profiles[currentProfile];
+            
+            // Build targets from all action coords
+            const allTargets = [];
+            selectedActions.forEach(item => {
+                if (item.coords.length > 0) {
+                    allTargets.push(`${getActionLabel(item.action)}: ${item.coords.join(', ')}`);
+                }
+            });
+            
+            const entry = {
+                timestamp: new Date().toLocaleString('ru-RU'),
+                round: currentRound,
+                profile: profile.name,
+                actions: selectedActions.map(a => getActionLabel(a.action)),
+                targets: allTargets
+            };
+            
+            actionLog.unshift(entry);
+            localStorage.setItem('sa_log', JSON.stringify(actionLog));
+            
+            renderLog();
+            showToast('План сохранён в лог');
+            
+            // Reset for next turn
+            resetPlan();
+        }
+
+        function resetPlan() {
+            selectedActions = [];
+            
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            renderSelectedActions();
+        }
+
+        // Log
+        function renderLog() {
+            const container = document.getElementById('logContainer');
+            
+            if (actionLog.length === 0) {
+                container.innerHTML = '<div class="log-entry" style="color: var(--text-secondary); text-align: center;">Лог пуст</div>';
+                return;
+            }
+            
+            container.innerHTML = actionLog.map(entry => `
+                <div class="log-entry">
+                    <div class="log-time">R${entry.round} | ${entry.timestamp}</div>
+                    <div class="log-profile">${entry.profile}</div>
+                    ${entry.actions.length > 0 ? `<div class="log-actions">▸ ${entry.actions.join(', ')}</div>` : ''}
+                    ${entry.targets && entry.targets.length > 0 ? `<div class="log-coords">${entry.targets.join('<br>')}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function clearLog() {
+            if (confirm('Очистить весь лог?')) {
+                actionLog = [];
+                localStorage.setItem('sa_log', JSON.stringify(actionLog));
+                renderLog();
+                showToast('Лог очищен');
+            }
+        }
+
+        // Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Clear All
+        function clearAll() {
+            if (!confirm('Очистить ВСЁ?\n\n• Текущий план\n• Весь лог\n• Нейрофрикция (сброс до 0)\n• Урон (сброс до 0)\n• Статусные эффекты\n• Эффекты контроля\n• Раунд (сброс до 1)')) return;
+            
+            // Reset plan
+            resetPlan();
+            
+            // Clear log
+            actionLog = [];
+            localStorage.setItem('sa_log', JSON.stringify(actionLog));
+            renderLog();
+            
+            // Reset status
+            const profile = profiles[currentProfile];
+            profile.neurofriction = 0;
+            profile.damage = 0;
+            profile.statusEffects = [];
+            profile.controlEffects = [];
+            document.getElementById('neurofrictionValue').textContent = 0;
+            document.getElementById('damageValue').textContent = 0;
+            updateNeurofrictionDisplay();
+            updateDamageDisplay();
+            renderStatusEffects();
+            renderControlEffects();
+            saveProfiles();
+            
+            // Reset round
+            currentRound = 1;
+            document.getElementById('roundValue').textContent = 1;
+            
+            showToast('Всё очищено');
+        }
+
+        // Handle Enter in modal
+        document.getElementById('newProfileName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') createProfile();
+        });
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
