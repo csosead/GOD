@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>GOD: Chess Grid Generator</title>
+    <title>GOD: Grid Map Editor</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            background-color: #1a1a1a;
+            background-color: #121212;
             color: #eee;
             margin: 0;
             display: flex;
@@ -16,79 +16,126 @@
 
         /* Панель управления */
         #controls {
-            width: 320px;
-            background: #252525;
+            width: 340px;
+            background: #1e1e1e;
             padding: 20px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.7);
             display: flex;
             flex-direction: column;
             gap: 15px;
             overflow-y: auto;
-            z-index: 10;
+            z-index: 100;
+            flex-shrink: 0;
         }
 
-        h2 { margin-top: 0; color: #00ff88; } /* Зеленый акцент для новой версии */
+        h2 { margin-top: 0; color: #00ff88; font-size: 1.2em; text-transform: uppercase; letter-spacing: 1px;}
         
         .control-group {
-            background: #333;
-            padding: 10px;
-            border-radius: 8px;
+            background: #2a2a2a;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #333;
         }
+
+        .row { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+        .row label { margin: 0; flex-grow: 1; }
 
         label {
             display: block;
             margin-bottom: 5px;
-            font-size: 0.9em;
-            color: #aaa;
+            font-size: 0.85em;
+            color: #bbb;
         }
 
-        input[type="range"] { width: 100%; }
-        input[type="number"] { width: 60px; background: #444; color: white; border: none; padding: 4px; }
-        input[type="color"] { width: 100%; height: 30px; border: none; cursor: pointer; }
+        input[type="range"] { width: 100%; cursor: pointer; }
+        input[type="number"] { width: 60px; background: #444; color: white; border: none; padding: 4px; border-radius: 3px; }
+        input[type="color"] { width: 40px; height: 25px; border: none; cursor: pointer; padding: 0; background: none;}
+        input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
         
         button {
             background: #00ff88;
             color: #000;
             border: none;
-            padding: 10px;
+            padding: 12px;
             font-weight: bold;
             cursor: pointer;
             border-radius: 4px;
+            font-size: 1em;
             transition: 0.2s;
+            text-transform: uppercase;
         }
-        button:hover { background: #55ffaa; }
+        button:hover { background: #55ffaa; box-shadow: 0 0 10px rgba(0,255,136, 0.4); }
+        
+        button.reset-view {
+            background: #444;
+            color: #fff;
+            padding: 8px;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
 
         /* Область просмотра */
         #viewport {
             flex-grow: 1;
-            background: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: auto;
+            background: #0a0a0a;
             position: relative;
+            overflow: hidden; /* Скрываем скроллбары, так как двигаем канвас внутри */
+            cursor: grab;
+        }
+        #viewport.grabbing { cursor: grabbing; }
+
+        /* Фоновый паттерн для прозрачности */
+        #viewport::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(45deg, #151515 25%, transparent 25%), 
+                linear-gradient(-45deg, #151515 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #151515 75%), 
+                linear-gradient(-45deg, transparent 75%, #151515 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            opacity: 0.5;
+            z-index: -1;
         }
 
         canvas {
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            max-width: none; /* Убираем ограничение, чтобы не мылило при зуме браузера */
+            display: block;
+            transform-origin: 0 0;
         }
 
-        .val-display { float: right; color: #fff; font-weight: bold; }
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: #aaa;
+            padding: 10px;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 0.8em;
+        }
+        
+        #loading { display: none; color: #00ff88; text-align: center; margin-top: 10px;}
     </style>
 </head>
 <body>
 
 <div id="controls">
-    <h2>Генератор сетки </h2>
+    <h2>Chess Grid Editor</h2>
     
     <div class="control-group">
-        <label>1. Загрузить карту</label>
+        <label>1. Файл карты</label>
         <input type="file" id="imageLoader" accept="image/*">
+        <button class="reset-view" onclick="fitToScreen()">Центрировать вид</button>
     </div>
 
     <div class="control-group">
-        <label>Размер Сектора (px) <span id="val-size" class="val-display">150</span></label>
+        <div class="row">
+            <label>Размер Сектора (px)</label>
+            <span id="val-size" style="color:#fff; font-weight:bold;">150</span>
+        </div>
         <input type="range" id="sectorSize" min="30" max="600" value="150">
         <div style="font-size: 0.8em; color: #777; margin-top:5px;">
             Размер клетки: <span id="cellSizeDisplay">50</span>px
@@ -96,52 +143,86 @@
     </div>
 
     <div class="control-group">
-        <label>Смещение сетки X / Y</label>
-        <input type="range" id="offsetX" min="0" max="300" value="0">
-        <input type="range" id="offsetY" min="0" max="300" value="0">
+        <label>Смещение сетки (Offset)</label>
+        <div class="row">
+            <span>X</span> <input type="range" id="offsetX" min="0" max="300" value="0">
+        </div>
+        <div class="row">
+            <span>Y</span> <input type="range" id="offsetY" min="0" max="300" value="0">
+        </div>
     </div>
 
     <div class="control-group">
-        <label>Линии Секторов (Макро)</label>
-        <input type="color" id="colorMacro" value="#00ff88">
-        <label>Прозрачность</label>
-        <input type="range" id="alphaMacro" min="0" max="1" step="0.1" value="0.8">
-        <label>Толщина</label>
-        <input type="number" id="widthMacro" value="3">
+        <label>Сектора (Макро)</label>
+        <div class="row">
+            <input type="color" id="colorMacro" value="#00ff88">
+            <input type="range" id="alphaMacro" min="0" max="1" step="0.1" value="0.8">
+        </div>
+        <div class="row">
+            <label>Толщина</label>
+            <input type="number" id="widthMacro" value="3">
+        </div>
     </div>
 
     <div class="control-group">
-        <label>Линии Клеток (Микро)</label>
-        <input type="color" id="colorMicro" value="#ffffff">
-        <label>Прозрачность</label>
-        <input type="range" id="alphaMicro" min="0" max="1" step="0.1" value="0.2">
+        <label>Клетки (Микро)</label>
+        <div class="row">
+            <input type="color" id="colorMicro" value="#ffffff">
+            <input type="range" id="alphaMicro" min="0" max="1" step="0.1" value="0.2">
+        </div>
     </div>
 
     <div class="control-group">
-        <label>Координаты (A1, B2...)</label>
-        <input type="color" id="colorText" value="#ffffff">
-        <label>Размер шрифта</label>
-        <input type="range" id="fontSize" min="10" max="100" value="28">
-        <label><input type="checkbox" id="showCoords" checked> Координаты Секторов</label>
-        <label><input type="checkbox" id="showNumpad"> Numpad внутри (1-9)</label>
+        <label>Текст и Координаты</label>
+        <div class="row">
+            <input type="color" id="colorText" value="#ffffff">
+            <input type="range" id="fontSize" min="10" max="150" value="30">
+        </div>
+        <div class="row">
+            <input type="checkbox" id="showCoords" checked>
+            <label for="showCoords">Координаты (A1)</label>
+        </div>
+        <div class="row">
+            <input type="checkbox" id="showNumpad">
+            <label for="showNumpad">Numpad (1-9)</label>
+        </div>
     </div>
 
     <button id="downloadBtn">Экспортировать карту</button>
+    <div id="loading">Обработка...</div>
 </div>
 
 <div id="viewport">
     <canvas id="mapCanvas"></canvas>
-    <div id="placeholder" style="color: #555; position: absolute;">Загрузите изображение</div>
+    <div class="hint">
+        Колесо мыши: Зум<br>
+        ЛКМ + Тянуть: Двигать карту
+    </div>
+    <div id="placeholder" style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); color: #555; pointer-events: none;">
+        Загрузите изображение
+    </div>
 </div>
 
 <script>
+    // === Variables ===
     const canvas = document.getElementById('mapCanvas');
     const ctx = canvas.getContext('2d');
-    const loader = document.getElementById('imageLoader');
+    const viewport = document.getElementById('viewport');
     
     let img = new Image();
-    let loaded = false;
+    let imgLoaded = false;
 
+    // View State (Zoom & Pan)
+    let view = {
+        scale: 1,
+        x: 0,
+        y: 0,
+        isDragging: false,
+        startX: 0,
+        startY: 0
+    };
+
+    // UI Controls
     const controls = {
         sectorSize: document.getElementById('sectorSize'),
         offsetX: document.getElementById('offsetX'),
@@ -157,29 +238,120 @@
         showNumpad: document.getElementById('showNumpad')
     };
 
-    loader.addEventListener('change', handleImage, false);
+    // === Initialization ===
+    document.getElementById('imageLoader').addEventListener('change', handleImage, false);
     document.getElementById('downloadBtn').addEventListener('click', download);
     
-    Object.values(controls).forEach(el => {
-        el.addEventListener('input', draw);
+    // Add redraw listeners to all inputs
+    Object.values(controls).forEach(el => el.addEventListener('input', () => {
+        updateUIValues();
+        render();
+    }));
+
+    // Window resize handling
+    window.addEventListener('resize', () => {
+        if(imgLoaded) {
+            canvas.width = viewport.clientWidth;
+            canvas.height = viewport.clientHeight;
+            render();
+        }
     });
+
+    // === Mouse Events (Zoom & Pan) ===
+    viewport.addEventListener('wheel', (e) => {
+        if (!imgLoaded) return;
+        e.preventDefault();
+        
+        const zoomIntensity = 0.1;
+        const delta = e.deltaY > 0 ? -1 : 1;
+        const newScale = view.scale + (delta * zoomIntensity * view.scale);
+        
+        // Limit zoom
+        if (newScale < 0.05 || newScale > 10) return;
+
+        // Calculate mouse position relative to canvas
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Zoom towards mouse pointer
+        view.x -= (mouseX - view.x) * (newScale / view.scale - 1);
+        view.y -= (mouseY - view.y) * (newScale / view.scale - 1);
+        view.scale = newScale;
+
+        render();
+    });
+
+    viewport.addEventListener('mousedown', (e) => {
+        if (!imgLoaded) return;
+        view.isDragging = true;
+        view.startX = e.clientX - view.x;
+        view.startY = e.clientY - view.y;
+        viewport.classList.add('grabbing');
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (view.isDragging) {
+            e.preventDefault();
+            view.x = e.clientX - view.startX;
+            view.y = e.clientY - view.startY;
+            render();
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        view.isDragging = false;
+        viewport.classList.remove('grabbing');
+    });
+
+    // === Logic ===
 
     function handleImage(e) {
         const reader = new FileReader();
         reader.onload = function(event) {
+            img = new Image();
             img.onload = function() {
-                loaded = true;
+                imgLoaded = true;
                 document.getElementById('placeholder').style.display = 'none';
+                
+                // Set canvas to full viewport size
+                canvas.width = viewport.clientWidth;
+                canvas.height = viewport.clientHeight;
+                
+                // Reset Grid Offsets max values
                 controls.offsetX.max = controls.sectorSize.value;
                 controls.offsetY.max = controls.sectorSize.value;
-                draw();
+
+                fitToScreen();
             }
             img.src = event.target.result;
         }
         reader.readAsDataURL(e.target.files[0]);
     }
 
-    // Функция перевода числа в буквы (0->A, 1->B, 26->AA)
+    function fitToScreen() {
+        if(!imgLoaded) return;
+        // Calculate scale to fit
+        const scaleX = viewport.clientWidth / img.width;
+        const scaleY = viewport.clientHeight / img.height;
+        view.scale = Math.min(scaleX, scaleY) * 0.9; // 90% fit
+        
+        // Center
+        view.x = (viewport.clientWidth - img.width * view.scale) / 2;
+        view.y = (viewport.clientHeight - img.height * view.scale) / 2;
+        
+        render();
+    }
+
+    function updateUIValues() {
+        const secSize = parseInt(controls.sectorSize.value);
+        document.getElementById('val-size').textContent = secSize;
+        document.getElementById('cellSizeDisplay').textContent = Math.round(secSize / 3);
+        controls.offsetX.max = secSize;
+        controls.offsetY.max = secSize;
+    }
+
+    // Helper: Convert number to letters (0->A, 26->AA)
     function toLetters(num) {
         let letters = '';
         while (num >= 0) {
@@ -189,105 +361,112 @@
         return letters;
     }
 
-    function draw() {
-        if (!loaded) return;
+    // Main Render Function (Screen)
+    function render() {
+        if (!imgLoaded) return;
 
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+        // Clear Screen
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        ctx.save();
+        // Apply Zoom and Pan
+        ctx.translate(view.x, view.y);
+        ctx.scale(view.scale, view.scale);
+
+        // Draw the Map Content
+        drawMapContent(ctx, img.width, img.height);
+
+        ctx.restore();
+    }
+
+    // Drawing Logic (Shared between Screen and Export)
+    function drawMapContent(context, width, height) {
+        // 1. Draw Image
+        context.drawImage(img, 0, 0);
+
+        // Grid Params
         const secSize = parseInt(controls.sectorSize.value);
         const cellSize = secSize / 3;
         const offX = parseInt(controls.offsetX.value);
         const offY = parseInt(controls.offsetY.value);
 
-        document.getElementById('val-size').textContent = secSize;
-        document.getElementById('cellSizeDisplay').textContent = Math.round(cellSize);
-        controls.offsetX.max = secSize;
-        controls.offsetY.max = secSize;
+        const cols = Math.ceil(width / cellSize);
+        const rows = Math.ceil(height / cellSize);
 
-        const cols = Math.ceil(canvas.width / cellSize);
-        const rows = Math.ceil(canvas.height / cellSize);
-
-        // Рисуем линии
-        // Вертикаль
+        // 2. Draw Lines
+        // Vertical
         for (let i = 0; i <= cols; i++) {
             const x = offX + (i * cellSize);
-            if (x > canvas.width) break;
-            ctx.beginPath();
+            if (x > width) break;
+            context.beginPath();
             if (i % 3 === 0) {
-                ctx.strokeStyle = hexToRgba(controls.colorMacro.value, controls.alphaMacro.value);
-                ctx.lineWidth = parseInt(controls.widthMacro.value);
+                context.strokeStyle = hexToRgba(controls.colorMacro.value, controls.alphaMacro.value);
+                context.lineWidth = parseInt(controls.widthMacro.value);
             } else {
-                ctx.strokeStyle = hexToRgba(controls.colorMicro.value, controls.alphaMicro.value);
-                ctx.lineWidth = 1;
+                context.strokeStyle = hexToRgba(controls.colorMicro.value, controls.alphaMicro.value);
+                context.lineWidth = 1;
             }
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
-            ctx.stroke();
+            context.moveTo(x, 0);
+            context.lineTo(x, height);
+            context.stroke();
         }
-        // Горизонталь
+        // Horizontal
         for (let i = 0; i <= rows; i++) {
             const y = offY + (i * cellSize);
-            if (y > canvas.height) break;
-            ctx.beginPath();
+            if (y > height) break;
+            context.beginPath();
             if (i % 3 === 0) {
-                ctx.strokeStyle = hexToRgba(controls.colorMacro.value, controls.alphaMacro.value);
-                ctx.lineWidth = parseInt(controls.widthMacro.value);
+                context.strokeStyle = hexToRgba(controls.colorMacro.value, controls.alphaMacro.value);
+                context.lineWidth = parseInt(controls.widthMacro.value);
             } else {
-                ctx.strokeStyle = hexToRgba(controls.colorMicro.value, controls.alphaMicro.value);
-                ctx.lineWidth = 1;
+                context.strokeStyle = hexToRgba(controls.colorMicro.value, controls.alphaMicro.value);
+                context.lineWidth = 1;
             }
-            ctx.moveTo(0, y);
-            ctx.lineTo(canvas.width, y);
-            ctx.stroke();
+            context.moveTo(0, y);
+            context.lineTo(width, y);
+            context.stroke();
         }
 
-        // Текст координат
+        // 3. Draw Text
         const fontSize = parseInt(controls.fontSize.value);
-        ctx.fillStyle = controls.colorText.value;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        // Шрифт Orbitron для красоты, если загружен в системе, иначе sans-serif
-        ctx.font = `bold ${fontSize}px "Orbitron", sans-serif`;
+        context.fillStyle = controls.colorText.value;
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.font = `bold ${fontSize}px "Orbitron", sans-serif`;
 
-        const numSectorsX = Math.ceil((canvas.width - offX) / secSize);
-        const numSectorsY = Math.ceil((canvas.height - offY) / secSize);
+        const numSectorsX = Math.ceil((width - offX) / secSize);
+        const numSectorsY = Math.ceil((height - offY) / secSize);
 
         for (let sy = 0; sy < numSectorsY; sy++) {
             for (let sx = 0; sx < numSectorsX; sx++) {
                 const sectorCenterX = offX + (sx * secSize) + (secSize / 2);
                 const sectorCenterY = offY + (sy * secSize) + (secSize / 2);
 
-                // Координаты шахматного типа
                 if (controls.showCoords.checked) {
-                    const labelX = toLetters(sx); // A, B, C...
-                    const labelY = sy + 1;        // 1, 2, 3...
+                    const labelX = toLetters(sx);
+                    const labelY = sy + 1;
                     
-                    // Рисуем тень (обводку) текста для читаемости
-                    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-                    ctx.lineWidth = 4;
-                    ctx.strokeText(`${labelX}${labelY}`, sectorCenterX, sectorCenterY);
-                    
-                    ctx.fillText(`${labelX}${labelY}`, sectorCenterX, sectorCenterY);
+                    context.lineWidth = 4;
+                    context.strokeStyle = 'rgba(0,0,0,0.8)';
+                    context.strokeText(`${labelX}${labelY}`, sectorCenterX, sectorCenterY);
+                    context.fillText(`${labelX}${labelY}`, sectorCenterX, sectorCenterY);
                 }
 
                 if (controls.showNumpad.checked) {
-                    ctx.font = `bold ${fontSize * 0.4}px sans-serif`;
-                    
+                    context.font = `bold ${fontSize * 0.4}px sans-serif`;
                     for(let dy=0; dy<3; dy++) {
                         for(let dx=0; dx<3; dx++) {
                             const num = ((2-dy)*3) + (dx+1);
                             const cx = offX + (sx * secSize) + (dx * cellSize) + (cellSize/2);
                             const cy = offY + (sy * secSize) + (dy * cellSize) + (cellSize/2);
                             
-                            ctx.fillStyle = `rgba(255,255,255, 0.6)`;
-                            ctx.fillText(num, cx, cy);
+                            context.fillStyle = `rgba(255,255,255, 0.7)`;
+                            context.fillText(num, cx, cy);
                         }
                     }
-                    // Возвращаем настройки шрифта для следующей итерации координат
-                    ctx.fillStyle = controls.colorText.value;
-                    ctx.font = `bold ${fontSize}px "Orbitron", sans-serif`;
+                    // Reset font
+                    context.fillStyle = controls.colorText.value;
+                    context.font = `bold ${fontSize}px "Orbitron", sans-serif`;
                 }
             }
         }
@@ -300,12 +479,36 @@
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
+    // Export Function
     function download() {
-        if(!loaded) return;
-        const link = document.createElement('a');
-        link.download = 'map-chess-grid.png';
-        link.href = canvas.toDataURL();
-        link.click();
+        if(!imgLoaded) return;
+        const btn = document.getElementById('downloadBtn');
+        const loading = document.getElementById('loading');
+        
+        btn.disabled = true;
+        loading.style.display = 'block';
+
+        // Wait a frame to let UI update
+        setTimeout(() => {
+            // Create an off-screen canvas at FULL resolution
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = img.width;
+            exportCanvas.height = img.height;
+            const exportCtx = exportCanvas.getContext('2d');
+
+            // Draw everything 1:1
+            drawMapContent(exportCtx, img.width, img.height);
+
+            // Save
+            const link = document.createElement('a');
+            link.download = 'map-grid-export.png';
+            link.href = exportCanvas.toDataURL('image/png', 0.9); // 90% quality
+            link.click();
+
+            // Cleanup
+            btn.disabled = false;
+            loading.style.display = 'none';
+        }, 100);
     }
 </script>
 
