@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>GOD: Tactical Mapper v0.6</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f0ff;
+            --neon-cyan-dim: #00899180;
+            --neon-pink: #ff2d7b;
+            --neon-pink-dim: #ff2d7b60;
+            --neon-yellow: #f0ff00;
+            --bg-dark: #04080c;
+            --bg-panel: #080e14;
+            --bg-panel-alt: #0a1218;
+            --bg-card: #0c161f;
+            --border-subtle: #0f2030;
+            --border-glow: #00f0ff30;
+            --text-dim: #4a7080;
+            --text-mid: #7ab0c0;
+            --text-bright: #c0e8f0;
+            --scrollbar-bg: #0a1218;
+            --scrollbar-thumb: #1a3040;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-bright);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* === SCROLLBAR === */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--scrollbar-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan-dim); }
+
+        /* === SIDEBAR === */
+        #controls {
+            width: 320px;
+            min-width: 320px;
+            background: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            border-right: 1px solid var(--border-subtle);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Scanline effect on sidebar */
+        #controls::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 240, 255, 0.008) 2px,
+                rgba(0, 240, 255, 0.008) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Header */
+        .sidebar-header {
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            position: relative;
+            background: linear-gradient(180deg, #0c1820 0%, var(--bg-panel) 100%);
+        }
+
+        .sidebar-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 20px; right: 20px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            opacity: 0.3;
+        }
+
+        .logo-line {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+            margin-bottom: 4px;
+        }
+
+        .logo-sub {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+        }
+
+        /* Scrollable content */
+        .sidebar-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* === SECTIONS === */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+        .section:hover { border-color: var(--border-glow); }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            background: linear-gradient(90deg, rgba(0,240,255,0.03) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background 0.2s;
+        }
+        .section-header:hover {
+            background: linear-gradient(90deg, rgba(0,240,255,0.06) 0%, transparent 100%);
+        }
+
+        .section-icon {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neon-cyan);
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2.5px;
+            color: var(--text-bright);
+            flex: 1;
+        }
+
+        .section-toggle {
+            font-size: 10px;
+            color: var(--text-dim);
+            transition: transform 0.3s;
+        }
+        .section.collapsed .section-toggle { transform: rotate(-90deg); }
+        .section.collapsed .section-body { display: none; }
+
+        .section-body {
+            padding: 12px 14px;
+            overflow: visible;
+        }
+
+        /* === FORM ELEMENTS === */
+        .field {
+            margin-bottom: 10px;
+        }
+        .field:last-child { margin-bottom: 0; }
+
+        .field-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-mid);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .field-label .val-display {
+            color: var(--neon-cyan);
+            font-size: 10px;
+            margin-left: auto;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Range slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            flex: 1;
+            height: 3px;
+            background: var(--border-subtle);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 6px var(--neon-cyan), 0 0 12px rgba(0,240,255,0.3);
+            cursor: pointer;
+            transition: box-shadow 0.2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 10px var(--neon-cyan), 0 0 20px rgba(0,240,255,0.5);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 6px var(--neon-cyan);
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Number input */
+        input[type="number"] {
+            width: 54px;
+            background: #060c12;
+            color: var(--neon-cyan);
+            border: 1px solid #1a2a36;
+            border-radius: 3px;
+            padding: 4px 6px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="number"]:focus { border-color: var(--neon-cyan); box-shadow: 0 0 8px rgba(0,240,255,0.15); }
+
+        /* Color input */
+        .color-wrap {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid #1a2a36;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .color-wrap input[type="color"] {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            top: -8px;
+            left: -8px;
+            border: none;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+
+        /* Checkbox */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cyber-toggle {
+            position: relative;
+            width: 36px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+        .cyber-toggle input { display: none; }
+        .cyber-toggle .track {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #0c1820;
+            border: 1px solid #1a2a36;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .cyber-toggle .track::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--text-dim);
+            transition: all 0.3s;
+        }
+        .cyber-toggle input:checked + .track {
+            background: rgba(0,240,255,0.15);
+            border-color: var(--neon-cyan);
+        }
+        .cyber-toggle input:checked + .track::after {
+            transform: translateX(18px);
+            background: var(--neon-cyan);
+            box-shadow: 0 0 6px var(--neon-cyan);
+        }
+
+        .toggle-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-mid);
+            letter-spacing: 1px;
+        }
+
+        /* File input */
+        .file-drop-zone {
+            border: 1px dashed #1a3040;
+            border-radius: 4px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(0,240,255,0.01);
+            position: relative;
+            overflow: hidden;
+        }
+        .file-drop-zone:hover {
+            border-color: var(--neon-cyan);
+            background: rgba(0,240,255,0.03);
+        }
+        .file-drop-zone.drag-over {
+            border-color: var(--neon-cyan);
+            background: rgba(0,240,255,0.06);
+            box-shadow: inset 0 0 20px rgba(0,240,255,0.05);
+        }
+        .file-drop-zone input { display: none; }
+
+        .drop-icon {
+            font-size: 22px;
+            margin-bottom: 6px;
+            opacity: 0.5;
+        }
+        .drop-text {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+        .drop-text-accent { color: var(--neon-cyan); }
+
+        /* Filename display */
+        .filename-display {
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: rgba(0,240,255,0.05);
+            border-left: 2px solid var(--neon-cyan);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            color: var(--neon-cyan);
+            letter-spacing: 0.5px;
+            display: none;
+            word-break: break-all;
+        }
+        .filename-display.visible { display: block; }
+
+        /* === BUTTONS === */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 9px 14px;
+            border: 1px solid #1a2a36;
+            border-radius: 3px;
+            background: #0c161f;
+            color: var(--text-mid);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.25s;
+            text-transform: uppercase;
+        }
+        .btn:hover {
+            background: rgba(0,240,255,0.06);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+        .btn.active {
+            background: rgba(255,45,123,0.1);
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+            box-shadow: 0 0 12px rgba(255,45,123,0.15), inset 0 0 12px rgba(255,45,123,0.05);
+        }
+
+        .btn-icon { font-size: 12px; }
+
+        /* Export button */
+        .btn-export {
+            background: linear-gradient(135deg, rgba(0,240,255,0.12) 0%, rgba(0,240,255,0.04) 100%);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-weight: 700;
+            padding: 12px;
+            letter-spacing: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-export::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; 
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,240,255,0.08), transparent);
+            transition: left 0.5s;
+        }
+        .btn-export:hover::before { left: 100%; }
+        .btn-export:hover {
+            background: linear-gradient(135deg, rgba(0,240,255,0.2) 0%, rgba(0,240,255,0.08) 100%);
+            box-shadow: 0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.05);
+        }
+
+        /* Reset view button */
+        .btn-reset {
+            padding: 7px 14px;
+            font-size: 8px;
+        }
+
+        /* Sidebar footer */
+        .sidebar-footer {
+            padding: 12px 16px 16px;
+            position: relative;
+            z-index: 2;
+        }
+        .sidebar-footer::before {
+            content: '';
+            display: block;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+            margin-bottom: 12px;
+        }
+
+        /* === VIEWPORT === */
+        #viewport {
+            flex: 1;
+            background: #020508;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Grid pattern on empty viewport */
+        #viewport::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #mapCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 1;
+        }
+
+        /* Empty state */
+        .empty-state {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .empty-state.hidden { display: none; }
+
+        .empty-hex {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        .empty-hex svg {
+            width: 100%;
+            height: 100%;
+            opacity: 0.15;
+        }
+
+        .empty-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+        .empty-sub {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: #2a3a44;
+            letter-spacing: 1px;
+        }
+
+        /* Hint overlay */
+        .hint-bar {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: 10px 20px;
+            background: linear-gradient(0deg, rgba(4,8,12,0.95) 0%, transparent 100%);
+            z-index: 10;
+            pointer-events: none;
+        }
+        .hint-bar.hidden { display: none; }
+
+        .hint-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 9px;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+        }
+        .hint-key {
+            padding: 2px 6px;
+            background: rgba(0,240,255,0.06);
+            border: 1px solid #1a2a36;
+            border-radius: 2px;
+            color: var(--text-mid);
+            font-size: 8px;
+        }
+
+        /* Crop mode indicator */
+        .crop-indicator {
+            position: absolute;
+            top: 16px; left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 16px;
+            background: rgba(255,45,123,0.1);
+            border: 1px solid var(--neon-pink);
+            border-radius: 3px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--neon-pink);
+            z-index: 10;
+            display: none;
+            animation: crop-pulse 2s ease-in-out infinite;
+        }
+        .crop-indicator.visible { display: block; }
+
+        @keyframes crop-pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; box-shadow: 0 0 15px rgba(255,45,123,0.2); }
+        }
+
+        /* Zoom indicator */
+        .zoom-display {
+            position: absolute;
+            top: 16px; right: 16px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: var(--text-dim);
+            z-index: 10;
+            pointer-events: none;
+            background: rgba(4,8,12,0.7);
+            padding: 4px 8px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 2px;
+        }
+        .zoom-display.hidden { display: none; }
+        .zoom-val { color: var(--neon-cyan); }
+
+        /* Two-column grid row */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        /* Responsive tweaks */
+        @media (max-width: 900px) {
+            #controls { width: 280px; min-width: 280px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- === SIDEBAR === -->
+<div id="controls">
+    <div class="sidebar-header">
+        <div class="logo-line">TACTICAL HUD</div>
+        <div class="logo-sub">:: GOD MAPPER v0.6 ::</div>
+    </div>
+
+    <div class="sidebar-scroll">
+
+        <!-- 1. SOURCE -->
+        <div class="section" id="secSource">
+            <div class="section-header" onclick="toggleSection('secSource')">
+                <div class="section-icon">⬡</div>
+                <div class="section-title">MAP SOURCE</div>
+                <div class="section-toggle">▾</div>
+            </div>
+            <div class="section-body">
+                <div class="file-drop-zone" id="dropZone" onclick="document.getElementById('imageLoader').click()">
+                    <input type="file" id="imageLoader" accept="image/*">
+                    <div class="drop-icon">◈</div>
+                    <div class="drop-text">Нажмите или перетащите изображение</div>
+                    <div class="drop-text" style="margin-top:2px"><span class="drop-text-accent">PNG · JPG · WEBP</span></div>
+                </div>
+                <div class="filename-display" id="filenameDisplay"></div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-reset" onclick="fitToScreen()">
+                        <span class="btn-icon">⟲</span> RESET VIEW
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CROP -->
+        <div class="section" id="secCrop">
+            <div class="section-header" onclick="toggleSection('secCrop')">
+                <div class="section-icon">◰</div>
+                <div class="section-title">CROP AREA</div>
+                <div class="section-toggle">▾</div>
+            </div>
+            <div class="section-body">
+                <button class="btn" id="toggleCrop">
+                    <span class="btn-icon">✂</span> EDIT CROP AREA
+                </button>
+                <div class="drop-text" style="margin-top:6px; font-size:8px; opacity:0.5">
+                    Активируйте и тяните за углы/стороны рамки
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. GRID -->
+        <div class="section" id="secGrid">
+            <div class="section-header" onclick="toggleSection('secGrid')">
+                <div class="section-icon">▦</div>
+                <div class="section-title">GRID CONFIG</div>
+                <div class="section-toggle">▾</div>
+            </div>
+            <div class="section-body">
+                <div class="field">
+                    <div class="field-label">
+                        SECTOR SIZE (PX)
+                        <span class="val-display" id="valSize">150</span>
+                    </div>
+                    <div class="field-row">
+                        <input type="range" id="sSlide" min="10" max="1000" value="150">
+                        <input type="number" id="sNum" value="150">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="field-label">
+                        OFFSET X
+                        <span class="val-display" id="valOffX">0</span>
+                    </div>
+                    <div class="field-row">
+                        <input type="range" id="offXSlide" min="-500" max="500" value="0">
+                        <input type="number" id="offX" value="0">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="field-label">
+                        OFFSET Y
+                        <span class="val-display" id="valOffY">0</span>
+                    </div>
+                    <div class="field-row">
+                        <input type="range" id="offYSlide" min="-500" max="500" value="0">
+                        <input type="number" id="offY" value="0">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. GRID STYLE -->
+        <div class="section" id="secStyle">
+            <div class="section-header" onclick="toggleSection('secStyle')">
+                <div class="section-icon">◐</div>
+                <div class="section-title">GRID STYLE</div>
+                <div class="section-toggle">▾</div>
+            </div>
+            <div class="section-body">
+                <div class="field">
+                    <div class="field-label">MACRO LINES <span style="font-size:8px;opacity:0.4">(секторы)</span></div>
+                    <div class="field-row">
+                        <div class="color-wrap"><input type="color" id="cMa" value="#00f2ff"></div>
+                        <input type="range" id="aMa" min="0" max="1" step="0.05" value="0.7">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="field-label">MICRO LINES <span style="font-size:8px;opacity:0.4">(подсектора)</span></div>
+                    <div class="field-row">
+                        <div class="color-wrap"><input type="color" id="cMi" value="#ffffff"></div>
+                        <input type="range" id="aMi" min="0" max="1" step="0.05" value="0.2">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. TEXT & COORDS -->
+        <div class="section" id="secText">
+            <div class="section-header" onclick="toggleSection('secText')">
+                <div class="section-icon">Ⓐ</div>
+                <div class="section-title">COORDINATES</div>
+                <div class="section-toggle">▾</div>
+            </div>
+            <div class="section-body">
+                <div class="field">
+                    <div class="field-row">
+                        <div class="color-wrap"><input type="color" id="cTxt" value="#ffffff"></div>
+                        <input type="range" id="aTxt" min="0" max="1" step="0.05" value="0.8">
+                        <input type="number" id="fSize" value="30" style="width:48px" title="Font size">
+                    </div>
+                </div>
+                <div class="field" style="margin-top:8px;">
+                    <div class="toggle-row">
+                        <label class="cyber-toggle">
+                            <input type="checkbox" id="showC" checked>
+                            <span class="track"></span>
+                        </label>
+                        <span class="toggle-label">SECTOR COORD (A1, B2…)</span>
+                    </div>
+                </div>
+                <div class="field" style="margin-top:6px;">
+                    <div class="toggle-row">
+                        <label class="cyber-toggle">
+                            <input type="checkbox" id="showN">
+                            <span class="track"></span>
+                        </label>
+                        <span class="toggle-label">NUMPAD (1-9)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Export -->
+    <div class="sidebar-footer">
+        <button class="btn btn-export" id="downloadBtn">
+            <span class="btn-icon">⤓</span> EXPORT MAP
+        </button>
+    </div>
+</div>
+
+<!-- === VIEWPORT === -->
+<div id="viewport">
+    <canvas id="mapCanvas"></canvas>
+
+    <div class="empty-state" id="emptyState">
+        <div class="empty-hex">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="50,5 93,27.5 93,72.5 50,95 7,72.5 7,27.5" stroke="currentColor" stroke-width="1" fill="none" color="#00f0ff"/>
+                <line x1="25" y1="50" x2="75" y2="50" stroke="#00f0ff" stroke-width="0.5"/>
+                <line x1="50" y1="25" x2="50" y2="75" stroke="#00f0ff" stroke-width="0.5"/>
+            </svg>
+        </div>
+        <div class="empty-title">NO MAP LOADED</div>
+        <div class="empty-sub">Upload an image to begin</div>
+    </div>
+
+    <div class="crop-indicator" id="cropIndicator">✂ CROP MODE ACTIVE</div>
+
+    <div class="zoom-display hidden" id="zoomDisplay">
+        ZOOM: <span class="zoom-val" id="zoomVal">100%</span>
+    </div>
+
+    <div class="hint-bar hidden" id="hintBar">
+        <div class="hint-item">
+            <span class="hint-key">LMB</span> Перемещение
+        </div>
+        <div class="hint-item">
+            <span class="hint-key">SCROLL</span> Масштаб
+        </div>
+        <div class="hint-item hint-crop" style="display:none">
+            <span class="hint-key">LMB</span> Двигать/тянуть crop
+        </div>
+        <div class="hint-item hint-crop" style="display:none">
+            <span class="hint-key">ПКМ</span> Двигать карту
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = document.getElementById('viewport');
+
+    let img = new Image(), imgLoaded = false;
+    let view = { scale: 1, x: 0, y: 0 };
+    let crop = { x: 100, y: 100, w: 400, h: 300, active: false };
+
+    let isDragging = false, isResizing = false;
+    let dragStart = { x: 0, y: 0 }, resizeType = '';
+
+    const ui = {
+        sSlide: document.getElementById('sSlide'), sNum: document.getElementById('sNum'),
+        offXSlide: document.getElementById('offXSlide'), offX: document.getElementById('offX'),
+        offYSlide: document.getElementById('offYSlide'), offY: document.getElementById('offY'),
+        cMa: document.getElementById('cMa'), aMa: document.getElementById('aMa'),
+        cMi: document.getElementById('cMi'), aMi: document.getElementById('aMi'),
+        cTxt: document.getElementById('cTxt'), aTxt: document.getElementById('aTxt'),
+        fSize: document.getElementById('fSize'),
+        showC: document.getElementById('showC'), showN: document.getElementById('showN'),
+        btnCrop: document.getElementById('toggleCrop')
+    };
+
+    // === SECTION COLLAPSE ===
+    function toggleSection(id) {
+        document.getElementById(id).classList.toggle('collapsed');
+    }
+
+    // === SYNC SLIDERS WITH NUMBER INPUTS ===
+    function setupSync(slide, num, valDisplay) {
+        const update = () => {
+            if (valDisplay) valDisplay.textContent = slide.value;
+            render();
+        };
+        slide.oninput = () => { num.value = slide.value; update(); };
+        num.oninput = () => { slide.value = num.value; update(); };
+    }
+    setupSync(ui.sSlide, ui.sNum, document.getElementById('valSize'));
+    setupSync(ui.offXSlide, ui.offX, document.getElementById('valOffX'));
+    setupSync(ui.offYSlide, ui.offY, document.getElementById('valOffY'));
+
+    // All other inputs
+    Object.values(ui).forEach(el => {
+        if (el.oninput === null) el.oninput = () => render();
+    });
+
+    // === CROP TOGGLE ===
+    ui.btnCrop.onclick = () => {
+        crop.active = !crop.active;
+        ui.btnCrop.classList.toggle('active');
+        document.getElementById('cropIndicator').classList.toggle('visible');
+        // Toggle hint items
+        document.querySelectorAll('.hint-crop').forEach(el => {
+            el.style.display = crop.active ? 'flex' : 'none';
+        });
+        render();
+    };
+
+    // === FILE INPUT & DRAG-DROP ===
+    const dropZone = document.getElementById('dropZone');
+    const filenameDisplay = document.getElementById('filenameDisplay');
+
+    function loadImage(file) {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            img = new Image();
+            img.onload = () => {
+                imgLoaded = true;
+                canvas.width = viewport.clientWidth;
+                canvas.height = viewport.clientHeight;
+                crop.x = canvas.width / 4; crop.y = canvas.height / 4;
+                crop.w = canvas.width / 2; crop.h = canvas.height / 2;
+                // Ensure crop stays within viewport
+                if (typeof clampCrop === 'function') clampCrop();
+                document.getElementById('emptyState').classList.add('hidden');
+                document.getElementById('hintBar').classList.remove('hidden');
+                document.getElementById('zoomDisplay').classList.remove('hidden');
+                filenameDisplay.textContent = '◈ ' + file.name;
+                filenameDisplay.classList.add('visible');
+                fitToScreen();
+            };
+            img.src = f.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    document.getElementById('imageLoader').onchange = (e) => {
+        if (e.target.files[0]) loadImage(e.target.files[0]);
+    };
+
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+    dropZone.ondragleave = () => { dropZone.classList.remove('drag-over'); };
+    dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files[0]) {
+            document.getElementById('imageLoader').files = e.dataTransfer.files;
+            loadImage(e.dataTransfer.files[0]);
+        }
+    };
+
+    // Also allow drag-drop on viewport
+    viewport.ondragover = (e) => { e.preventDefault(); };
+    viewport.ondrop = (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files[0]) {
+            document.getElementById('imageLoader').files = e.dataTransfer.files;
+            loadImage(e.dataTransfer.files[0]);
+        }
+    };
+
+    // === PAN / ZOOM / CROP CONTROLS ===
+    let isCropDragging = false;
+
+    function isInsideCrop(mx, my) {
+        return mx > crop.x && mx < crop.x + crop.w && my > crop.y && my < crop.y + crop.h;
+    }
+
+    function clampCrop() {
+        const vw = viewport.clientWidth;
+        const vh = viewport.clientHeight;
+        const m = 30; // minimum visible margin
+        crop.w = Math.max(50, crop.w);
+        crop.h = Math.max(50, crop.h);
+        crop.x = Math.max(-crop.w + m, Math.min(crop.x, vw - m));
+        crop.y = Math.max(-crop.h + m, Math.min(crop.y, vh - m));
+    }
+
+    // Prevent context menu in crop mode
+    viewport.addEventListener('contextmenu', (e) => {
+        if (crop.active) e.preventDefault();
+    });
+
+    viewport.onmousedown = (e) => {
+        if (!imgLoaded) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        if (crop.active) {
+            // Right mouse button in crop mode → pan the map
+            if (e.button === 2) {
+                e.preventDefault();
+                isDragging = true;
+                dragStart = { x: mx - view.x, y: my - view.y };
+                return;
+            }
+
+            // LMB: check resize edges first
+            resizeType = getResizeType(mx, my);
+            if (resizeType) {
+                isResizing = true;
+                dragStart = { x: mx, y: my };
+                return;
+            }
+
+            // LMB inside crop → drag the whole crop rect
+            if (isInsideCrop(mx, my)) {
+                isCropDragging = true;
+                dragStart = { x: mx - crop.x, y: my - crop.y };
+                return;
+            }
+
+            // LMB outside crop → snap crop center to cursor and start dragging
+            isCropDragging = true;
+            crop.x = mx - crop.w / 2;
+            crop.y = my - crop.h / 2;
+            clampCrop();
+            dragStart = { x: mx - crop.x, y: my - crop.y };
+            render();
+            return;
+        }
+
+        // Normal mode: LMB = pan
+        isDragging = true;
+        dragStart = { x: mx - view.x, y: my - view.y };
+    };
+
+    window.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        if (isResizing) {
+            const dx = mx - dragStart.x;
+            const dy = my - dragStart.y;
+            if (resizeType.includes('e')) crop.w = Math.max(50, crop.w + dx);
+            if (resizeType.includes('w')) { const oldW = crop.w; crop.w = Math.max(50, crop.w - dx); crop.x += (oldW - crop.w); }
+            if (resizeType.includes('s')) crop.h = Math.max(50, crop.h + dy);
+            if (resizeType.includes('n')) { const oldH = crop.h; crop.h = Math.max(50, crop.h - dy); crop.y += (oldH - crop.h); }
+            dragStart = { x: mx, y: my };
+            clampCrop();
+            render();
+        } else if (isCropDragging) {
+            crop.x = mx - dragStart.x;
+            crop.y = my - dragStart.y;
+            clampCrop();
+            render();
+        } else if (isDragging) {
+            view.x = mx - dragStart.x;
+            view.y = my - dragStart.y;
+            render();
+        } else if (crop.active) {
+            const type = getResizeType(mx, my);
+            if (type) {
+                viewport.style.cursor = type + '-resize';
+            } else if (isInsideCrop(mx, my)) {
+                viewport.style.cursor = 'move';
+            } else {
+                viewport.style.cursor = 'crosshair';
+            }
+        } else {
+            viewport.style.cursor = 'grab';
+        }
+    };
+
+    window.onmouseup = () => { isDragging = false; isResizing = false; isCropDragging = false; };
+
+    viewport.onwheel = (e) => {
+        if (!imgLoaded) return;
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        const newScale = Math.min(Math.max(view.scale + delta * view.scale, 0.005), 50);
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        view.x -= (mx - view.x) * (newScale / view.scale - 1);
+        view.y -= (my - view.y) * (newScale / view.scale - 1);
+        view.scale = newScale;
+        updateZoomDisplay();
+        render();
+    };
+
+    function updateZoomDisplay() {
+        const el = document.getElementById('zoomVal');
+        if (el) el.textContent = Math.round(view.scale * 100) + '%';
+    }
+
+    function getResizeType(mx, my) {
+        const t = 15;
+        let res = '';
+        if (Math.abs(my - crop.y) < t) res += 'n';
+        else if (Math.abs(my - (crop.y + crop.h)) < t) res += 's';
+        if (Math.abs(mx - crop.x) < t) res += 'w';
+        else if (Math.abs(mx - (crop.x + crop.w)) < t) res += 'e';
+        return res;
+    }
+
+    // === RENDER ===
+    function fitToScreen() {
+        view.scale = Math.min(viewport.clientWidth / img.width, viewport.clientHeight / img.height) * 0.8;
+        view.x = (viewport.clientWidth - img.width * view.scale) / 2;
+        view.y = (viewport.clientHeight - img.height * view.scale) / 2;
+        updateZoomDisplay();
+        render();
+    }
+
+    function render() {
+        if (!imgLoaded) return;
+        canvas.width = viewport.clientWidth;
+        canvas.height = viewport.clientHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(view.x, view.y);
+        ctx.scale(view.scale, view.scale);
+        drawGridContent(ctx, img.width, img.height);
+        ctx.restore();
+
+        // Crop overlay
+        if (crop.active) {
+            ctx.fillStyle = "rgba(4,8,12,0.65)";
+            ctx.fillRect(0, 0, canvas.width, crop.y);
+            ctx.fillRect(0, crop.y + crop.h, canvas.width, canvas.height - crop.y - crop.h);
+            ctx.fillRect(0, crop.y, crop.x, crop.h);
+            ctx.fillRect(crop.x + crop.w, crop.y, canvas.width - crop.x - crop.w, crop.h);
+
+            // Crop border
+            ctx.strokeStyle = "#ff2d7b";
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([6, 4]);
+            ctx.strokeRect(crop.x, crop.y, crop.w, crop.h);
+            ctx.setLineDash([]);
+
+            // Corner handles
+            ctx.fillStyle = "#ff2d7b";
+            const s = 8, hl = 20;
+            // Top-left
+            ctx.fillRect(crop.x - 1, crop.y - 1, hl, 2);
+            ctx.fillRect(crop.x - 1, crop.y - 1, 2, hl);
+            // Top-right
+            ctx.fillRect(crop.x + crop.w - hl + 1, crop.y - 1, hl, 2);
+            ctx.fillRect(crop.x + crop.w - 1, crop.y - 1, 2, hl);
+            // Bottom-left
+            ctx.fillRect(crop.x - 1, crop.y + crop.h - 1, hl, 2);
+            ctx.fillRect(crop.x - 1, crop.y + crop.h - hl + 1, 2, hl);
+            // Bottom-right
+            ctx.fillRect(crop.x + crop.w - hl + 1, crop.y + crop.h - 1, hl, 2);
+            ctx.fillRect(crop.x + crop.w - 1, crop.y + crop.h - hl + 1, 2, hl);
+
+            // Size label
+            const cropW = Math.round(crop.w / view.scale);
+            const cropH = Math.round(crop.h / view.scale);
+            ctx.font = '10px "Share Tech Mono", monospace';
+            ctx.fillStyle = 'rgba(255,45,123,0.8)';
+            ctx.textAlign = 'center';
+            ctx.fillText(cropW + ' × ' + cropH + ' px', crop.x + crop.w / 2, crop.y + crop.h + 18);
+        }
+    }
+
+    function drawGridContent(c, w, h) {
+        c.drawImage(img, 0, 0);
+        const sSize = parseInt(ui.sNum.value), cSize = sSize / 3;
+        const oX = parseInt(ui.offX.value), oY = parseInt(ui.offY.value);
+
+        for (let i = 0; i <= Math.ceil(w / cSize); i++) {
+            const x = oX + i * cSize; if (x < 0 || x > w) continue;
+            c.beginPath();
+            c.strokeStyle = i % 3 === 0 ? hexToRgba(ui.cMa.value, ui.aMa.value) : hexToRgba(ui.cMi.value, ui.aMi.value);
+            c.lineWidth = i % 3 === 0 ? 3 : 1;
+            c.moveTo(x, 0); c.lineTo(x, h); c.stroke();
+        }
+        for (let i = 0; i <= Math.ceil(h / cSize); i++) {
+            const y = oY + i * cSize; if (y < 0 || y > h) continue;
+            c.beginPath();
+            c.strokeStyle = i % 3 === 0 ? hexToRgba(ui.cMa.value, ui.aMa.value) : hexToRgba(ui.cMi.value, ui.aMi.value);
+            c.lineWidth = i % 3 === 0 ? 3 : 1;
+            c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+        }
+
+        const fs = parseInt(ui.fSize.value);
+        c.textAlign = "center"; c.textBaseline = "middle";
+
+        for (let sy = -2; sy < Math.ceil(h / sSize) + 2; sy++) {
+            for (let sx = -2; sx < Math.ceil(w / sSize) + 2; sx++) {
+                const cx = oX + sx * sSize + sSize / 2, cy = oY + sy * sSize + sSize / 2;
+                if (cx < 0 || cx > w || cy < 0 || cy > h) continue;
+
+                if (ui.showC.checked) {
+                    c.font = `bold ${fs}px Orbitron`;
+                    c.fillStyle = hexToRgba("#000000", ui.aTxt.value);
+                    c.fillText(toLetters(sx) + (sy + 1), cx + 1, cy + 1);
+                    c.fillStyle = hexToRgba(ui.cTxt.value, ui.aTxt.value);
+                    c.fillText(toLetters(sx) + (sy + 1), cx, cy);
+                }
+                if (ui.showN.checked) {
+                    c.font = `${fs * 0.4}px Orbitron`;
+                    c.fillStyle = hexToRgba(ui.cTxt.value, ui.aTxt.value * 0.5);
+                    for (let dy = 0; dy < 3; dy++) {
+                        for (let dx = 0; dx < 3; dx++) {
+                            const n = (2 - dy) * 3 + (dx + 1);
+                            c.fillText(n, oX + sx * sSize + dx * cSize + cSize / 2, oY + sy * sSize + dy * cSize + cSize / 2);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function toLetters(n) {
+        if (n < 0) return "";
+        let r = ''; while (n >= 0) { r = String.fromCharCode(n % 26 + 65) + r; n = Math.floor(n / 26) - 1; } return r;
+    }
+
+    function hexToRgba(h, a) {
+        const r = parseInt(h.slice(1, 3), 16), g = parseInt(h.slice(3, 5), 16), b = parseInt(h.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${a})`;
+    }
+
+    // === EXPORT ===
+    document.getElementById('downloadBtn').onclick = () => {
+        if (!imgLoaded) return;
+        const out = document.createElement('canvas');
+        const exportW = crop.active ? crop.w / view.scale : img.width;
+        const exportH = crop.active ? crop.h / view.scale : img.height;
+        out.width = exportW; out.height = exportH;
+        const octx = out.getContext('2d');
+
+        if (crop.active) {
+            octx.translate(-(crop.x - view.x) / view.scale, -(crop.y - view.y) / view.scale);
+        }
+        drawGridContent(octx, img.width, img.height);
+
+        const a = document.createElement('a');
+        a.download = 'TACTICAL_MAP_EXPORT.png';
+        a.href = out.toDataURL();
+        a.click();
+    };
+
+    // === WINDOW RESIZE ===
+    window.addEventListener('resize', () => {
+        if (imgLoaded) render();
+    });
+</script>
+</body>
+</html>
