@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>GOD: Tactical Mapper Fixed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f2ff;
+            --neon-pink: #ff00ea;
+            --bg-dark: #050a0f;
+            --panel-bg: #0d151d;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg-dark);
+            color: var(--neon-cyan);
+            margin: 0; display: flex; height: 100vh; overflow: hidden; user-select: none;
+        }
+
+        #controls {
+            width: 360px; background: var(--panel-bg); padding: 20px;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.9); display: flex; flex-direction: column;
+            gap: 12px; overflow-y: auto; z-index: 100; border-right: 1px solid var(--neon-cyan);
+        }
+
+        h2 { 
+            font-family: 'Orbitron', sans-serif; font-size: 1.1em; text-transform: uppercase; 
+            letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-cyan);
+            border-bottom: 2px solid var(--neon-cyan); padding-bottom: 8px; margin: 0;
+        }
+        
+        .control-group {
+            background: rgba(0, 242, 255, 0.05); padding: 10px; border-left: 3px solid var(--neon-cyan);
+        }
+
+        .row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+        .row label { flex-grow: 1; text-transform: uppercase; font-size: 0.7em; opacity: 0.8; width: 60px;}
+
+        input[type="range"] { flex-grow: 2; cursor: pointer; accent-color: var(--neon-cyan); }
+        input[type="number"] { 
+            width: 65px; background: #000; color: var(--neon-cyan); 
+            border: 1px solid var(--neon-cyan); padding: 3px; font-family: inherit;
+        }
+        input[type="color"] { width: 30px; height: 24px; border: 1px solid #444; cursor: pointer; background: none; padding: 0;}
+        
+        button {
+            background: transparent; color: var(--neon-cyan); border: 1px solid var(--neon-cyan);
+            padding: 10px; font-family: 'Orbitron', sans-serif; cursor: pointer;
+            transition: all 0.3s; text-transform: uppercase; font-size: 0.8em;
+        }
+        button:hover { background: rgba(0, 242, 255, 0.1); box-shadow: 0 0 10px var(--neon-cyan); }
+        button.active { background: var(--neon-pink); color: #000; border-color: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink);}
+        
+        #downloadBtn { background: var(--neon-cyan); color: #000; font-weight: bold; margin-top: 5px; }
+
+        #viewport { flex-grow: 1; background: #000; position: relative; overflow: hidden; }
+        
+        .hint {
+            position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.8);
+            color: var(--neon-cyan); padding: 10px; border: 1px solid var(--neon-cyan);
+            font-size: 0.75em; pointer-events: none; line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div id="controls">
+    <h2>TACTICAL_HUD v5.0</h2>
+    
+    <div class="control-group">
+        <label>SYSTEM SOURCE</label>
+        <input type="file" id="imageLoader" accept="image/*" style="font-size: 0.7em; margin: 5px 0; width: 100%;">
+        <button style="width:100%" onclick="fitToScreen()">RESET VIEW</button>
+    </div>
+
+    <div class="control-group">
+        <label>CROP CONTROL</label>
+        <button id="toggleCrop" style="width: 100%;">EDIT CROP AREA</button>
+    </div>
+
+    <div class="control-group">
+        <label>GRID SCALE (PX)</label>
+        <div class="row">
+            <input type="range" id="sSlide" min="10" max="1000" value="150">
+            <input type="number" id="sNum" value="150">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label>GRID OFFSET</label>
+        <div class="row">
+            <label>X</label>
+            <input type="range" id="offXSlide" min="-500" max="500" value="0">
+            <input type="number" id="offX" value="0">
+        </div>
+        <div class="row">
+            <label>Y</label>
+            <input type="range" id="offYSlide" min="-500" max="500" value="0">
+            <input type="number" id="offY" value="0">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label>VISUALS (MACRO/MICRO)</label>
+        <div class="row">
+            <input type="color" id="cMa" value="#00f2ff">
+            <input type="range" id="aMa" min="0" max="1" step="0.1" value="0.7">
+        </div>
+        <div class="row">
+            <input type="color" id="cMi" value="#ffffff">
+            <input type="range" id="aMi" min="0" max="1" step="0.1" value="0.2">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label>COORDINATES & TEXT</label>
+        <div class="row">
+            <input type="color" id="cTxt" value="#ffffff">
+            <label>OPACITY</label>
+            <input type="range" id="aTxt" min="0" max="1" step="0.1" value="0.8">
+        </div>
+        <div class="row">
+            <label>SIZE</label>
+            <input type="number" id="fSize" value="30">
+            <input type="checkbox" id="showC" checked> <label>COORD</label>
+            <input type="checkbox" id="showN"> <label>NUMPAD</label>
+        </div>
+    </div>
+
+    <button id="downloadBtn">EXPORT TACTICAL_DATA</button>
+</div>
+
+<div id="viewport">
+    <canvas id="mapCanvas"></canvas>
+    <div class="hint">
+        <b>[LMB]:</b> PAN / ДВИГАТЬ<br>
+        <b>[WHEEL]:</b> ZOOM / МАСШТАБ
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = document.getElementById('viewport');
+    
+    let img = new Image(), imgLoaded = false;
+    let view = { scale: 1, x: 0, y: 0 };
+    let crop = { x: 100, y: 100, w: 400, h: 300, active: false };
+    
+    let isDragging = false, isResizing = false;
+    let dragStart = { x: 0, y: 0 }, resizeType = '';
+
+    const ui = {
+        sSlide: document.getElementById('sSlide'), sNum: document.getElementById('sNum'),
+        offXSlide: document.getElementById('offXSlide'), offX: document.getElementById('offX'),
+        offYSlide: document.getElementById('offYSlide'), offY: document.getElementById('offY'),
+        cMa: document.getElementById('cMa'), aMa: document.getElementById('aMa'),
+        cMi: document.getElementById('cMi'), aMi: document.getElementById('aMi'),
+        cTxt: document.getElementById('cTxt'), aTxt: document.getElementById('aTxt'),
+        fSize: document.getElementById('fSize'),
+        showC: document.getElementById('showC'), showN: document.getElementById('showN'),
+        btnCrop: document.getElementById('toggleCrop')
+    };
+
+    // Синхронизация всех связанных полей
+    function setupSync(slide, num) {
+        slide.oninput = () => { num.value = slide.value; render(); };
+        num.oninput = () => { slide.value = num.value; render(); };
+    }
+    setupSync(ui.sSlide, ui.sNum);
+    setupSync(ui.offXSlide, ui.offX);
+    setupSync(ui.offYSlide, ui.offY);
+
+    // Слушатель для всех остальных инпутов
+    Object.values(ui).forEach(el => {
+        if(el.oninput === null) el.oninput = () => render();
+    });
+
+    ui.btnCrop.onclick = () => {
+        crop.active = !crop.active;
+        ui.btnCrop.classList.toggle('active');
+        render();
+    };
+
+    document.getElementById('imageLoader').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            img = new Image();
+            img.onload = () => {
+                imgLoaded = true;
+                canvas.width = viewport.clientWidth;
+                canvas.height = viewport.clientHeight;
+                crop.x = canvas.width/4; crop.y = canvas.height/4;
+                crop.w = canvas.width/2; crop.h = canvas.height/2;
+                fitToScreen();
+            };
+            img.src = f.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    // --- УПРАВЛЕНИЕ ---
+    viewport.onmousedown = (e) => {
+        if (!imgLoaded) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        if (crop.active) {
+            resizeType = getResizeType(mx, my);
+            if (resizeType) {
+                isResizing = true;
+                dragStart = { x: mx, y: my };
+                return;
+            }
+        }
+        isDragging = true;
+        dragStart = { x: mx - view.x, y: my - view.y };
+    };
+
+    window.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        if (isResizing) {
+            const dx = mx - dragStart.x;
+            const dy = my - dragStart.y;
+            if (resizeType.includes('e')) crop.w = Math.max(50, crop.w + dx);
+            if (resizeType.includes('w')) { const oldW = crop.w; crop.w = Math.max(50, crop.w - dx); crop.x += (oldW - crop.w); }
+            if (resizeType.includes('s')) crop.h = Math.max(50, crop.h + dy);
+            if (resizeType.includes('n')) { const oldH = crop.h; crop.h = Math.max(50, crop.h - dy); crop.y += (oldH - crop.h); }
+            dragStart = { x: mx, y: my };
+            render();
+        } else if (isDragging) {
+            view.x = mx - dragStart.x;
+            view.y = my - dragStart.y;
+            render();
+        } else if (crop.active) {
+            const type = getResizeType(mx, my);
+            viewport.style.cursor = type ? type + '-resize' : 'crosshair';
+        } else {
+            viewport.style.cursor = 'grab';
+        }
+    };
+
+    window.onmouseup = () => { isDragging = false; isResizing = false; };
+
+    viewport.onwheel = (e) => {
+        if (!imgLoaded) return;
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        const newScale = Math.min(Math.max(view.scale + delta * view.scale, 0.005), 50);
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        view.x -= (mx - view.x) * (newScale / view.scale - 1);
+        view.y -= (my - view.y) * (newScale / view.scale - 1);
+        view.scale = newScale;
+        render();
+    };
+
+    function getResizeType(mx, my) {
+        const t = 15;
+        let res = '';
+        if (Math.abs(my - crop.y) < t) res += 'n';
+        else if (Math.abs(my - (crop.y + crop.h)) < t) res += 's';
+        if (Math.abs(mx - crop.x) < t) res += 'w';
+        else if (Math.abs(mx - (crop.x + crop.w)) < t) res += 'e';
+        return res;
+    }
+
+    // --- ОТРИСОВКА ---
+    function fitToScreen() {
+        view.scale = Math.min(viewport.clientWidth / img.width, viewport.clientHeight / img.height) * 0.8;
+        view.x = (viewport.clientWidth - img.width * view.scale) / 2;
+        view.y = (viewport.clientHeight - img.height * view.scale) / 2;
+        render();
+    }
+
+    function render() {
+        if (!imgLoaded) return;
+        canvas.width = viewport.clientWidth;
+        canvas.height = viewport.clientHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(view.x, view.y);
+        ctx.scale(view.scale, view.scale);
+        drawGridContent(ctx, img.width, img.height);
+        ctx.restore();
+
+        // Отрисовываем рамку и затемнение ТОЛЬКО если режим Кропа включен
+        if (crop.active) {
+            ctx.fillStyle = "rgba(0,0,0,0.6)";
+            ctx.fillRect(0, 0, canvas.width, crop.y);
+            ctx.fillRect(0, crop.y + crop.h, canvas.width, canvas.height - crop.y - crop.h);
+            ctx.fillRect(0, crop.y, crop.x, crop.h);
+            ctx.fillRect(crop.x + crop.w, crop.y, canvas.width - crop.x - crop.w, crop.h);
+
+            ctx.strokeStyle = "#ff00ea";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(crop.x, crop.y, crop.w, crop.h);
+            
+            ctx.fillStyle = "#ff00ea";
+            const s = 10;
+            ctx.fillRect(crop.x-s/2, crop.y-s/2, s, s);
+            ctx.fillRect(crop.x+crop.w-s/2, crop.y-s/2, s, s);
+            ctx.fillRect(crop.x-s/2, crop.y+crop.h-s/2, s, s);
+            ctx.fillRect(crop.x+crop.w-s/2, crop.y+crop.h-s/2, s, s);
+        }
+    }
+
+    function drawGridContent(c, w, h) {
+        c.drawImage(img, 0, 0);
+        const sSize = parseInt(ui.sNum.value), cSize = sSize / 3;
+        const oX = parseInt(ui.offX.value), oY = parseInt(ui.offY.value);
+
+        for (let i = 0; i <= Math.ceil(w/cSize); i++) {
+            const x = oX + i*cSize; if (x<0 || x>w) continue;
+            c.beginPath();
+            c.strokeStyle = i%3===0 ? hexToRgba(ui.cMa.value, ui.aMa.value) : hexToRgba(ui.cMi.value, ui.aMi.value);
+            c.lineWidth = i%3===0 ? 3 : 1;
+            c.moveTo(x, 0); c.lineTo(x, h); c.stroke();
+        }
+        for (let i = 0; i <= Math.ceil(h/cSize); i++) {
+            const y = oY + i*cSize; if (y<0 || y>h) continue;
+            c.beginPath();
+            c.strokeStyle = i%3===0 ? hexToRgba(ui.cMa.value, ui.aMa.value) : hexToRgba(ui.cMi.value, ui.aMi.value);
+            c.lineWidth = i%3===0 ? 3 : 1;
+            c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+        }
+
+        const fs = parseInt(ui.fSize.value);
+        c.textAlign = "center"; c.textBaseline = "middle";
+        
+        for (let sy = -2; sy < Math.ceil(h/sSize)+2; sy++) {
+            for (let sx = -2; sx < Math.ceil(w/sSize)+2; sx++) {
+                const cx = oX + sx*sSize + sSize/2, cy = oY + sy*sSize + sSize/2;
+                if(cx < 0 || cx > w || cy < 0 || cy > h) continue;
+
+                if (ui.showC.checked) {
+                    c.font = `bold ${fs}px Orbitron`;
+                    c.fillStyle = hexToRgba("#000000", ui.aTxt.value);
+                    c.fillText(toLetters(sx)+(sy+1), cx+1, cy+1); // Тень
+                    c.fillStyle = hexToRgba(ui.cTxt.value, ui.aTxt.value);
+                    c.fillText(toLetters(sx)+(sy+1), cx, cy);
+                }
+                if (ui.showN.checked) {
+                    c.font = `${fs*0.4}px Orbitron`;
+                    c.fillStyle = hexToRgba(ui.cTxt.value, ui.aTxt.value*0.5);
+                    for(let dy=0; dy<3; dy++) {
+                        for(let dx=0; dx<3; dx++) {
+                            const n = (2-dy)*3 + (dx+1);
+                            c.fillText(n, oX+sx*sSize+dx*cSize+cSize/2, oY+sy*sSize+dy*cSize+cSize/2);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function toLetters(n) { 
+        if (n < 0) return "";
+        let r=''; while(n>=0){ r=String.fromCharCode(n%26+65)+r; n=Math.floor(n/26)-1; } return r; 
+    }
+    function hexToRgba(h, a) { const r=parseInt(h.slice(1,3),16), g=parseInt(h.slice(3,5),16), b=parseInt(h.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; }
+
+    document.getElementById('downloadBtn').onclick = () => {
+        if (!imgLoaded) return;
+        const out = document.createElement('canvas');
+        const exportW = crop.active ? crop.w / view.scale : img.width;
+        const exportH = crop.active ? crop.h / view.scale : img.height;
+        out.width = exportW; out.height = exportH;
+        const octx = out.getContext('2d');
+
+        if(crop.active) {
+            octx.translate(- (crop.x - view.x) / view.scale, - (crop.y - view.y) / view.scale);
+        }
+        drawGridContent(octx, img.width, img.height);
+
+        const a = document.createElement('a'); a.download = 'TACTICAL_MAP_EXPORT.png';
+        a.href = out.toDataURL(); a.click();
+    };
+</script>
+</body>
+</html>
