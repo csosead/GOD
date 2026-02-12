@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>GOD: Map Editor Cyberpunk Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f2ff;
+            --neon-pink: #ff00ea;
+            --neon-green: #00ff88;
+            --bg-dark: #050a0f;
+            --panel-bg: #0d151d;
+            --border-glow: rgba(0, 242, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg-dark);
+            color: var(--neon-cyan);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Панель управления в стиле Sci-Fi */
+        #controls {
+            width: 340px;
+            background: var(--panel-bg);
+            padding: 20px;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            z-index: 100;
+            flex-shrink: 0;
+            border-right: 1px solid var(--neon-cyan);
+            position: relative;
+        }
+
+        /* Декоративная сетка на фоне панели */
+        #controls::before {
+            content: "";
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        h2 { 
+            margin-top: 0; 
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan); 
+            font-size: 1.4em; 
+            text-transform: uppercase; 
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px var(--neon-cyan);
+            border-bottom: 2px solid var(--neon-cyan);
+            padding-bottom: 10px;
+        }
+        
+        .control-group {
+            background: rgba(0, 242, 255, 0.05);
+            padding: 12px;
+            border-radius: 2px;
+            border-left: 3px solid var(--neon-cyan);
+            position: relative;
+        }
+
+        .row { display: flex; gap: 10px; align-items: center; margin-bottom: 5px; }
+        .row label { margin: 0; flex-grow: 1; text-transform: uppercase; font-size: 0.8em; }
+
+        label { display: block; margin-bottom: 5px; font-size: 0.85em; color: var(--neon-cyan); opacity: 0.8; }
+
+        input[type="range"] { 
+            width: 100%; 
+            cursor: pointer; 
+            accent-color: var(--neon-cyan);
+        }
+
+        input[type="number"] { 
+            width: 60px; 
+            background: #000; 
+            color: var(--neon-cyan); 
+            border: 1px solid var(--neon-cyan); 
+            padding: 4px; 
+            font-family: inherit;
+        }
+
+        input[type="color"] { 
+            width: 40px; height: 25px; border: none; cursor: pointer; background: none;
+        }
+
+        /* Кнопки в стиле HUD */
+        button {
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 1px solid var(--neon-cyan);
+            padding: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: "";
+            position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+
+        button:hover {
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 15px var(--border-glow);
+            text-shadow: 0 0 5px var(--neon-cyan);
+        }
+
+        button:hover::after { left: 100%; }
+
+        button.reset-view {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+            font-size: 0.7em;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        button#downloadBtn {
+            background: var(--neon-cyan);
+            color: #000;
+            margin-top: 10px;
+        }
+
+        /* Область просмотра */
+        #viewport {
+            flex-grow: 1;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: var(--neon-cyan);
+            padding: 12px;
+            border: 1px solid var(--neon-cyan);
+            pointer-events: none;
+            font-size: 0.8em;
+            text-transform: uppercase;
+        }
+        
+        #loading { display: none; color: var(--neon-pink); text-align: center; margin-top: 10px; font-weight: bold;}
+
+        /* Скроллбар в стиле Sci-Fi */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--neon-cyan); }
+    </style>
+</head>
+<body>
+
+<div id="controls">
+    <h2>Tactical HUD v2.0</h2>
+    
+    <div class="control-group">
+        <label>SYSTEM: LOAD MAP</label>
+        <input type="file" id="imageLoader" accept="image/*">
+        <button class="reset-view" onclick="fitToScreen()">RESET VISUALS</button>
+    </div>
+
+    <div class="control-group">
+        <div class="row">
+            <label>SECTOR SIZE (px)</label>
+            <span id="val-size" style="color:var(--neon-cyan); font-weight:bold;">150</span>
+        </div>
+        <input type="range" id="sectorSize" min="30" max="600" value="150">
+    </div>
+
+    <div class="control-group">
+        <label>GRID OFFSET (X / Y)</label>
+        <div class="row">
+            <input type="range" id="offsetX" min="0" max="300" value="0">
+        </div>
+        <div class="row">
+            <input type="range" id="offsetY" min="0" max="300" value="0">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label>MACRO SECTORS (9x9)</label>
+        <div class="row">
+            <input type="color" id="colorMacro" value="#00f2ff">
+            <input type="range" id="alphaMacro" min="0" max="1" step="0.1" value="0.8">
+        </div>
+        <div class="row">
+            <label>WIDTH</label>
+            <input type="number" id="widthMacro" value="3">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label>MICRO CELLS (1-9)</label>
+        <div class="row">
+            <input type="color" id="colorMicro" value="#ffffff">
+            <input type="range" id="alphaMicro" min="0" max="1" step="0.1" value="0.2">
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label>COORDINATES RENDER</label>
+        <div class="row">
+            <input type="color" id="colorText" value="#ffffff">
+            <span>OPACITY</span>
+            <input type="range" id="alphaText" min="0" max="1" step="0.1" value="0.9">
+        </div>
+        <div class="row">
+            <input type="range" id="fontSize" min="10" max="200" value="30">
+        </div>
+        <div class="row">
+            <input type="checkbox" id="showCoords" checked>
+            <label for="showCoords">Labels (A1)</label>
+        </div>
+        <div class="row">
+            <input type="checkbox" id="showNumpad">
+            <label for="showNumpad">Numpad</label>
+        </div>
+    </div>
+
+    <button id="downloadBtn">GENERATE DATA_LINK</button>
+    <div id="loading">PROCESSING EXPORT...</div>
+</div>
+
+<div id="viewport">
+    <canvas id="mapCanvas"></canvas>
+    <div class="hint">
+        [MOUSE_WHEEL]: ZOOM<br>
+        [LEFT_CLICK]: PAN VIEW
+    </div>
+    <div id="placeholder" style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); color: var(--neon-cyan); opacity: 0.3;">
+        >>> WAITING FOR IMAGE INPUT...
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = document.getElementById('viewport');
+    let img = new Image();
+    let imgLoaded = false;
+
+    let view = { scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0 };
+
+    const controls = {
+        sectorSize: document.getElementById('sectorSize'),
+        offsetX: document.getElementById('offsetX'),
+        offsetY: document.getElementById('offsetY'),
+        colorMacro: document.getElementById('colorMacro'),
+        alphaMacro: document.getElementById('alphaMacro'),
+        widthMacro: document.getElementById('widthMacro'),
+        colorMicro: document.getElementById('colorMicro'),
+        alphaMicro: document.getElementById('alphaMicro'),
+        colorText: document.getElementById('colorText'),
+        alphaText: document.getElementById('alphaText'), // Новое поле
+        fontSize: document.getElementById('fontSize'),
+        showCoords: document.getElementById('showCoords'),
+        showNumpad: document.getElementById('showNumpad')
+    };
+
+    document.getElementById('imageLoader').addEventListener('change', handleImage, false);
+    document.getElementById('downloadBtn').addEventListener('click', download);
+    Object.values(controls).forEach(el => el.addEventListener('input', () => { render(); }));
+
+    viewport.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    viewport.addEventListener('wheel', (e) => {
+        if (!imgLoaded) return;
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        const newScale = Math.min(Math.max(view.scale + delta * view.scale, 0.01), 50);
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        view.x -= (mouseX - view.x) * (newScale / view.scale - 1);
+        view.y -= (mouseY - view.y) * (newScale / view.scale - 1);
+        view.scale = newScale;
+        render();
+    });
+
+    viewport.addEventListener('mousedown', (e) => {
+        if (imgLoaded && e.button === 0) {
+            e.preventDefault();
+            view.isDragging = true;
+            view.startX = e.clientX - view.x;
+            view.startY = e.clientY - view.y;
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (view.isDragging) {
+            view.x = e.clientX - view.startX;
+            view.y = e.clientY - view.startY;
+            render();
+        }
+    });
+
+    window.addEventListener('mouseup', () => view.isDragging = false);
+
+    function handleImage(e) {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            img = new Image();
+            img.onload = () => {
+                imgLoaded = true;
+                document.getElementById('placeholder').style.display = 'none';
+                canvas.width = viewport.clientWidth;
+                canvas.height = viewport.clientHeight;
+                fitToScreen();
+            };
+            img.src = f.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function fitToScreen() {
+        view.scale = Math.min(viewport.clientWidth / img.width, viewport.clientHeight / img.height) * 0.95;
+        view.x = (viewport.clientWidth - img.width * view.scale) / 2;
+        view.y = (viewport.clientHeight - img.height * view.scale) / 2;
+        render();
+    }
+
+    function toLetters(num) {
+        let res = '';
+        while (num >= 0) { res = String.fromCharCode(num % 26 + 65) + res; num = Math.floor(num / 26) - 1; }
+        return res;
+    }
+
+    function hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function render() {
+        if (!imgLoaded) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(view.x, view.y);
+        ctx.scale(view.scale, view.scale);
+        drawMapContent(ctx, img.width, img.height);
+        ctx.restore();
+    }
+
+    function drawMapContent(c, w, h) {
+        c.drawImage(img, 0, 0);
+        const secSize = parseInt(controls.sectorSize.value), cellSize = secSize / 3;
+        const offX = parseInt(controls.offsetX.value), offY = parseInt(controls.offsetY.value);
+        document.getElementById('val-size').innerText = secSize;
+
+        // Линии
+        for (let i = 0; i <= Math.ceil(w / cellSize); i++) {
+            const x = offX + i * cellSize; if (x > w) break;
+            c.beginPath();
+            c.strokeStyle = i % 3 === 0 ? hexToRgba(controls.colorMacro.value, controls.alphaMacro.value) : hexToRgba(controls.colorMicro.value, controls.alphaMicro.value);
+            c.lineWidth = i % 3 === 0 ? parseInt(controls.widthMacro.value) : 1;
+            c.moveTo(x, 0); c.lineTo(x, h); c.stroke();
+        }
+        for (let i = 0; i <= Math.ceil(h / cellSize); i++) {
+            const y = offY + i * cellSize; if (y > h) break;
+            c.beginPath();
+            c.strokeStyle = i % 3 === 0 ? hexToRgba(controls.colorMacro.value, controls.alphaMacro.value) : hexToRgba(controls.colorMicro.value, controls.alphaMicro.value);
+            c.lineWidth = i % 3 === 0 ? parseInt(controls.widthMacro.value) : 1;
+            c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+        }
+
+        // Текст
+        const fontSize = parseInt(controls.fontSize.value);
+        const txtAlpha = controls.alphaText.value;
+        c.textAlign = "center"; c.textBaseline = "middle";
+        c.font = `bold ${fontSize}px 'Orbitron', sans-serif`;
+
+        for (let sy = 0; sy < Math.ceil((h - offY) / secSize); sy++) {
+            for (let sx = 0; sx < Math.ceil((w - offX) / secSize); sx++) {
+                const cx = offX + sx * secSize + secSize / 2, cy = offY + sy * secSize + secSize / 2;
+                if (controls.showCoords.checked) {
+                    c.fillStyle = hexToRgba('#000000', txtAlpha * 0.8);
+                    c.fillText(toLetters(sx) + (sy + 1), cx + 2, cy + 2); // Тень
+                    c.fillStyle = hexToRgba(controls.colorText.value, txtAlpha);
+                    c.fillText(toLetters(sx) + (sy + 1), cx, cy);
+                }
+                if (controls.showNumpad.checked) {
+                    c.font = `bold ${fontSize * 0.4}px sans-serif`;
+                    for (let dy = 0; dy < 3; dy++) {
+                        for (let dx = 0; dx < 3; dx++) {
+                            const n = (2 - dy) * 3 + (dx + 1);
+                            c.fillStyle = hexToRgba(controls.colorText.value, txtAlpha * 0.5);
+                            c.fillText(n, offX + sx * secSize + dx * cellSize + cellSize / 2, offY + sy * secSize + dy * cellSize + cellSize / 2);
+                        }
+                    }
+                    c.font = `bold ${fontSize}px 'Orbitron', sans-serif`;
+                }
+            }
+        }
+    }
+
+    function download() {
+        if (!imgLoaded) return;
+        document.getElementById('loading').style.display = 'block';
+        setTimeout(() => {
+            const out = document.createElement('canvas'); out.width = img.width; out.height = img.height;
+            drawMapContent(out.getContext('2d'), img.width, img.height);
+            const a = document.createElement('a'); a.download = 'TACTICAL_MAP_DATA.png';
+            a.href = out.toDataURL('image/png'); a.click();
+            document.getElementById('loading').style.display = 'none';
+        }, 100);
+    }
+</script>
+
+</body>
+</html>
