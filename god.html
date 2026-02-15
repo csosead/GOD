@@ -1,0 +1,2311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0e14">
+    <title>GOD — Tactical Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #141a24;
+            --bg-tertiary: #1a222e;
+            --accent-cyan: #00d4ff;
+            --accent-orange: #ff6b35;
+            --accent-green: #00ff88;
+            --accent-red: #ff3366;
+            --accent-yellow: #ffd93d;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --text-primary: #e8f0f8;
+            --text-secondary: #7a8ba8;
+            --border-glow: rgba(0, 212, 255, 0.3);
+            --grid-line: rgba(0, 212, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            overflow-x: hidden;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        html { height: -webkit-fill-available; }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .app-container { max-width: 480px; margin: 0 auto; padding: 16px; padding-bottom: 100px; }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-glow);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 20px var(--accent-cyan);
+            animation: headerGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes headerGlow {
+            from { text-shadow: 0 0 10px var(--accent-cyan); }
+            to { text-shadow: 0 0 30px var(--accent-cyan), 0 0 60px var(--accent-cyan); }
+        }
+
+        .header .subtitle { font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 2px; margin-top: 4px; }
+
+        /* Profile */
+        .profile-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .profile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .profile-header label { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: var(--accent-cyan); letter-spacing: 2px; }
+        .profile-controls { display: flex; gap: 8px; }
+
+        .btn-icon {
+            width: 32px; height: 32px;
+            border: 1px solid var(--accent-cyan);
+            background: transparent;
+            color: var(--accent-cyan);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover, .btn-icon:active { background: var(--accent-cyan); color: var(--bg-primary); }
+        .btn-icon.danger { border-color: var(--accent-red); color: var(--accent-red); }
+        .btn-icon.danger:hover { background: var(--accent-red); color: var(--bg-primary); }
+
+        .profile-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .profile-select:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 10px var(--border-glow); }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .tab-btn:hover { color: var(--text-primary); }
+        .tab-btn.active { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green)); color: var(--bg-primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Sections */
+        .section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: linear-gradient(90deg, var(--bg-tertiary), transparent);
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .section-title.orange { color: var(--accent-orange); }
+        .section-title.purple { color: var(--accent-purple); }
+
+        .section-content { padding: 14px; }
+
+        /* Counter */
+        .counter { display: flex; align-items: center; justify-content: center; gap: 16px; }
+
+        .counter-btn {
+            width: 48px; height: 48px;
+            border: 2px solid var(--accent-orange);
+            background: transparent;
+            color: var(--accent-orange);
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .counter-btn:hover, .counter-btn:active { background: var(--accent-orange); color: var(--bg-primary); transform: scale(1.1); }
+        .counter-btn.red { border-color: var(--accent-red); color: var(--accent-red); }
+        .counter-btn.red:hover, .counter-btn.red:active { background: var(--accent-red); color: var(--bg-primary); }
+
+        .counter-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent-orange);
+            text-shadow: 0 0 20px var(--accent-orange);
+            min-width: 80px;
+            text-align: center;
+        }
+        .counter-value.red { color: var(--accent-red); text-shadow: 0 0 20px var(--accent-red); }
+        .counter-value.high { animation: counterPulse 0.5s ease-in-out infinite alternate; }
+
+        @keyframes counterPulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        /* Round */
+        .round-indicator { display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+        .round-btn {
+            width: 36px; height: 36px;
+            border: 1px solid var(--accent-yellow);
+            background: transparent;
+            color: var(--accent-yellow);
+            border-radius: 4px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .round-btn:hover { background: var(--accent-yellow); color: var(--bg-primary); }
+
+        .round-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--accent-yellow);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* Tags Legend */
+        .tags-legend {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-glow);
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; color: var(--text-secondary); }
+
+        .tag-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .tag-dot.action-dot { background: var(--accent-cyan); }
+        .tag-dot.control-dot { background: var(--accent-yellow); }
+        .tag-dot.focus-dot { background: var(--accent-purple); }
+        .tag-dot.complex-dot { background: var(--accent-pink); }
+        .tag-or { font-size: 0.5rem; color: var(--text-secondary); font-style: italic; margin: 0 2px; }
+
+        /* Actions Grid */
+        .actions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+        .action-btn {
+            padding: 12px 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            position: relative;
+        }
+        .action-btn:hover { border-color: var(--accent-cyan); }
+        .action-btn.selected {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            color: var(--bg-primary);
+            border-color: transparent;
+            font-weight: bold;
+        }
+        .action-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+        .action-btn .action-tags { display: flex; gap: 4px; justify-content: center; margin-top: 6px; }
+
+        /* Custom action - visible marker */
+        .action-btn.custom {
+            position: relative;
+            border-color: var(--accent-purple);
+        }
+
+        .action-btn.custom::after {
+            content: '★';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.7rem;
+            color: var(--accent-purple);
+        }
+
+        .action-btn.custom.selected::after {
+            color: var(--bg-primary);
+        }
+
+        /* Phase Headers */
+        .phase-category {
+            grid-column: 1 / -1;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            padding: 8px 0 4px;
+            border-bottom: 1px solid var(--border-glow);
+            margin-top: 8px;
+        }
+        .phase-category:first-child { margin-top: 0; }
+        .phase-category.action { color: var(--accent-cyan); }
+        .phase-category.move { color: var(--accent-green); }
+        .phase-category.forcing { color: var(--accent-red); }
+
+        /* Custom Action Input */
+        .custom-input-section { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-glow); }
+
+        .custom-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+
+        .custom-input-row input {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .custom-input-row input:focus { outline: none; border-color: var(--accent-cyan); }
+
+        .custom-input-row select {
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        .btn-add {
+            padding: 10px 16px;
+            background: var(--accent-cyan);
+            border: none;
+            border-radius: 4px;
+            color: var(--bg-primary);
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Tags checkboxes 2x2 */
+        .tags-checkboxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .tag-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            border: 1px solid var(--border-glow);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        .tag-check:hover { border-color: var(--accent-cyan); }
+
+        .tag-check input { display: none; }
+        .tag-check input:checked + .tag-dot { box-shadow: 0 0 8px currentColor; transform: scale(1.2); }
+        .tag-check input:checked + .tag-exclaim { text-shadow: 0 0 8px var(--accent-yellow); transform: scale(1.2); }
+        .tag-check input:checked ~ .tag-label { color: var(--text-primary); }
+        .tag-check .tag-dot, .tag-check .tag-exclaim { transition: all 0.2s; }
+
+        .tag-label { transition: color 0.2s; }
+        .tag-check:nth-child(1) .tag-label { color: var(--accent-cyan); }
+        .tag-check:nth-child(2) .tag-label { color: var(--accent-yellow); }
+        .tag-check:nth-child(3) .tag-label { color: var(--accent-purple); }
+        .tag-check:nth-child(4) .tag-label { color: var(--accent-pink); }
+
+        /* Exclamation mark for control tag (delayed effect) */
+        .tag-exclaim {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--accent-yellow);
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
+        /* Selected Actions Display */
+        .selected-actions { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-glow); }
+        .selected-label { font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 8px; }
+        .selected-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .selected-action-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .selected-action-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .selected-action-name { color: var(--accent-cyan); font-weight: bold; font-size: 0.85rem; }
+        .selected-action-remove { background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 1.2rem; padding: 0 4px; }
+
+        .coord-input-inline { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .coord-input-inline label { font-size: 0.65rem; color: var(--text-secondary); width: 100%; margin-bottom: 4px; }
+
+        .coord-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            overflow: hidden;
+            flex: 1;
+        }
+        .coord-input-wrapper:focus-within { border-color: var(--accent-green); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+
+        .coord-single {
+            width: 100%;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            color: var(--accent-green);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+        .coord-single:focus { outline: none; }
+        .coord-single::placeholder { color: var(--text-secondary); opacity: 0.6; }
+
+        .coord-add-btn {
+            padding: 8px 12px;
+            background: var(--accent-green);
+            border: none;
+            border-radius: 4px;
+            color: var(--bg-primary);
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .coord-skip-btn {
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--text-secondary);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .coord-skip-btn:hover { border-color: var(--text-primary); color: var(--text-primary); }
+
+        .coord-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+        .coord-tag {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .coord-tag .remove { cursor: pointer; opacity: 0.7; }
+        .coord-tag .remove:hover { opacity: 1; }
+
+        /* Status Effects */
+        .status-effects-list { display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; }
+
+        .status-effect-tag {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent-purple);
+            color: var(--accent-purple);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-effect-tag .remove { cursor: pointer; color: var(--accent-red); font-weight: bold; }
+
+        .control-effects .status-effect-tag { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+
+        .no-effects { color: var(--text-secondary); font-size: 0.75rem; font-style: italic; }
+
+        .effect-input { display: flex; gap: 8px; margin-bottom: 12px; }
+        .effect-input input {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .effect-input input:focus { outline: none; border-color: var(--accent-cyan); }
+
+        /* Log */
+        .log-container {
+            max-height: 200px;
+            overflow-y: auto;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .log-entry { padding: 8px; border-bottom: 1px solid var(--border-glow); font-size: 0.75rem; }
+        .log-entry:last-child { border-bottom: none; }
+        .log-time { color: var(--accent-cyan); font-size: 0.65rem; }
+        .log-profile { color: var(--accent-yellow); font-weight: bold; }
+        .log-actions { color: var(--accent-green); }
+        .log-coords { color: var(--text-secondary); }
+
+        /* Bottom Actions */
+        .bottom-actions {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, var(--bg-primary), var(--bg-primary) 80%, transparent);
+            padding: 16px 12px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .btn-primary {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            border: none;
+            border-radius: 6px;
+            color: var(--bg-primary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            flex: 1;
+            max-width: 160px;
+        }
+        .btn-primary:hover, .btn-primary:active { transform: scale(1.02); box-shadow: 0 0 20px var(--accent-cyan); }
+
+        .btn-secondary {
+            padding: 12px 14px;
+            background: transparent;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 6px;
+            color: var(--accent-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            flex: 1;
+            max-width: 100px;
+        }
+        .btn-secondary:hover { background: var(--accent-cyan); color: var(--bg-primary); }
+
+        .btn-danger {
+            padding: 12px 12px;
+            background: transparent;
+            border: 2px solid var(--accent-red);
+            border-radius: 6px;
+            color: var(--accent-red);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            flex: 1;
+            max-width: 100px;
+        }
+        .btn-danger:hover { background: var(--accent-red); color: var(--bg-primary); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 90%;
+            width: 360px;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        .modal-overlay.active .modal { transform: scale(1); }
+
+        .modal h3 { font-family: 'Orbitron', sans-serif; color: var(--accent-cyan); margin-bottom: 16px; text-align: center; }
+
+        .modal input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 16px;
+        }
+        .modal input:focus { outline: none; border-color: var(--accent-cyan); }
+
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 300;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        /* d100 Check System */
+        .stat-block { margin-bottom: 4px; }
+        .stat-block:last-child { margin-bottom: 0; }
+        .stat-block-title {
+            font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1.5px;
+            text-transform: uppercase; padding: 8px 0 6px;
+            border-bottom: 1px solid var(--border-glow); margin-bottom: 6px;
+        }
+        .stat-block-title.int { color: var(--accent-cyan); }
+        .stat-block-title.comm { color: var(--accent-green); }
+        .stat-block-title.psy { color: var(--accent-purple); }
+        .stat-block-title.body { color: var(--accent-orange); }
+        .stat-block-title.motor { color: var(--accent-yellow); }
+
+        .aspect-row { padding: 7px 0; border-bottom: 1px solid rgba(0,212,255,0.05); }
+        .aspect-row:last-child { border-bottom: none; }
+        .aspect-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+        .aspect-name { font-size: 0.78rem; color: var(--text-primary); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .aspect-val-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .asp-input {
+            width: 56px; padding: 5px 4px;
+            background: var(--bg-tertiary); border: 1px solid var(--border-glow); border-radius: 4px;
+            color: var(--accent-cyan); font-family: 'Orbitron', sans-serif; font-size: 1rem;
+            font-weight: 700; text-align: center;
+            -moz-appearance: textfield;
+        }
+        .asp-input::-webkit-outer-spin-button,
+        .asp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .asp-input:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 8px var(--border-glow); }
+        .aspect-thresholds { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; padding-left: 4px; }
+        .threshold-tag {
+            font-size: 0.65rem; padding: 4px 8px; border-radius: 4px;
+            font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px; font-weight: 700;
+        }
+        .threshold-tag.low { background: rgba(255,107,53,0.15); color: var(--accent-orange); border: 1px solid rgba(255,107,53,0.4); }
+        .threshold-tag.soft { background: rgba(0,255,136,0.12); color: var(--accent-green); border: 1px solid rgba(0,255,136,0.3); }
+        .threshold-tag.over { background: rgba(255,217,61,0.15); color: var(--accent-yellow); border: 1px solid rgba(255,217,61,0.4); }
+
+        /* Clickable aspect for roll */
+        .aspect-row.clickable { 
+            cursor: pointer; 
+            transition: all 0.15s;
+            padding: 6px 8px;
+            margin: -6px -8px;
+            border-radius: 6px;
+        }
+        .aspect-row.clickable:hover { background: rgba(0,212,255,0.08); }
+        .aspect-row.clickable:active { background: rgba(0,212,255,0.15); }
+        .aspect-row.clickable.selected-aspect {
+            background: rgba(0,212,255,0.15);
+            border: 1px solid var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0,212,255,0.2);
+        }
+
+        /* Confirm plan button */
+        .btn-confirm-plan {
+            width: 100%;
+            margin-top: 12px;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            border: none;
+            border-radius: 6px;
+            color: var(--bg-primary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-confirm-plan:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(0,212,255,0.3); }
+        .btn-confirm-plan:active { transform: scale(0.98); }
+
+        /* Perks */
+        .perk-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(0,212,255,0.05); }
+        .perk-row:last-child { border-bottom: none; }
+        .perk-name { flex: 1; font-size: 0.75rem; color: var(--text-primary); }
+        .perk-del { background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 1rem; padding: 0 4px; opacity: 0.6; }
+        .perk-del:hover { opacity: 1; }
+        .perk-add-row { display: flex; gap: 6px; margin-top: 8px; }
+        .perk-add-row input {
+            flex: 1; padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-glow);
+            border-radius: 4px; color: var(--text-primary); font-family: 'Share Tech Mono', monospace; font-size: 0.8rem;
+        }
+        .perk-add-row input:focus { outline: none; border-color: var(--accent-cyan); }
+
+        /* Coolness */
+        .coolness-counter { display: flex; align-items: center; justify-content: center; gap: 16px; }
+        .coolness-val {
+            font-family: 'Orbitron', sans-serif; font-size: 3rem; font-weight: 900;
+            color: var(--accent-yellow); text-shadow: 0 0 25px rgba(255,217,61,0.4);
+            min-width: 60px; text-align: center;
+        }
+
+        /* Roll builder */
+        .roll-field { margin-bottom: 12px; }
+        .roll-label { font-size: 0.6rem; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; font-family: 'Orbitron', sans-serif; }
+        .roll-select {
+            width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-glow);
+            border-radius: 4px; color: var(--text-primary); font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; cursor: pointer;
+        }
+        .roll-select:focus { outline: none; border-color: var(--accent-cyan); }
+
+        .selected-aspect-display {
+            padding: 12px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-glow);
+            border-radius: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            text-align: center;
+        }
+        .selected-aspect-display.has-aspect {
+            border-color: var(--accent-cyan);
+            background: rgba(0,212,255,0.08);
+        }
+
+        .mode-btns { display: flex; gap: 6px; }
+        .mode-btn {
+            flex: 1; padding: 10px 4px; border-radius: 6px; border: 1px solid var(--border-glow);
+            background: transparent; font-family: 'Orbitron', sans-serif; font-size: 0.5rem;
+            font-weight: 700; letter-spacing: 0.5px; cursor: pointer; text-align: center;
+            transition: all 0.15s; color: var(--text-secondary);
+        }
+        .mode-btn:hover { border-color: var(--text-primary); color: var(--text-primary); }
+        .mode-btn.active-low { border-color: var(--accent-orange); color: var(--accent-orange); background: rgba(255,107,53,0.1); }
+        .mode-btn.active-soft { border-color: var(--accent-green); color: var(--accent-green); background: rgba(0,255,136,0.08); }
+        .mode-btn.active-over { border-color: var(--accent-yellow); color: var(--accent-yellow); background: rgba(255,217,61,0.1); }
+
+        .roll-type-btns { display: flex; gap: 6px; margin-bottom: 8px; }
+        .roll-type-btn {
+            flex: 1; padding: 10px 4px; border-radius: 6px; border: 1px solid var(--border-glow);
+            background: transparent; font-family: 'Orbitron', sans-serif; font-size: 0.55rem;
+            font-weight: 700; letter-spacing: 0.5px; cursor: pointer; text-align: center;
+            transition: all 0.15s; color: var(--text-secondary);
+        }
+        .roll-type-btn:hover { border-color: var(--text-primary); color: var(--text-primary); }
+        .roll-type-btn.active { border-color: var(--accent-green); color: var(--accent-green); background: rgba(0,255,136,0.1); }
+        .roll-type-btn.active-adv { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(0,212,255,0.1); }
+        .roll-type-btn.active-disadv { border-color: var(--accent-red); color: var(--accent-red); background: rgba(255,51,102,0.1); }
+
+        .dice-count-btns { display: flex; gap: 6px; }
+        .dice-btn {
+            flex: 1; padding: 10px 4px; border-radius: 6px; border: 1px solid var(--border-glow);
+            background: transparent; font-family: 'Orbitron', sans-serif; font-size: 0.6rem;
+            font-weight: 700; letter-spacing: 0.5px; cursor: pointer; text-align: center;
+            transition: all 0.15s; color: var(--text-secondary);
+        }
+        .dice-btn:hover { border-color: var(--text-primary); color: var(--text-primary); }
+        .dice-btn.active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(0,212,255,0.1); }
+
+        .roll-info {
+            background: var(--bg-tertiary); border: 1px solid var(--border-glow); border-radius: 6px;
+            padding: 10px; font-size: 0.7rem; color: var(--text-secondary); line-height: 1.7;
+        }
+        .ri-val { color: var(--accent-cyan); font-weight: bold; }
+        .ri-range.low { color: var(--accent-orange); font-weight: bold; }
+        .ri-range.soft { color: var(--accent-green); font-weight: bold; }
+        .ri-range.over { color: var(--accent-yellow); font-weight: bold; }
+
+        .roll-launch {
+            font-family: 'Orbitron', sans-serif; font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 3px; padding: 14px 32px; border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 6px; background: transparent; color: var(--accent-cyan);
+            cursor: pointer; transition: all 0.2s; text-transform: uppercase; width: 100%; margin-top: 12px;
+        }
+        .roll-launch:hover { background: rgba(0,212,255,0.1); border-color: var(--accent-cyan); box-shadow: 0 0 20px rgba(0,212,255,0.2); }
+        .roll-launch:disabled { opacity: 0.3; pointer-events: none; }
+
+        .reroll-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 1px; padding: 12px 20px; border: 1px solid var(--accent-yellow);
+            border-radius: 6px; background: rgba(255,217,61,0.1); color: var(--accent-yellow);
+            cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 12px;
+        }
+        .reroll-btn:hover { background: rgba(255,217,61,0.2); box-shadow: 0 0 15px rgba(255,217,61,0.2); }
+        .reroll-btn:disabled { opacity: 0.3; pointer-events: none; }
+
+        /* Result */
+        .result-big {
+            font-family: 'Orbitron', sans-serif; font-size: 4.5rem; font-weight: 900;
+            text-align: center; line-height: 1; margin: 8px 0 4px;
+        }
+        .result-big.r-success { color: var(--accent-green); text-shadow: 0 0 30px rgba(0,255,136,0.3); }
+        .result-big.r-fail { color: var(--accent-red); text-shadow: 0 0 30px rgba(255,51,102,0.3); }
+        .result-big.r-triumph { color: var(--accent-yellow); text-shadow: 0 0 30px rgba(255,217,61,0.4); }
+        .result-big.r-side { color: var(--accent-orange); text-shadow: 0 0 30px rgba(255,107,53,0.3); }
+
+        .result-adv { display: flex; flex-direction: column; justify-content: center; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 0.75rem; }
+        .result-adv-row { display: flex; gap: 16px; align-items: center; }
+        .adv-die { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid; }
+        .adv-die.chosen { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(0,212,255,0.08); }
+        .adv-die.discarded { border-color: #444; color: #555; opacity: 0.5; }
+        .adv-die-select { 
+            text-align: center; padding: 8px 12px; border-radius: 8px; 
+            border: 2px solid var(--accent-green); background: rgba(0,255,136,0.05);
+            transition: all 0.15s;
+        }
+        .adv-die-select:hover { background: rgba(0,255,136,0.15); transform: scale(1.05); }
+        .adv-die-select:active { transform: scale(0.98); }
+        .adv-die-select .adv-die { border-color: var(--accent-green); color: var(--accent-green); }
+
+        .result-status {
+            font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 900; letter-spacing: 3px;
+            text-align: center; padding: 8px 16px; border-radius: 6px; margin: 8px 0;
+        }
+        .result-status.s-success { color: var(--accent-green); border: 1px solid var(--accent-green); }
+        .result-status.s-fail { color: var(--accent-red); border: 1px solid var(--accent-red); }
+        .result-status.s-triumph { color: var(--accent-yellow); border: 1px solid var(--accent-yellow); text-shadow: 0 0 10px rgba(255,217,61,0.3); }
+        .result-status.s-side { color: var(--accent-orange); border: 1px solid var(--accent-orange); }
+
+        .result-detail { font-size: 0.7rem; color: var(--text-secondary); text-align: center; margin-top: 6px; }
+        .result-dmg { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; text-align: center; margin-top: 8px; color: var(--accent-cyan); }
+
+        .nf-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .nf-val { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 900; color: var(--accent-orange); text-shadow: 0 0 20px rgba(255,107,53,0.3); }
+        .nf-val.critical { color: var(--accent-red); animation: counterPulse 0.5s ease-in-out infinite alternate; }
+        .nf-threshold { font-size: 0.6rem; color: var(--text-secondary); margin-top: 2px; }
+        .nf-empire { margin-top: 10px; padding: 8px 12px; border-radius: 6px; text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; letter-spacing: 1px; }
+        .nf-empire.locked { border: 1px solid var(--border-glow); color: var(--text-secondary); }
+        .nf-empire.active { border: 1px solid var(--accent-purple); color: var(--accent-purple); background: rgba(168,85,247,0.1); text-shadow: 0 0 8px rgba(168,85,247,0.3); animation: counterPulse 1s ease-in-out infinite alternate; cursor: pointer; }
+        .nf-empire.split { border: 1px solid var(--accent-red); color: var(--accent-red); background: rgba(255,51,102,0.1); animation: counterPulse 0.4s ease-in-out infinite alternate; }
+        .nf-split {
+            margin-top: 8px; padding: 8px 12px; border-radius: 6px; text-align: center;
+            font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;
+            border: 1px solid var(--accent-red); color: var(--accent-red); background: rgba(255,51,102,0.08);
+            cursor: pointer;
+        }
+        .nf-split:hover { background: rgba(255,51,102,0.15); }
+
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-tertiary); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>GOD</h1>
+            <div class="subtitle">▸ TACTICAL PLANNER ◂</div>
+        </header>
+
+        <div class="profile-section">
+            <div class="profile-header">
+                <label>ПРОФИЛЬ ЮНИТА</label>
+                <div class="profile-controls">
+                    <button class="btn-icon" onclick="openNewProfileModal()">+</button>
+                    <button class="btn-icon danger" onclick="deleteCurrentProfile()">×</button>
+                </div>
+            </div>
+            <select class="profile-select" id="profileSelect" onchange="loadProfile()"></select>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="planning" onclick="switchTab('planning')">Планирование</button>
+            <button class="tab-btn" data-tab="dice" onclick="switchTab('dice')">Проверки</button>
+            <button class="tab-btn" data-tab="status" onclick="switchTab('status')">Статус</button>
+        </div>
+
+        <!-- Planning Tab -->
+        <div class="tab-content active" id="tab-planning">
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title">Раунд</span>
+                </div>
+                <div class="section-content">
+                    <div class="round-indicator">
+                        <button class="round-btn" onclick="changeRound(-1)">−</button>
+                        <span class="round-value" id="roundValue">1</span>
+                        <button class="round-btn" onclick="changeRound(1)">+</button>
+                    </div>
+                    <div class="tags-legend">
+                        <span class="legend-item"><span class="tag-dot action-dot"></span> Basic</span>
+                        <span class="legend-item"><span class="tag-exclaim">!</span> Control</span>
+                        <span class="legend-item"><span class="tag-dot focus-dot"></span> Prep</span>
+                        <span class="legend-item"><span class="tag-dot complex-dot"></span> Prep+Basic</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title">Активность</span>
+                </div>
+                <div class="section-content">
+                    <div class="actions-grid" id="actionsGrid"></div>
+
+                    <div class="custom-input-section">
+                        <div class="custom-input-row">
+                            <input type="text" id="customActionInput" placeholder="Своё действие...">
+                            <select id="customPhaseSelect">
+                                <option value="Action">Prep and Basic</option>
+                                <option value="move">Move</option>
+                                <option value="forcing">Dash</option>
+                            </select>
+                            <button class="btn-add" onclick="addCustomAction()">+</button>
+                        </div>
+                        <div class="tags-checkboxes">
+                            <label class="tag-check"><input type="checkbox" id="tagAction" checked><span class="tag-dot action-dot"></span><span class="tag-label">Basic</span></label>
+                            <label class="tag-check"><input type="checkbox" id="tagControl"><span class="tag-exclaim">!</span><span class="tag-label">Control</span></label>
+                            <label class="tag-check"><input type="checkbox" id="tagFocus"><span class="tag-dot focus-dot"></span><span class="tag-label">Prep</span></label>
+                            <label class="tag-check"><input type="checkbox" id="tagComplex"><span class="tag-dot complex-dot"></span><span class="tag-label">Prep+Basic</span></label>
+                        </div>
+                    </div>
+
+                    <div class="selected-actions" id="selectedActionsDisplay" style="display: none;">
+                        <div class="selected-label">ВЫБРАННЫЕ ДЕЙСТВИЯ:</div>
+                        <div class="selected-list" id="selectedList"></div>
+                        <button class="btn-confirm-plan" onclick="confirmPlan()">✓ ПОДТВЕРДИТЬ ПЛАН</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title">Лог действий</span>
+                    <button class="btn-icon" onclick="clearLog()">⌫</button>
+                </div>
+                <div class="section-content">
+                    <div class="log-container" id="logContainer">
+                        <div class="log-entry" style="color: var(--text-secondary); text-align: center;">Лог пуст</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Проверки Tab -->
+        <div class="tab-content" id="tab-dice">
+            <div class="section">
+                <div class="section-header"><span class="section-title">Аспекты</span></div>
+                <div class="section-content" id="aspectsContainer" style="padding:10px 14px;"></div>
+            </div>
+            <div class="section">
+                <div class="section-header"><span class="section-title" style="color:var(--accent-green);">Перки</span></div>
+                <div class="section-content" id="perksContainer" style="padding:10px 14px;"></div>
+            </div>
+            <div class="section">
+                <div class="section-header"><span class="section-title" style="color:var(--accent-orange);">Бросок</span></div>
+                <div class="section-content" style="padding:14px;">
+                    <div class="roll-field">
+                        <div class="roll-label">Выбранный аспект</div>
+                        <div class="selected-aspect-display" id="selectedAspectDisplay">
+                            <span style="color:var(--text-secondary);">↑ Нажмите на аспект выше</span>
+                        </div>
+                        <select class="roll-select" id="rollAspect" style="display:none;"><option value="">— Выбрать —</option></select>
+                    </div>
+                    <div class="roll-field">
+                        <div class="roll-label">Режим</div>
+                        <div class="mode-btns">
+                            <button class="mode-btn active-low" id="modeL" onclick="setMode('low')">Компромисс</button>
+                            <button class="mode-btn" id="modeS" onclick="setMode('soft')">Контроль</button>
+                            <button class="mode-btn" id="modeO" onclick="setMode('over')">Одержимость</button>
+                        </div>
+                    </div>
+                    <div class="roll-field">
+                        <div class="roll-label">Тип броска</div>
+                        <div class="roll-type-btns">
+                            <button class="roll-type-btn" id="rtypeDisadv" onclick="setRollType('disadvantage')">Помеха</button>
+                            <button class="roll-type-btn active" id="rtypeNormal" onclick="setRollType('normal')">Обычный</button>
+                            <button class="roll-type-btn" id="rtypeAdv" onclick="setRollType('advantage')">Превосх.</button>
+                        </div>
+                    </div>
+                    <div class="roll-field">
+                        <div class="roll-label">Количество кубиков</div>
+                        <div class="dice-count-btns">
+                            <button class="dice-btn active" id="dice1" onclick="setDiceCount(1)">1d100</button>
+                            <button class="dice-btn" id="dice2" onclick="setDiceCount(2)">2d100</button>
+                            <button class="dice-btn" id="dice3" onclick="setDiceCount(3)">3d100</button>
+                        </div>
+                    </div>
+                    <div class="roll-field">
+                        <div class="roll-label">Параметры броска</div>
+                        <div class="roll-info" id="rollInfo">Выберите аспект</div>
+                    </div>
+                    <button class="roll-launch" id="rollBtn" onclick="executeRoll()" disabled>▸ БРОСИТЬ</button>
+                </div>
+            </div>
+            <div class="section" id="diceResultSection" style="display:none;">
+                <div class="section-header"><span class="section-title" id="resultTitle" style="color:var(--accent-green);">Результат</span></div>
+                <div class="section-content">
+                    <div id="diceResultDisplay" style="text-align:center;"></div>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-header"><span class="section-title">История</span><button class="btn-icon" onclick="clearDiceLog()">⌫</button></div>
+                <div class="section-content">
+                    <div class="log-container" id="diceLogContainer" style="max-height:160px;">
+                        <div class="log-entry" style="color:var(--text-secondary);text-align:center;">Бросков пока нет</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Tab -->
+        <div class="tab-content" id="tab-status">
+            <div class="section">
+                <div class="section-header"><span class="section-title orange">Нейрофрикция</span></div>
+                <div class="section-content">
+                    <div class="nf-bar">
+                        <button class="counter-btn" onclick="changeNF(-1)">−</button>
+                        <div style="flex:1;text-align:center;">
+                            <div class="nf-val" id="nfVal">0</div>
+                            <div class="nf-threshold" id="nfThreshold">Макс: 0</div>
+                        </div>
+                        <button class="counter-btn" onclick="changeNF(1)">+</button>
+                    </div>
+                    <div class="nf-split" id="nfSplit" style="display:none;"></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header"><span class="section-title" style="color: var(--accent-red);">Полученный урон (за раунд)</span></div>
+                <div class="section-content">
+                    <div class="counter">
+                        <button class="counter-btn red" onclick="changeDamage(-1)">−</button>
+                        <span class="counter-value red" id="damageValue">0</span>
+                        <button class="counter-btn red" onclick="changeDamage(1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header"><span class="section-title purple">Статусные эффекты</span></div>
+                <div class="section-content">
+                    <div class="effect-input">
+                        <input type="text" id="statusEffectInput" placeholder="Название эффекта..." onkeypress="if(event.key==='Enter')addStatusEffect()">
+                        <button class="btn-add" onclick="addStatusEffect()">+</button>
+                    </div>
+                    <div class="status-effects-list" id="statusEffectsList">
+                        <span class="no-effects">Нет активных эффектов</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header"><span class="section-title" style="color: var(--accent-yellow);">Эффекты контроля</span></div>
+                <div class="section-content">
+                    <div class="effect-input">
+                        <input type="text" id="controlEffectInput" placeholder="Название эффекта..." onkeypress="if(event.key==='Enter')addControlEffect()">
+                        <button class="btn-add" onclick="addControlEffect()">+</button>
+                    </div>
+                    <div class="status-effects-list control-effects" id="controlEffectsList">
+                        <span class="no-effects">Нет эффектов контроля</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-actions">
+        <button class="btn-danger" onclick="clearAll()">ОЧИСТИТЬ ВСЁ</button>
+    </div>
+
+    <div class="modal-overlay" id="newProfileModal">
+        <div class="modal">
+            <h3>НОВЫЙ ПРОФИЛЬ</h3>
+            <input type="text" id="newProfileName" placeholder="Имя юнита..." onkeypress="if(event.key==='Enter')createProfile()">
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeModal('newProfileModal')">Отмена</button>
+                <button class="btn-primary" onclick="createProfile()">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Сохранено</div>
+
+    <script>
+        // Database
+        const DB = {
+            melee: { name: 'Ближний бой', phase: 'Action', tags: ['action'] },
+            ranged: { name: 'Дальний бой', phase: 'Action', tags: ['action'] },
+            push: { name: 'Толчок', phase: 'Action', tags: ['action', 'focus', 'control'] },
+            grab: { name: 'Захват', phase: 'Action', tags: ['action', 'focus', 'control'] },
+            trip: { name: 'Подсечка', phase: 'Action', tags: ['action', 'focus', 'control'] },
+            distract: { name: 'Отвлечение', phase: 'Action', tags: ['action', 'focus'] },
+            stabilize: { name: 'Восстановление', phase: 'Action', tags: ['action', 'focus'] },
+            accelerate: { name: 'Ускорение', phase: 'move', tags: ['focus'] },
+            defense: { name: 'Оборона', phase: 'Action', tags: ['action'] },
+            standard: { name: 'Обычное действие', phase: 'Action', tags: ['action'] },
+            quick: { name: 'Лёгкое действие', phase: 'Action', tags: ['focus'] },
+            reload: { name: 'Перезарядка', phase: 'Action', tags: ['focus'] },
+            aim: { name: 'Прицеливание', phase: 'Action', tags: ['focus'] },
+            assess: { name: 'Оценить врага', phase: 'Action', tags: ['action', 'focus'] },
+            chase: { name: 'Преследование', phase: 'Action', tags: ['action', 'focus'] },
+            escape: { name: 'Выйти из захвата', phase: 'Action', tags: ['action'] },
+            complex: { name: 'Сложное действие', phase: 'Action', tags: ['complex'] },
+            bag: { name: 'Достать из сумки', phase: 'Action', tags: ['complex'] },
+            move: { name: 'Перемещение', phase: 'move', tags: [] },
+            standup: { name: 'Встать', phase: 'move', tags: [] },
+            hide: { name: 'Скрыться', phase: 'move', tags: ['focus'] },
+            dash: { name: 'Рывок', phase: 'forcing', tags: [] }
+        };
+
+        // State
+        let profiles = JSON.parse(localStorage.getItem('sa_profiles')) || {
+            default: { name: 'Персонаж 1', neurofriction: 0, damage: 0, statusEffects: [], controlEffects: [], customActions: [] }
+        };
+        let currentProfile = 'default';
+        let selectedActions = [];
+        let currentRound = 1;
+        let actionLog = JSON.parse(localStorage.getItem('sa_log')) || [];
+
+        // Migration
+        Object.values(profiles).forEach(p => {
+            if (p.stress !== undefined) { p.neurofriction = p.stress; delete p.stress; }
+            p.damage = p.damage || 0;
+            p.statusEffects = p.statusEffects || [];
+            p.controlEffects = p.controlEffects || [];
+            p.customActions = p.customActions || [];
+            if (p.customActions.length && typeof p.customActions[0] === 'string') {
+                p.customActions = p.customActions.map(name => ({ name, phase: 'Action', tags: ['action'] }));
+            }
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProfileSelect();
+            loadProfile();
+            renderLog();
+        });
+
+        // Profiles
+        function renderProfileSelect() {
+            const sel = document.getElementById('profileSelect');
+            sel.innerHTML = Object.entries(profiles).map(([k, v]) => 
+                `<option value="${k}">— ${v.name} —</option>`
+            ).join('');
+            sel.value = currentProfile;
+        }
+
+        function loadProfile() {
+            currentProfile = document.getElementById('profileSelect').value;
+            const p = profiles[currentProfile];
+            document.getElementById('damageValue').textContent = p.damage || 0;
+            updateDisplay('damageValue', 3);
+            renderStatusEffects();
+            renderControlEffects();
+            selectedActions = [];
+            renderActionsGrid();
+            renderSelectedActions();
+        }
+
+        function openNewProfileModal() {
+            document.getElementById('newProfileModal').classList.add('active');
+            document.getElementById('newProfileName').focus();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function createProfile() {
+            const name = document.getElementById('newProfileName').value.trim();
+            if (!name) return;
+            const key = 'profile_' + Date.now();
+            profiles[key] = { name, neurofriction: 0, damage: 0, statusEffects: [], controlEffects: [], customActions: [] };
+            saveProfiles();
+            currentProfile = key;
+            renderProfileSelect();
+            document.getElementById('profileSelect').value = key;
+            loadProfile();
+            closeModal('newProfileModal');
+            document.getElementById('newProfileName').value = '';
+            showToast('Профиль создан');
+        }
+
+        function deleteCurrentProfile() {
+            if (currentProfile === 'default') return showToast('Нельзя удалить базовый профиль');
+            if (!confirm(`Удалить профиль "${profiles[currentProfile].name}"?`)) return;
+            delete profiles[currentProfile];
+            saveProfiles();
+            currentProfile = 'default';
+            renderProfileSelect();
+            loadProfile();
+            showToast('Профиль удалён');
+        }
+
+        function saveProfiles() { localStorage.setItem('sa_profiles', JSON.stringify(profiles)); }
+
+        // Counters
+        function changeDamage(d) {
+            const p = profiles[currentProfile];
+            p.damage = Math.max(0, (p.damage || 0) + d);
+            document.getElementById('damageValue').textContent = p.damage;
+            updateDisplay('damageValue', 3);
+            saveProfiles();
+        }
+
+        function updateDisplay(id, threshold) {
+            const el = document.getElementById(id);
+            el.classList.toggle('high', parseInt(el.textContent) >= threshold);
+        }
+
+        function changeRound(d) {
+            currentRound = Math.max(1, currentRound + d);
+            document.getElementById('roundValue').textContent = currentRound;
+            if (d > 0) {
+                profiles[currentProfile].damage = 0;
+                document.getElementById('damageValue').textContent = 0;
+                updateDisplay('damageValue', 3);
+                saveProfiles();
+            }
+        }
+
+        // Effects
+        function addStatusEffect() {
+            const input = document.getElementById('statusEffectInput');
+            const val = input.value.trim();
+            if (!val) return;
+            profiles[currentProfile].statusEffects.push(val);
+            saveProfiles();
+            input.value = '';
+            renderStatusEffects();
+            showToast('Эффект добавлен');
+        }
+
+        function removeStatusEffect(i) {
+            profiles[currentProfile].statusEffects.splice(i, 1);
+            saveProfiles();
+            renderStatusEffects();
+        }
+
+        function renderStatusEffects() {
+            const el = document.getElementById('statusEffectsList');
+            const arr = profiles[currentProfile].statusEffects || [];
+            el.innerHTML = arr.length ? arr.map((e, i) => 
+                `<div class="status-effect-tag">${e}<span class="remove" onclick="removeStatusEffect(${i})">×</span></div>`
+            ).join('') : '<span class="no-effects">Нет активных эффектов</span>';
+        }
+
+        function addControlEffect() {
+            const input = document.getElementById('controlEffectInput');
+            const val = input.value.trim();
+            if (!val) return;
+            profiles[currentProfile].controlEffects.push(val);
+            saveProfiles();
+            input.value = '';
+            renderControlEffects();
+            showToast('Эффект контроля добавлен');
+        }
+
+        function removeControlEffect(i) {
+            profiles[currentProfile].controlEffects.splice(i, 1);
+            saveProfiles();
+            renderControlEffects();
+        }
+
+        function renderControlEffects() {
+            const el = document.getElementById('controlEffectsList');
+            const arr = profiles[currentProfile].controlEffects || [];
+            el.innerHTML = arr.length ? arr.map((e, i) => 
+                `<div class="status-effect-tag">${e}<span class="remove" onclick="removeControlEffect(${i})">×</span></div>`
+            ).join('') : '<span class="no-effects">Нет эффектов контроля</span>';
+        }
+
+        // Actions
+        function renderActionsGrid() {
+            const grid = document.getElementById('actionsGrid');
+            const customs = profiles[currentProfile].customActions || [];
+            
+            let html = '<div class="phase-category action">▸ PREP AND BASIC ACTION</div>';
+            ['melee','ranged','push','grab','trip','distract','stabilize','defense','standard','quick','reload','aim','assess','chase','escape','complex','bag'].forEach(k => {
+                html += renderBtn(k, DB[k]);
+            });
+            customs.filter(c => c.phase === 'Action').forEach((c, i) => {
+                html += renderBtn('custom:' + customs.indexOf(c), c, true);
+            });
+
+            html += '<div class="phase-category move">▸ PREP AND BASIC MOVE</div>';
+            ['move','standup','accelerate','hide'].forEach(k => html += renderBtn(k, DB[k]));
+            customs.filter(c => c.phase === 'move').forEach((c, i) => {
+                html += renderBtn('custom:' + customs.indexOf(c), c, true);
+            });
+
+            html += '<div class="phase-category forcing">▸ DASH</div>';
+            html += renderBtn('dash', DB['dash']);
+            customs.filter(c => c.phase === 'forcing').forEach((c, i) => {
+                html += renderBtn('custom:' + customs.indexOf(c), c, true);
+            });
+
+            grid.innerHTML = html;
+            
+            // Add event listeners
+            grid.querySelectorAll('.action-btn').forEach(btn => {
+                const key = btn.dataset.key;
+                let pressTimer = null;
+                let isLongPress = false;
+                let startX = 0;
+                let startY = 0;
+                let hasMoved = false;
+                
+                const startPress = (e) => {
+                    isLongPress = false;
+                    hasMoved = false;
+                    
+                    // Get start position
+                    if (e.touches) {
+                        startX = e.touches[0].clientX;
+                        startY = e.touches[0].clientY;
+                    } else {
+                        startX = e.clientX;
+                        startY = e.clientY;
+                    }
+                    
+                    if (btn.classList.contains('custom')) {
+                        pressTimer = setTimeout(() => {
+                            if (!hasMoved) {
+                                isLongPress = true;
+                                const idx = parseInt(btn.dataset.customIdx);
+                                deleteCustom(idx);
+                            }
+                        }, 600);
+                    }
+                };
+                
+                const movePress = (e) => {
+                    if (e.touches) {
+                        const moveX = e.touches[0].clientX;
+                        const moveY = e.touches[0].clientY;
+                        const distance = Math.sqrt(Math.pow(moveX - startX, 2) + Math.pow(moveY - startY, 2));
+                        
+                        // If moved more than 10px, consider it a scroll
+                        if (distance > 10) {
+                            hasMoved = true;
+                            clearTimeout(pressTimer);
+                        }
+                    }
+                };
+                
+                const endPress = (e) => {
+                    clearTimeout(pressTimer);
+                    
+                    // Only toggle if not long press and not scrolling
+                    if (!isLongPress && !hasMoved) {
+                        e.preventDefault();
+                        toggleAction(key);
+                    }
+                };
+                
+                const cancelPress = () => {
+                    clearTimeout(pressTimer);
+                    hasMoved = true;
+                };
+                
+                btn.addEventListener('mousedown', startPress);
+                btn.addEventListener('mouseup', endPress);
+                btn.addEventListener('mouseleave', cancelPress);
+                btn.addEventListener('touchstart', startPress, { passive: true });
+                btn.addEventListener('touchmove', movePress, { passive: true });
+                btn.addEventListener('touchend', endPress);
+                btn.addEventListener('touchcancel', cancelPress);
+            });
+            
+            updateActionStates();
+        }
+
+        function renderBtn(key, action, isCustom = false) {
+            // Собираем теги с OR между action и focus
+            const hasAction = action.tags.includes('action');
+            const hasFocus = action.tags.includes('focus');
+            const hasControl = action.tags.includes('control');
+            const hasComplex = action.tags.includes('complex');
+            
+            let dotsArr = [];
+            if (hasAction) dotsArr.push('<span class="tag-dot action-dot"></span>');
+            if (hasAction && hasFocus) dotsArr.push('<span class="tag-or">or</span>');
+            if (hasFocus) dotsArr.push('<span class="tag-dot focus-dot"></span>');
+            if (hasControl) dotsArr.push('<span class="tag-exclaim">!</span>');
+            if (hasComplex) dotsArr.push('<span class="tag-dot complex-dot"></span>');
+            
+            const dots = dotsArr.join('');
+            const customIdx = isCustom ? key.split(':')[1] : '';
+            return `<button class="action-btn ${isCustom ? 'custom' : ''}" data-key="${key}" data-phase="${action.phase}" data-tags="${action.tags.join(',')}" ${isCustom ? `data-custom-idx="${customIdx}"` : ''}>
+                ${action.name}
+                <div class="action-tags">${dots}</div>
+            </button>`;
+        }
+
+        function getAction(key) {
+            if (key.startsWith('custom:')) {
+                return profiles[currentProfile].customActions[parseInt(key.split(':')[1])];
+            }
+            return DB[key];
+        }
+
+        function toggleAction(key) {
+            const btn = document.querySelector(`[data-key="${key}"]`);
+            if (!btn || btn.classList.contains('disabled')) return;
+
+            const idx = selectedActions.findIndex(a => a.action === key);
+            if (idx >= 0) {
+                selectedActions.splice(idx, 1);
+            } else {
+                selectedActions.push({ action: key, coords: [] });
+            }
+            updateActionStates();
+            renderSelectedActions();
+        }
+
+        function updateActionStates() {
+            const hasComplex = selectedActions.some(a => getAction(a.action)?.tags.includes('complex'));
+            const hasForcing = selectedActions.some(a => getAction(a.action)?.phase === 'forcing');
+            const hasMove = selectedActions.some(a => getAction(a.action)?.phase === 'move');
+            // Проверяем есть ли действие с тегом action (синий кружок)
+            const hasAction = selectedActions.some(a => getAction(a.action)?.tags.includes('action'));
+
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                const key = btn.dataset.key;
+                const phase = btn.dataset.phase;
+                const tags = btn.dataset.tags.split(',').filter(t => t);
+                const isSelected = selectedActions.some(a => a.action === key);
+
+                btn.classList.toggle('selected', isSelected);
+
+                let disabled = false;
+                // Forcing блокирует Action и Move
+                if (hasForcing && !isSelected && (phase === 'Action' || phase === 'move')) disabled = true;
+                // Complex блокирует action
+                if (hasComplex && !isSelected && tags.includes('action')) disabled = true;
+                // Action (синий) блокирует complex (розовый) и forcing
+                if (hasAction && !isSelected && (tags.includes('complex') || phase === 'forcing')) disabled = true;
+                // Другие Move блокируются если один Move выбран
+                if (hasMove && !isSelected && phase === 'move') disabled = true;
+
+                btn.classList.toggle('disabled', disabled);
+            });
+        }
+
+        function addCustomAction() {
+            const input = document.getElementById('customActionInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const tags = [];
+            if (document.getElementById('tagAction').checked) tags.push('action');
+            if (document.getElementById('tagControl').checked) tags.push('control');
+            if (document.getElementById('tagFocus').checked) tags.push('focus');
+            if (document.getElementById('tagComplex').checked) tags.push('complex');
+
+            profiles[currentProfile].customActions.push({
+                name,
+                phase: document.getElementById('customPhaseSelect').value,
+                tags
+            });
+            saveProfiles();
+            input.value = '';
+            renderActionsGrid();
+            showToast('Способность добавлена');
+        }
+
+        function deleteCustom(idx) {
+            const customs = profiles[currentProfile].customActions;
+            if (!confirm(`Удалить "${customs[idx].name}"?`)) return;
+            customs.splice(idx, 1);
+            saveProfiles();
+            selectedActions = selectedActions.filter(a => !a.action.startsWith('custom:'));
+            renderActionsGrid();
+            renderSelectedActions();
+            showToast('Способность удалена');
+        }
+
+        function renderSelectedActions() {
+            const display = document.getElementById('selectedActionsDisplay');
+            const list = document.getElementById('selectedList');
+            
+            if (!selectedActions.length) {
+                display.style.display = 'none';
+                return;
+            }
+            
+            display.style.display = 'block';
+            list.innerHTML = selectedActions.map((item, i) => {
+                const act = getAction(item.action);
+                const coordsHtml = item.coords.map((c, ci) => 
+                    `<span class="coord-tag">${c}<span class="remove" onclick="removeCoord(${i},${ci})">×</span></span>`
+                ).join('');
+                
+                return `<div class="selected-action-item">
+                    <div class="selected-action-header">
+                        <span class="selected-action-name">${act?.name || item.action}</span>
+                        <button class="selected-action-remove" onclick="removeSelected(${i})">×</button>
+                    </div>
+                    <div class="coord-input-inline">
+                        <label>Цель (координаты)</label>
+                        <div class="coord-input-wrapper">
+                            <input type="text" class="coord-single" id="coord${i}" placeholder="F3:5" maxlength="15" oninput="formatCoord(this)" onkeypress="if(event.key==='Enter'){addCoord(${i});event.preventDefault();}">
+                        </div>
+                        <button class="coord-add-btn" onclick="addCoord(${i})">+</button>
+                        <button class="coord-skip-btn" onclick="skipCoord(${i})">Без цели</button>
+                    </div>
+                    <div class="coord-tags">${coordsHtml}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function formatCoord(input) {
+            let val = input.value.toUpperCase();
+            // Убираем всё кроме букв, цифр и двоеточия
+            val = val.replace(/[^A-Z0-9:]/g, '');
+            // Автоматически добавляем двоеточие после буквенно-цифровой части (например F3)
+            // если пользователь вводит третий символ и это цифра, а двоеточия ещё нет
+            if (val.length >= 2 && !val.includes(':')) {
+                const match = val.match(/^([A-Z]+\d+)(\d)$/);
+                if (match) {
+                    val = match[1] + ':' + match[2];
+                }
+            }
+            input.value = val;
+        }
+
+        function addCoord(i) {
+            const input = document.getElementById(`coord${i}`);
+            const val = input.value.trim();
+            if (!val) return showToast('Введите координаты');
+            selectedActions[i].coords.push(val);
+            input.value = '';
+            renderSelectedActions();
+        }
+
+        function removeCoord(i, ci) {
+            selectedActions[i].coords.splice(ci, 1);
+            renderSelectedActions();
+        }
+
+        function skipCoord(i) {
+            document.getElementById(`sector${i}`).value = '';
+            document.getElementById(`cell${i}`).value = '';
+            showToast('Цель пропущена');
+        }
+
+        function removeSelected(i) {
+            selectedActions.splice(i, 1);
+            updateActionStates();
+            renderSelectedActions();
+        }
+
+        // Plan
+        function confirmPlan() {
+            if (!selectedActions.length) return showToast('Нечего сохранять');
+            
+            const p = profiles[currentProfile];
+            const targets = selectedActions.filter(a => a.coords.length).map(a => 
+                `${getAction(a.action)?.name || a.action}: ${a.coords.join(', ')}`
+            );
+            
+            actionLog.unshift({
+                timestamp: new Date().toLocaleString('ru-RU'),
+                round: currentRound,
+                profile: p.name,
+                actions: selectedActions.map(a => getAction(a.action)?.name || a.action),
+                targets
+            });
+            localStorage.setItem('sa_log', JSON.stringify(actionLog));
+            
+            renderLog();
+            showToast('План сохранён');
+            selectedActions = [];
+            updateActionStates();
+            renderSelectedActions();
+        }
+
+        function renderLog() {
+            const el = document.getElementById('logContainer');
+            el.innerHTML = actionLog.length ? actionLog.map(e => `
+                <div class="log-entry">
+                    <div class="log-time">R${e.round} | ${e.timestamp}</div>
+                    <div class="log-profile">${e.profile}</div>
+                    ${e.actions.length ? `<div class="log-actions">▸ ${e.actions.join(', ')}</div>` : ''}
+                    ${e.targets?.length ? `<div class="log-coords">${e.targets.join('<br>')}</div>` : ''}
+                </div>
+            `).join('') : '<div class="log-entry" style="color:var(--text-secondary);text-align:center;">Лог пуст</div>';
+        }
+
+        function clearLog() {
+            if (!confirm('Очистить весь лог?')) return;
+            actionLog = [];
+            localStorage.setItem('sa_log', JSON.stringify(actionLog));
+            renderLog();
+            showToast('Лог очищен');
+        }
+
+        function clearAll() {
+            if (!confirm('Очистить ВСЁ?\n\n• Текущий план\n• Лог действий\n• Лог бросков\n• Нейрофрикция\n• Урон\n• Эффекты\n• Раунд')) return;
+            
+            selectedActions = [];
+            actionLog = [];
+            localStorage.setItem('sa_log', JSON.stringify(actionLog));
+            
+            // Очистка лога бросков
+            diceLog = [];
+            localStorage.setItem('sa_dice_log', JSON.stringify(diceLog));
+            
+            const p = profiles[currentProfile];
+            p.neurofriction = p.damage = 0;
+            p.nf = 0;
+            p.statusEffects = [];
+            p.controlEffects = [];
+            
+            document.getElementById('damageValue').textContent = 0;
+            updateDisplay('damageValue', 3);
+            if (document.getElementById('nfVal')) renderNF();
+            
+            currentRound = 1;
+            document.getElementById('roundValue').textContent = 1;
+            
+            saveProfiles();
+            renderStatusEffects();
+            renderControlEffects();
+            updateActionStates();
+            renderSelectedActions();
+            renderLog();
+            if (typeof renderDiceLog === 'function') renderDiceLog();
+            showToast('Всё очищено');
+        }
+
+        // Utils
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${tab}`));
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        document.getElementById('customActionInput').addEventListener('keypress', e => { if (e.key === 'Enter') addCustomAction(); });
+        document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }));
+
+
+
+        // ==================== d100 CHECK SYSTEM ====================
+        const ASPECT_MAP = {
+            int:  { name:'Интеллект',    css:'int',   aspects:[{key:'logic',name:'Логика'},{key:'erudition',name:'Эрудиция'},{key:'concept',name:'Концептуализация'},{key:'auto_digit',name:'Авто-оцифровка'}] },
+            comm: { name:'Коммуникации', css:'comm',  aspects:[{key:'rhetoric',name:'Риторика'},{key:'authority',name:'Авторитет'},{key:'masquerade',name:'Маскарад'}] },
+            psy:  { name:'Психика',      css:'psy',   aspects:[{key:'empathy',name:'Эмпатия'},{key:'gravipheromone',name:'Гравиферомон'},{key:'steel_core',name:'Сталь'},{key:'insight',name:'Проницательность'}] },
+            body: { name:'Телосложение', css:'body',  aspects:[{key:'power',name:'Силовой Механизм'},{key:'endurance',name:'Стойкость'},{key:'weapon_flesh',name:'Оружейная Плоть'}] },
+            motor:{ name:'Моторика',     css:'motor', aspects:[{key:'reaction',name:'Реактивность'},{key:'lacing',name:'Сноровка'},{key:'optic_aim',name:'Оптическая Самонаводка'},{key:'perception',name:'Восприятие'}] }
+        };
+
+        let rollMode = 'low'; // low | soft | over
+        let rollType = 'normal'; // normal | advantage | disadvantage
+        let diceCount = 1; // 1, 2, or 3
+        let diceLog = JSON.parse(localStorage.getItem('sa_dice_log')) || [];
+        let diceRolling = false;
+
+        function prof() {
+            const p = profiles[currentProfile];
+            if (!p.aspects) p.aspects = {};
+            Object.values(ASPECT_MAP).forEach(cat => cat.aspects.forEach(a => { if (p.aspects[a.key] === undefined) p.aspects[a.key] = 10; }));
+            if (p.nf === undefined) p.nf = 0;
+            if (!p.perks) p.perks = [];
+            // Clean old object perks
+            p.perks = p.perks.map(pk => typeof pk === 'string' ? pk : (pk && pk.name ? pk.name : '')).filter(Boolean);
+            return p;
+        }
+
+        function quarter(v) { return Math.ceil(v / 4); }
+        function half(v) { return Math.ceil(v / 2); }
+
+        let selectedAspectKey = null;
+
+        // --- Render Aspects ---
+        function renderAspects() {
+            const p = prof();
+            document.getElementById('aspectsContainer').innerHTML = Object.entries(ASPECT_MAP).map(([,cat]) =>
+                `<div class="stat-block"><div class="stat-block-title ${cat.css}">${cat.name}</div>` +
+                cat.aspects.map(a => {
+                    const v = p.aspects[a.key];
+                    const isSelected = selectedAspectKey === a.key;
+                    return `<div class="aspect-row clickable ${isSelected ? 'selected-aspect' : ''}" data-aspect-key="${a.key}">
+                        <div class="aspect-top">
+                            <span class="aspect-name">${a.name}</span>
+                            <div class="aspect-val-controls">
+                                <input type="number" class="asp-input" value="${v}" min="10" max="80" step="5"
+                                    onchange="setAsp('${a.key}',this.value);event.stopPropagation();"
+                                    onclick="event.stopPropagation();"
+                                    onfocus="this.select()">
+                            </div>
+                        </div>
+                        <div class="aspect-thresholds">
+                            <span class="threshold-tag low">Комп: 01–${String(v).padStart(2,'0')}</span>
+                            <span class="threshold-tag soft">Контр: ${String(quarter(v)).padStart(2,'0')}–${String(v).padStart(2,'0')}</span>
+                            <span class="threshold-tag over">Одерж: ${String(half(v)).padStart(2,'0')}–${String(v).padStart(2,'0')}</span>
+                        </div>
+                    </div>`;
+                }).join('') + '</div>'
+            ).join('');
+            
+            // Добавляем обработчики с задержкой для защиты от скролла
+            setupAspectClickHandlers();
+        }
+
+        function setupAspectClickHandlers() {
+            document.querySelectorAll('.aspect-row.clickable').forEach(row => {
+                let pressTimer = null;
+                let startX = 0, startY = 0;
+                let hasMoved = false;
+                
+                const startPress = (e) => {
+                    // Игнорируем если клик на input
+                    if (e.target.classList.contains('asp-input')) return;
+                    
+                    hasMoved = false;
+                    if (e.touches) {
+                        startX = e.touches[0].clientX;
+                        startY = e.touches[0].clientY;
+                    } else {
+                        startX = e.clientX;
+                        startY = e.clientY;
+                    }
+                    
+                    pressTimer = setTimeout(() => {
+                        if (!hasMoved) {
+                            selectAspectForRoll(row.dataset.aspectKey);
+                        }
+                    }, 150); // 150ms задержка
+                };
+                
+                const movePress = (e) => {
+                    let moveX, moveY;
+                    if (e.touches) {
+                        moveX = e.touches[0].clientX;
+                        moveY = e.touches[0].clientY;
+                    } else {
+                        moveX = e.clientX;
+                        moveY = e.clientY;
+                    }
+                    const distance = Math.sqrt(Math.pow(moveX - startX, 2) + Math.pow(moveY - startY, 2));
+                    if (distance > 10) {
+                        hasMoved = true;
+                        clearTimeout(pressTimer);
+                    }
+                };
+                
+                const endPress = (e) => {
+                    clearTimeout(pressTimer);
+                };
+                
+                const cancelPress = () => {
+                    clearTimeout(pressTimer);
+                    hasMoved = true;
+                };
+                
+                row.addEventListener('mousedown', startPress);
+                row.addEventListener('mousemove', movePress);
+                row.addEventListener('mouseup', endPress);
+                row.addEventListener('mouseleave', cancelPress);
+                row.addEventListener('touchstart', startPress, { passive: true });
+                row.addEventListener('touchmove', movePress, { passive: true });
+                row.addEventListener('touchend', endPress);
+                row.addEventListener('touchcancel', cancelPress);
+            });
+        }
+
+        function selectAspectForRoll(key) {
+            selectedAspectKey = key;
+            // Обновляем визуально
+            document.querySelectorAll('.aspect-row.clickable').forEach(r => {
+                r.classList.toggle('selected-aspect', r.dataset.aspectKey === key);
+            });
+            // Обновляем скрытый select для совместимости
+            const sel = document.getElementById('rollAspect');
+            if (sel) sel.value = key;
+            updateRollInfo();
+            // Скролл к секции броска
+            const rollSection = document.querySelector('#tab-dice .section:has(.roll-launch)');
+            if (rollSection) {
+                setTimeout(() => rollSection.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+            }
+            vib(20);
+            showToast('Аспект выбран: ' + (Object.values(ASPECT_MAP).flatMap(c=>c.aspects).find(a=>a.key===key)?.name || key));
+        }
+
+        function chAsp(key, d) {
+            const p = prof();
+            p.aspects[key] = Math.max(10, Math.min(80, p.aspects[key] + d));
+            saveProfiles(); renderAspects(); populateAspectSelect(); updateRollInfo();
+        }
+
+        function setAsp(key, val) {
+            const p = prof();
+            let v = parseInt(val) || 10;
+            v = Math.max(10, Math.min(80, v));
+            p.aspects[key] = v;
+            saveProfiles(); renderAspects(); populateAspectSelect(); updateRollInfo();
+        }
+
+        // --- Perks ---
+        function renderPerks() {
+            const p = prof();
+            document.getElementById('perksContainer').innerHTML =
+                (p.perks.length ? p.perks.map((pk, i) =>
+                    `<div class="perk-row"><span class="perk-name">${pk}</span><button class="perk-del" onclick="delPerk(${i})">×</button></div>`
+                ).join('') : '<div style="color:var(--text-secondary);font-size:0.75rem;margin-bottom:8px;">Нет перков</div>') +
+                `<div class="perk-add-row"><input type="text" id="perkInput" placeholder="Название перка..." onkeypress="if(event.key==='Enter')addPerk()"><button class="btn-add" onclick="addPerk()">+</button></div>`;
+        }
+        function addPerk() {
+            const inp = document.getElementById('perkInput');
+            const n = inp.value.trim(); if (!n) return;
+            prof().perks.push(n); saveProfiles(); inp.value = ''; renderPerks(); showToast('Перк добавлен');
+        }
+        function delPerk(i) { prof().perks.splice(i, 1); saveProfiles(); renderPerks(); }
+
+        // --- Coolness ---
+        function changeCoolness(d) {
+            const p = prof();
+            p.coolness = Math.max(0, p.coolness + d);
+            saveProfiles();
+            document.getElementById('coolnessVal').textContent = p.coolness;
+            updateAdvButton();
+        }
+        function updateAdvButton() {
+            const el = document.getElementById('advToggle');
+            if (advantageOn && prof().coolness < 1) { advantageOn = false; el.classList.remove('on'); }
+        }
+
+        // --- Neurofriction ---
+        // Max = (Сталь / 10) + (Стойкость / 10) + 5
+        function getNFMax() { 
+            const p = prof();
+            const steelTens = Math.floor((p.aspects.steel_core || 10) / 10);
+            const enduranceTens = Math.floor((p.aspects.endurance || 10) / 10);
+            return steelTens + enduranceTens + 5; 
+        }
+
+        function changeNF(d) {
+            const p = prof();
+            const max = getNFMax();
+            p.nf = Math.max(0, Math.min(max, (p.nf||0) + d));
+            saveProfiles(); renderNF();
+        }
+
+        function renderNF() {
+            const p = prof();
+            const v = p.nf || 0;
+            const max = getNFMax();
+            const el = document.getElementById('nfVal');
+            if (!el) return;
+            el.textContent = v;
+            el.classList.toggle('critical', v >= max);
+            document.getElementById('nfThreshold').textContent = `Макс: ${max}`;
+
+            const split = document.getElementById('nfSplit');
+
+            if (v >= max) {
+                split.style.display = 'block';
+                split.innerHTML = '<div style="color:var(--accent-red);font-weight:bold;margin-bottom:8px;">💀 РАСЩЕПЛЕНИЕ — СРЫВ 💀</div>' +
+                    '<button style="background:rgba(255,51,102,0.2);border:1px solid var(--accent-red);color:var(--accent-red);padding:8px 16px;border-radius:4px;font-family:\'Orbitron\',sans-serif;font-size:0.6rem;cursor:pointer;" onclick="resetNF()">Отыграно — сбросить НФ</button>';
+            } else {
+                split.style.display = 'none';
+            }
+        }
+
+        function resetNF() {
+            const p = prof();
+            p.nf = 0;
+            saveProfiles(); renderNF();
+            showToast('Расщепление отыграно. НФ сброшена.');
+            vib([50,30,50]);
+        }
+
+        // --- Roll UI ---
+        function populateAspectSelect() {
+            const p = prof();
+            const sel = document.getElementById('rollAspect');
+            const cur = sel.value;
+            sel.innerHTML = '<option value="">— Выбрать —</option>' +
+                Object.entries(ASPECT_MAP).map(([,cat]) =>
+                    `<optgroup label="${cat.name}">` +
+                    cat.aspects.map(a => `<option value="${a.key}">${a.name} (${p.aspects[a.key]})</option>`).join('') +
+                    '</optgroup>'
+                ).join('');
+            sel.value = cur;
+        }
+
+        function setMode(m) {
+            rollMode = m;
+            document.getElementById('modeL').className = 'mode-btn' + (m==='low'?' active-low':'');
+            document.getElementById('modeS').className = 'mode-btn' + (m==='soft'?' active-soft':'');
+            document.getElementById('modeO').className = 'mode-btn' + (m==='over'?' active-over':'');
+            updateRollInfo();
+        }
+
+        function setRollType(type) {
+            rollType = type;
+            document.getElementById('rtypeNormal').className = 'roll-type-btn' + (type==='normal'?' active':'');
+            document.getElementById('rtypeAdv').className = 'roll-type-btn' + (type==='advantage'?' active-adv':'');
+            document.getElementById('rtypeDisadv').className = 'roll-type-btn' + (type==='disadvantage'?' active-disadv':'');
+            updateRollInfo();
+        }
+
+        function setDiceCount(count) {
+            diceCount = count;
+            document.getElementById('dice1').classList.toggle('active', count === 1);
+            document.getElementById('dice2').classList.toggle('active', count === 2);
+            document.getElementById('dice3').classList.toggle('active', count === 3);
+            updateRollInfo();
+        }
+
+        function onAspectChange() { updateRollInfo(); }
+
+        function getRange(v, mode) {
+            if (mode === 'low') return { from: 1, to: v };
+            if (mode === 'soft') return { from: Math.ceil(v/4), to: v };
+            return { from: Math.ceil(v/2), to: v };
+        }
+
+        function updateRollInfo() {
+            const key = selectedAspectKey || document.getElementById('rollAspect').value;
+            const info = document.getElementById('rollInfo');
+            const btn = document.getElementById('rollBtn');
+            const aspectDisplay = document.getElementById('selectedAspectDisplay');
+            
+            if (!key) { 
+                info.innerHTML = 'Выберите аспект'; 
+                btn.disabled = true; 
+                if (aspectDisplay) {
+                    aspectDisplay.innerHTML = '<span style="color:var(--text-secondary);">↑ Нажмите на аспект выше</span>';
+                    aspectDisplay.classList.remove('has-aspect');
+                }
+                return; 
+            }
+            
+            btn.disabled = false;
+            const p = prof(); 
+            const v = p.aspects[key];
+            const name = Object.values(ASPECT_MAP).flatMap(c=>c.aspects).find(a=>a.key===key)?.name||key;
+            const r = getRange(v, rollMode);
+            const mn = {low:'Компромисс',soft:'Контроль',over:'Одержимость'};
+            const mc = {low:'low',soft:'soft',over:'over'};
+            
+            // Обновляем отображение выбранного аспекта
+            if (aspectDisplay) {
+                aspectDisplay.innerHTML = `<strong>${name}</strong> <span style="color:var(--accent-yellow);">(${v})</span>`;
+                aspectDisplay.classList.add('has-aspect');
+            }
+            
+            // Синхронизируем скрытый select
+            document.getElementById('rollAspect').value = key;
+            
+            let typeText = '';
+            if (rollType === 'advantage') typeText = '<span style="color:var(--accent-cyan);">▲ Превосходство</span>';
+            else if (rollType === 'disadvantage') typeText = '<span style="color:var(--accent-red);">▼ Помеха</span>';
+            else typeText = 'Обычный';
+            
+            const diceText = diceCount === 1 ? '1d100' : `${diceCount}d100`;
+            info.innerHTML =
+                `<span class="ri-val">${name}: ${v}</span><br>` +
+                `Режим: <span class="ri-range ${mc[rollMode]}">${mn[rollMode]}</span> — <span class="ri-range ${mc[rollMode]}">${String(r.from).padStart(2,'0')}–${String(r.to).padStart(2,'0')}</span><br>` +
+                `${typeText} | ${diceText}`;
+        }
+
+        // --- SFX ---
+        const SFX = (() => {
+            let ac=null;
+            function c(){if(!ac)try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}return ac}
+            function tick(){const x=c();if(!x)return;const o=x.createOscillator(),g=x.createGain();o.connect(g);g.connect(x.destination);o.type='square';o.frequency.value=600+Math.random()*2400;g.gain.value=0.03;g.gain.exponentialRampToValueAtTime(0.001,x.currentTime+0.03);o.start(x.currentTime);o.stop(x.currentTime+0.03)}
+            function lock(){const x=c();if(!x)return;const t=x.currentTime;const b=x.createBuffer(1,x.sampleRate*0.06,x.sampleRate);const d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*0.25;const n=x.createBufferSource();n.buffer=b;const ng=x.createGain();ng.gain.setValueAtTime(0.1,t);ng.gain.exponentialRampToValueAtTime(0.001,t+0.06);n.connect(ng);ng.connect(x.destination);n.start(t);n.stop(t+0.06);const o=x.createOscillator(),g=x.createGain();o.connect(g);g.connect(x.destination);o.type='sine';o.frequency.value=880;g.gain.setValueAtTime(0.08,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.15);o.start(t);o.stop(t+0.15)}
+            function res(ok){const x=c();if(!x)return;const t=x.currentTime;(ok?[523,659,784]:[440,349,294]).forEach((f,i)=>{const o=x.createOscillator(),g=x.createGain();o.connect(g);g.connect(x.destination);o.type=ok?'sine':'triangle';o.frequency.value=f;const s=t+i*(ok?0.08:0.1);g.gain.setValueAtTime(0.07,s);g.gain.exponentialRampToValueAtTime(0.001,s+0.15);o.start(s);o.stop(s+0.15)})}
+            function triumph(){const x=c();if(!x)return;const t=x.currentTime;[523,659,784,1047].forEach(f=>{const o=x.createOscillator(),g=x.createGain();o.connect(g);g.connect(x.destination);o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.05,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.5);o.start(t);o.stop(t+0.5)})}
+            return {tick,lock,res,triumph};
+        })();
+        function vib(p){try{if(navigator.vibrate)navigator.vibrate(p)}catch(e){}}
+
+        // --- Roll Execution ---
+        function rolld100() { return Math.floor(Math.random()*100)+1; }
+
+        function executeRoll() {
+            if (diceRolling) return;
+            const key = document.getElementById('rollAspect').value;
+            if (!key) return;
+            diceRolling = true;
+            document.getElementById('rollBtn').disabled = true;
+            document.getElementById('diceResultSection').style.display = 'none';
+            vib(30);
+
+            // Бросаем нужное количество кубиков
+            const rolls = [];
+            for (let i = 0; i < diceCount; i++) {
+                rolls.push(rolld100());
+            }
+
+            // Simple tick animation
+            let tick = 0;
+            const total = 25 + Math.floor(Math.random()*10);
+            const iv = setInterval(() => {
+                tick++;
+                if (tick <= total*0.7) SFX.tick();
+                if (tick >= total) {
+                    clearInterval(iv); SFX.lock(); vib([20,30,40]);
+                    setTimeout(() => {
+                        diceRolling = false;
+                        document.getElementById('rollBtn').disabled = false;
+                        showResult(key, rolls, rollMode, rollType);
+                    }, 300);
+                }
+            }, 45);
+        }
+
+        function showResult(key, rolls, mode, type) {
+            const p = prof(); const v = p.aspects[key];
+            const name = Object.values(ASPECT_MAP).flatMap(c=>c.aspects).find(a=>a.key===key)?.name||key;
+            const r = getRange(v, mode);
+            
+            // Логика выбора броска в зависимости от типа
+            let chosen;
+            let allSuccessRolls = [];
+            let allFailRolls = [];
+            let successCount = 0;
+            
+            rolls.forEach(roll => {
+                const inRange = roll >= r.from && roll <= r.to;
+                if (inRange) {
+                    successCount++;
+                    allSuccessRolls.push(roll);
+                } else {
+                    allFailRolls.push(roll);
+                }
+            });
+            
+            let needChoice = false;
+            
+            if (type === 'advantage') {
+                // Преимущество: выбираем лучший для успеха
+                if (successCount > 1) {
+                    needChoice = true;
+                    chosen = null;
+                } else if (successCount === 1) {
+                    chosen = allSuccessRolls[0];
+                } else {
+                    // Все провал — ближайший к успеху
+                    let minDist = Infinity;
+                    rolls.forEach(roll => {
+                        const dist = roll < r.from ? r.from - roll : roll - r.to;
+                        if (dist < minDist) { minDist = dist; chosen = roll; }
+                    });
+                }
+            } else if (type === 'disadvantage') {
+                // Помеха: выбираем худший (дальше от успеха)
+                if (allFailRolls.length > 0) {
+                    // Есть провалы — выбираем самый далёкий от диапазона
+                    let maxDist = -1;
+                    allFailRolls.forEach(roll => {
+                        const dist = roll < r.from ? r.from - roll : roll - r.to;
+                        if (dist > maxDist) { maxDist = dist; chosen = roll; }
+                    });
+                } else {
+                    // Все успехи — выбираем ближайший к границе провала
+                    let minMargin = Infinity;
+                    allSuccessRolls.forEach(roll => {
+                        const margin = Math.min(roll - r.from, r.to - roll);
+                        if (margin < minMargin) { minMargin = margin; chosen = roll; }
+                    });
+                }
+            } else {
+                // Обычный: один кубик
+                chosen = rolls[0];
+            }
+            
+            const isSuccess = type === 'disadvantage' 
+                ? (chosen >= r.from && chosen <= r.to)
+                : (needChoice ? true : (chosen >= r.from && chosen <= r.to));
+
+            let statusLabel, statusClass, bigClass, detail='', titleColor;
+            if (isSuccess) {
+                if (mode==='low') {
+                    statusLabel='УСПЕХ + ПОБОЧКА'; statusClass='s-side'; bigClass='r-side'; titleColor='var(--accent-orange)';
+                    detail='Успех с побочным эффектом'; SFX.res(true); vib([30,20,60]);
+                } else if (mode==='soft') {
+                    statusLabel='ЧИСТЫЙ УСПЕХ'; statusClass='s-success'; bigClass='r-success'; titleColor='var(--accent-green)';
+                    detail='Чистый успех, без осложнений'; SFX.res(true); vib([30,20,60]);
+                } else {
+                    statusLabel='КРИТ. УСПЕХ!'; statusClass='s-triumph'; bigClass='r-triumph'; titleColor='var(--accent-yellow)';
+                    detail='Критический успех!';
+                    SFX.triumph(); vib([50,50,50,50,100]);
+                }
+            } else {
+                statusLabel='ПРОВАЛ'; statusClass='s-fail'; bigClass='r-fail'; titleColor='var(--accent-red)';
+                detail=`Нужно ${String(r.from).padStart(2,'0')}–${String(r.to).padStart(2,'0')}, выпало ${String(chosen).padStart(2,'0')}`;
+                // Провал в режиме Одержимость даёт +1 НФ
+                if (mode==='over') {
+                    const max = getNFMax();
+                    p.nf = Math.min(max, (p.nf||0) + 1);
+                    saveProfiles();
+                    if (document.getElementById('nfVal')) renderNF();
+                    detail += ' | +1 Нейрофрикция';
+                }
+                SFX.res(false); vib([60,30,60]);
+            }
+
+            const section = document.getElementById('diceResultSection');
+            section.style.display = 'block';
+            document.getElementById('resultTitle').style.color = titleColor;
+            document.getElementById('resultTitle').textContent = statusLabel;
+
+            let advHTML = '';
+            const typeLabel = type === 'advantage' ? '▲ Превосходство' : (type === 'disadvantage' ? '▼ Помеха' : '');
+            
+            if (rolls.length > 1) {
+                if (needChoice && type === 'advantage') {
+                    // Несколько успешны — показываем выбор
+                    advHTML = `<div class="result-adv">
+                        <div style="color:var(--accent-green);font-size:0.65rem;margin-bottom:6px;">${successCount} успешных! Выбери результат:</div>
+                        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                            ${allSuccessRolls.map(roll => `
+                                <div class="adv-die-select" onclick="selectAdvRoll(${roll})" style="cursor:pointer;">
+                                    <span class="adv-die chosen">${String(roll).padStart(2,'0')}</span>
+                                    <div style="font-size:0.55rem;color:var(--text-secondary);">ед: ${roll % 10}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                } else {
+                    // Показываем все кубики
+                    const typeColor = type === 'advantage' ? 'var(--accent-cyan)' : (type === 'disadvantage' ? 'var(--accent-red)' : 'var(--text-secondary)');
+                    advHTML = `<div class="result-adv">
+                        ${typeLabel ? `<div style="color:${typeColor};font-size:0.6rem;margin-bottom:4px;">${typeLabel}</div>` : ''}
+                        <div class="result-adv-row">
+                            ${rolls.map(roll => `
+                                <span class="adv-die ${roll===chosen?'chosen':'discarded'}">${String(roll).padStart(2,'0')}</span>
+                            `).join('<span style="color:var(--text-secondary);font-size:0.5rem;margin:0 4px;">→</span>')}
+                        </div>
+                    </div>`;
+                }
+            }
+
+            const dmgVal = needChoice ? '—' : (chosen % 10);
+            document.getElementById('diceResultDisplay').innerHTML =
+                advHTML +
+                (needChoice ? '' : `<div class="result-big ${bigClass}">${String(chosen).padStart(2,'0')}</div>`) +
+                `<div class="result-status ${statusClass}">${statusLabel}</div>` +
+                `<div class="result-detail">${detail}</div>` +
+                (needChoice ? '' : `<div class="result-dmg">Единицы: ${dmgVal}</div>`);
+
+            setTimeout(()=>section.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+
+            // Log — если нужен выбор, логируем после выбора игрока
+            if (!needChoice) {
+                const modeNames={low:'Комп',soft:'Контр',over:'Одерж'};
+                const typeNames={normal:'',advantage:'▲',disadvantage:'▼'};
+                diceLog.unshift({
+                    time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+                    name, val:v, mode:modeNames[mode], roll:chosen, dice:rolls.length, type:typeNames[type], success:isSuccess, label:statusLabel
+                });
+                if (diceLog.length>50) diceLog.length=50;
+                localStorage.setItem('sa_dice_log',JSON.stringify(diceLog));
+                renderDiceLog();
+            } else {
+                // Сохраняем контекст для выбора игрока
+                window._pendingRoll = { name, val:v, mode, type, rolls, allSuccessRolls, statusLabel, bigClass, statusClass, titleColor };
+            }
+        }
+
+        function selectAdvRoll(roll) {
+            const ctx = window._pendingRoll;
+            if (!ctx) return;
+            
+            vib(30); SFX.tick();
+            
+            const dmgVal = roll % 10;
+            const display = document.getElementById('diceResultDisplay');
+            
+            // Обновляем отображение
+            display.innerHTML =
+                `<div class="result-adv"><div style="color:var(--accent-green);font-size:0.65rem;">Выбрано:</div></div>` +
+                `<div class="result-big ${ctx.bigClass}">${String(roll).padStart(2,'0')}</div>` +
+                `<div class="result-status ${ctx.statusClass}">${ctx.statusLabel}</div>` +
+                `<div class="result-detail">Выбран результат из ${ctx.allSuccessRolls.length} успешных</div>` +
+                `<div class="result-dmg">Единицы: ${dmgVal}</div>`;
+            
+            // Логируем
+            const modeNames={low:'Комп',soft:'Контр',over:'Одерж'};
+            const typeNames={normal:'',advantage:'▲',disadvantage:'▼'};
+            diceLog.unshift({
+                time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+                name:ctx.name, val:ctx.val, mode:modeNames[ctx.mode], roll, dice:ctx.rolls.length, type:typeNames[ctx.type]||'', success:true, label:ctx.statusLabel
+            });
+            if (diceLog.length>50) diceLog.length=50;
+            localStorage.setItem('sa_dice_log',JSON.stringify(diceLog));
+            renderDiceLog();
+            
+            window._pendingRoll = null;
+        }
+
+        function renderDiceLog() {
+            const el=document.getElementById('diceLogContainer');
+            if (!diceLog.length) { el.innerHTML='<div class="log-entry" style="color:var(--text-secondary);text-align:center;">Бросков пока нет</div>'; return; }
+            el.innerHTML=diceLog.map(e=>{
+                const color=(e.label||'').includes('КРИТ')?'var(--accent-yellow)':(e.label||'').includes('ПОБОЧКА')?'var(--accent-orange)':e.success?'var(--accent-green)':'var(--accent-red)';
+                const diceInfo = e.dice && e.dice > 1 ? `<span style="color:var(--accent-cyan);font-size:0.5rem;">${e.dice}d</span>` : '';
+                const typeInfo = e.type ? `<span style="color:${e.type==='▲'?'var(--accent-cyan)':'var(--accent-red)'};font-size:0.5rem;">${e.type}</span>` : '';
+                return `<div class="log-entry">
+                    <span class="log-time">${e.time}</span>
+                    <span style="color:var(--accent-cyan);margin-left:4px;font-size:0.6rem;">${e.name||''}${e.val?'('+e.val+')':''}</span>
+                    <span style="margin-left:4px;font-size:0.55rem;color:var(--text-secondary);">${e.mode||''}</span>
+                    ${diceInfo}${typeInfo}
+                    <span style="font-weight:bold;margin-left:4px;">${e.roll!=null?String(e.roll).padStart(2,'0'):''}</span>
+                    <span style="color:${color};margin-left:6px;font-size:0.6rem;">${e.label||e.outcome||''}</span>
+                </div>`;
+            }).join('');
+        }
+
+        function clearDiceLog() {
+            if(!confirm('Очистить историю?'))return;
+            diceLog=[];localStorage.setItem('sa_dice_log',JSON.stringify(diceLog));
+            renderDiceLog();showToast('История очищена');
+        }
+
+        // Profile change
+        const origLoadProfile=loadProfile;
+        loadProfile=function(){
+            origLoadProfile();
+            rollMode='low';
+            rollType='normal';
+            diceCount=1;
+            selectedAspectKey=null;
+            const p=prof();
+            if(document.getElementById('nfVal'))renderNF();
+            if(document.getElementById('aspectsContainer')){
+                renderAspects();renderPerks();populateAspectSelect();
+                updateRollInfo();setMode('low');setRollType('normal');setDiceCount(1);
+            }
+        };
+
+        // Tab switch
+        let diceInited=false;
+        const origSwitchTab=switchTab;
+        switchTab=function(tab){
+            origSwitchTab(tab);
+            if(tab==='dice'){
+                diceInited=true;
+                renderAspects();renderPerks();populateAspectSelect();
+                updateRollInfo();renderDiceLog();
+            }
+            if(tab==='status'){
+                renderNF();
+            }
+        };
+    </script>
+</body>
+</html>
