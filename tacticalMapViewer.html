@@ -87,29 +87,70 @@
             pointer-events: none; min-width: 50px; text-align: right;
         }
 
-        /* ── BOTTOM TOOLBAR ───────────────────────────── */
-        #toolbar {
-            position: fixed; bottom: 0; left: 0; right: 0;
+        /* ── LEFT TOOL SIDEBAR ───────────────────────── */
+        #toolSidebar {
+            position: fixed;
+            top: calc(54px + var(--safe-t));
+            left: 0;
+            bottom: calc(74px + var(--safe-b));
+            width: calc(62px + var(--safe-l));
+            padding: 6px 6px 6px calc(6px + var(--safe-l));
+            display: flex; flex-direction: column; gap: 5px;
+            z-index: 100;
+            background: linear-gradient(90deg, rgba(4,8,12,0.94) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        #toolSidebar > * { pointer-events: all; }
+
+        .sidebar-btn {
+            width: 100%;
+            flex: 1;
+            min-height: 44px;
+            max-height: 76px;
+            background: rgba(6,11,17,0.88);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-dim);
+            font-family: inherit; font-size: 7px; letter-spacing: 1.3px;
+            cursor: pointer; touch-action: manipulation;
             display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 3px;
+            transition: all .15s;
+        }
+        .sidebar-btn .icon { font-size: 15px; line-height: 1; }
+        .sidebar-btn:hover:not(.active):not(.tool-disabled) { border-color: #1a3040; color: var(--text-mid); }
+
+        /* PAN is always cyan when active */
+        .sidebar-btn.active[data-tool="pan"] {
+            border-color: var(--cyan); color: var(--cyan);
+            background: rgba(0,240,255,.07);
+            box-shadow: inset 0 0 10px rgba(0,240,255,.08);
+        }
+        /* Drawing tools: active color follows phase */
+        #toolSidebar.phase-move      .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
+        #toolSidebar.phase-execution .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
+        #toolSidebar.phase-surge     .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
+
+        /* Disabled tools (MOVE phase only allows LINE) */
+        .sidebar-btn.tool-disabled {
+            opacity: 0.28; pointer-events: none;
+        }
+
+        /* ── BOTTOM BAR ───────────────────────────────── */
+        #bottomBar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            display: flex; align-items: stretch; gap: 8px;
+            padding: 8px calc(10px + var(--safe-r)) calc(10px + var(--safe-b)) calc(10px + var(--safe-l));
             z-index: 100;
             background: linear-gradient(0deg, rgba(4,8,12,0.97) 0%, transparent 100%);
         }
 
         #phaseRow {
+            flex: 1;
             display: flex; align-items: stretch; gap: 7px;
-            padding: 8px calc(10px + var(--safe-r)) 6px calc(10px + var(--safe-l));
         }
 
-        #shapeRow {
-            display: flex; align-items: stretch; gap: 5px;
-            padding: 0 calc(10px + var(--safe-r)) calc(10px + var(--safe-b)) calc(10px + var(--safe-l));
-            transition: opacity .15s;
-        }
-        #shapeRow.hidden {
-            display: none;
-        }
-
-        .tool-btn {
+        .phase-btn {
             flex: 1;
             min-height: 54px;
             background: rgba(6,11,17,0.9);
@@ -122,44 +163,18 @@
             align-items: center; justify-content: center; gap: 4px;
             transition: all .15s;
         }
-        .tool-btn .icon { font-size: 18px; line-height: 1; }
-        .tool-btn:hover:not(.active) { border-color: #1a3040; color: var(--text-mid); }
+        .phase-btn .icon { font-size: 18px; line-height: 1; }
+        .phase-btn:hover:not(.active) { border-color: #1a3040; color: var(--text-mid); }
+        .phase-btn.active[data-phase="move"]      { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 12px rgba(0,224,96,.08); }
+        .phase-btn.active[data-phase="execution"] { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 12px rgba(0,150,255,.08); }
+        .phase-btn.active[data-phase="surge"]     { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 12px rgba(255,51,51,.08); }
 
-        .tool-btn.active[data-phase="pan"]       { border-color: var(--cyan);  color: var(--cyan);  background: rgba(0,240,255,.07);  box-shadow: inset 0 0 12px rgba(0,240,255,.08); }
-        .tool-btn.active[data-phase="move"]      { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);   box-shadow: inset 0 0 12px rgba(0,224,96,.08);  }
-        .tool-btn.active[data-phase="execution"] { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07);  box-shadow: inset 0 0 12px rgba(0,150,255,.08); }
-        .tool-btn.active[data-phase="surge"]     { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07);  box-shadow: inset 0 0 12px rgba(255,51,51,.08);  }
-
-        /* Shape buttons */
-        .shape-btn {
-            flex: 1;
-            min-height: 40px;
-            background: rgba(6,11,17,0.85);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            color: var(--text-dim);
-            font-family: inherit; font-size: 8px; letter-spacing: 1.4px;
-            cursor: pointer; touch-action: manipulation;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 3px;
-            transition: all .15s;
-        }
-        .shape-btn .icon { font-size: 14px; line-height: 1; }
-        .shape-btn:hover:not(.active) { border-color: #1a3040; color: var(--text-mid); }
-
-        #shapeRow[data-phase="execution"] .shape-btn.active {
-            border-color: var(--blue); color: var(--blue);
-            background: rgba(0,150,255,.1);
-            box-shadow: inset 0 0 8px rgba(0,150,255,.1);
-        }
-        #shapeRow[data-phase="surge"] .shape-btn.active {
-            border-color: var(--red); color: var(--red);
-            background: rgba(255,51,51,.1);
-            box-shadow: inset 0 0 8px rgba(255,51,51,.1);
+        #actionBtns {
+            display: flex; gap: 6px; align-items: stretch;
         }
 
-        #btnClear, #btnUndo {
-            flex: none; width: 54px;
+        .action-btn {
+            width: 54px;
             min-height: 54px;
             background: rgba(6,11,17,0.9);
             border: 1px solid var(--border);
@@ -169,27 +184,9 @@
             display: flex; align-items: center; justify-content: center;
             transition: all .15s;
         }
-        #btnClear:hover { border-color: var(--red); color: var(--red); background: rgba(255,51,51,.07); }
-        #btnClear:active { opacity: .7; }
-        #btnUndo:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,.07); }
-        #btnUndo:active { opacity: .7; }
-
-        /* ── LEGEND PILL ──────────────────────────────── */
-        #legend {
-            position: fixed; bottom: 110px; right: calc(12px + var(--safe-r));
-            display: flex; flex-direction: column; gap: 4px;
-            z-index: 90; pointer-events: none;
-            transition: bottom .15s;
-        }
-        #legend.with-shape { bottom: 162px; }
-        .leg-item {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 9px; letter-spacing: 1.5px;
-            color: var(--text-dim);
-            background: rgba(4,8,12,0.7);
-            padding: 3px 8px 3px 6px; border-radius: 2px;
-        }
-        .leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        #btnUndo:hover  { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,.07); }
+        #btnClear:hover { border-color: var(--red);  color: var(--red);  background: rgba(255,51,51,.07); }
+        .action-btn:active { opacity: .7; }
 
         /* ── LANDING ──────────────────────────────────── */
         #landing {
@@ -312,47 +309,48 @@
 </div>
 <input type="file" id="fileInput" accept=".gridmap" style="display:none">
 
-<!-- Bottom toolbar -->
-<div id="toolbar">
-    <!-- Phase selection row -->
-    <div id="phaseRow">
-        <button class="tool-btn active" data-phase="pan" id="btnPan">
-            <span class="icon">✥</span><span>PAN</span>
-        </button>
-        <button class="tool-btn" data-phase="move" id="btnMove">
-            <span class="icon">⟶</span><span>MOVE</span>
-        </button>
-        <button class="tool-btn" data-phase="execution" id="btnExec">
-            <span class="icon">◈</span><span>EXEC</span>
-        </button>
-        <button class="tool-btn" data-phase="surge" id="btnSurge">
-            <span class="icon">◎</span><span>SURGE</span>
-        </button>
-        <button id="btnUndo"  title="Undo last drawing (Ctrl+Z)">↩</button>
-        <button id="btnClear" title="Clear all drawings">✕</button>
-    </div>
-    <!-- Shape selection row (EXEC / SURGE only) -->
-    <div id="shapeRow" class="hidden" data-phase="execution">
-        <button class="shape-btn active" data-shape="line">
-            <span class="icon">╱</span><span>LINE</span>
-        </button>
-        <button class="shape-btn" data-shape="wideline">
-            <span class="icon">▬</span><span>WIDE</span>
-        </button>
-        <button class="shape-btn" data-shape="point">
-            <span class="icon">●</span><span>POINT</span>
-        </button>
-        <button class="shape-btn" data-shape="circle">
-            <span class="icon">◯</span><span>AOE</span>
-        </button>
-    </div>
+<!-- Left tool sidebar -->
+<div id="toolSidebar" class="phase-move">
+    <button class="sidebar-btn active" data-tool="pan" id="btnPan">
+        <span class="icon">✥</span><span>PAN</span>
+    </button>
+    <button class="sidebar-btn" data-tool="line" id="btnToolLine">
+        <span class="icon">╱</span><span>LINE</span>
+    </button>
+    <button class="sidebar-btn tool-disabled" data-tool="wideline" id="btnToolWide">
+        <span class="icon">▬</span><span>WIDE</span>
+    </button>
+    <button class="sidebar-btn tool-disabled" data-tool="point" id="btnToolPoint">
+        <span class="icon">●</span><span>POINT</span>
+    </button>
+    <button class="sidebar-btn tool-disabled" data-tool="circle" id="btnToolCircle">
+        <span class="icon">◯</span><span>CIRCLE</span>
+    </button>
+    <button class="sidebar-btn tool-disabled" data-tool="square" id="btnToolSquare">
+        <span class="icon">□</span><span>SQUARE</span>
+    </button>
+    <button class="sidebar-btn tool-disabled" data-tool="triangle" id="btnToolTriangle">
+        <span class="icon">△</span><span>CONE</span>
+    </button>
 </div>
 
-<!-- Legend -->
-<div id="legend">
-    <div class="leg-item"><div class="leg-dot" style="background:#00e060"></div>MOVE</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#0096ff"></div>EXEC</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#ff3333"></div>SURGE</div>
+<!-- Bottom bar: phases + actions -->
+<div id="bottomBar">
+    <div id="phaseRow">
+        <button class="phase-btn active" data-phase="move" id="btnMove">
+            <span class="icon">⟶</span><span>MOVE</span>
+        </button>
+        <button class="phase-btn" data-phase="execution" id="btnExec">
+            <span class="icon">◈</span><span>EXEC</span>
+        </button>
+        <button class="phase-btn" data-phase="surge" id="btnSurge">
+            <span class="icon">◎</span><span>SURGE</span>
+        </button>
+    </div>
+    <div id="actionBtns">
+        <button class="action-btn" id="btnUndo"  title="Undo last (Ctrl+Z)">↩</button>
+        <button class="action-btn" id="btnClear" title="Clear all drawings">✕</button>
+    </div>
 </div>
 
 <!-- Landing screen -->
@@ -400,8 +398,8 @@ const drawCtx    = drawCanvas.getContext('2d');
 // --- App state ---
 let mapData     = null;   // { header, img, imgUrl, fileName }
 let view        = { x: 0, y: 0, scale: 1 };
-let activePhase = 'pan';  // 'pan' | 'move' | 'execution' | 'surge'
-let activeShape = 'line'; // 'line' | 'point' | 'circle' | 'square' | 'triangle'
+let activePhase = 'move'; // 'move' | 'execution' | 'surge'
+let activeTool  = 'pan';  // 'pan' | 'line' | 'wideline' | 'point' | 'circle' | 'square' | 'triangle'
 let drawings    = [];
 let currentDraw = null;   // in-progress stroke
 
@@ -660,7 +658,7 @@ function cellRect(col, row) {
     };
 }
 
-// Supercover line — every cell the line segment intersects (no diagonal gaps)
+// Supercover DDA — every cell the line segment touches, including corner-crossing cells
 function lineCells(c1, r1, c2, r2) {
     const cells = [], seen = new Set();
     const addCell = (c, r) => {
@@ -677,7 +675,9 @@ function lineCells(c1, r1, c2, r2) {
         const tX = (1 + 2 * ix) * ny;
         const tY = (1 + 2 * iy) * nx;
         if (tX === tY) {
-            // Exact corner crossing — include both edge neighbours
+            // Exact corner crossing — line touches both cardinal neighbors before the diagonal
+            addCell(px + signX, py);
+            addCell(px, py + signY);
             px += signX; py += signY;
             ix++; iy++;
         } else if (tX < tY) {
@@ -690,29 +690,49 @@ function lineCells(c1, r1, c2, r2) {
     return cells;
 }
 
-// Wide line — supercover path expanded by 1 cell in all 8 directions
+// Wide line — pill-shaped corridor 3 cells wide, oriented along the vector.
+// For every cell in the bounding box, highlight it if the shortest distance
+// from its center to the line SEGMENT is <= 1.5 cells (half of 3-cell width).
 function wideLineCells(c1, r1, c2, r2) {
-    const core = lineCells(c1, r1, c2, r2);
-    const seen = new Set(), cells = [];
-    for (const { col, row } of core) {
-        for (let dc = -1; dc <= 1; dc++) {
-            for (let dr = -1; dr <= 1; dr++) {
-                const k = (col + dc) + ',' + (row + dr);
-                if (!seen.has(k)) { seen.add(k); cells.push({ col: col + dc, row: row + dr }); }
+    const halfW = 1.5;
+    const ax = c1 + 0.5, ay = r1 + 0.5;   // start cell center
+    const bx = c2 + 0.5, by = r2 + 0.5;   // end cell center
+    const dx = bx - ax, dy = by - ay;
+    const lenSq = dx * dx + dy * dy;
+
+    const margin = 2; // cells beyond the bounding box to scan
+    const colMin = Math.min(c1, c2) - margin;
+    const colMax = Math.max(c1, c2) + margin;
+    const rowMin = Math.min(r1, r2) - margin;
+    const rowMax = Math.max(r1, r2) + margin;
+
+    const cells = [];
+    for (let col = colMin; col <= colMax; col++) {
+        for (let row = rowMin; row <= rowMax; row++) {
+            const px = col + 0.5, py = row + 0.5;   // candidate cell center
+            let dist;
+            if (lenSq === 0) {
+                // Degenerate: start === end — circular point
+                dist = Math.hypot(px - ax, py - ay);
+            } else {
+                // Project onto segment, clamp t to [0,1] to stay within endpoints
+                const t  = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
+                dist = Math.hypot(ax + t * dx - px, ay + t * dy - py);
             }
+            if (dist <= halfW) cells.push({ col, row });
         }
     }
     return cells;
 }
 
-// Euclidean circle fill in cell-space
+// Euclidean circle fill — highlight cell if center-to-center distance <= radius
 function circleCells(cc, rc, radiusCells) {
     const cells = [];
     const r = Math.max(0, radiusCells);
     const ri = Math.ceil(r);
     for (let dc = -ri; dc <= ri; dc++) {
         for (let dr = -ri; dr <= ri; dr++) {
-            if (Math.hypot(dc, dr) <= r + 0.5) {
+            if (Math.hypot(dc, dr) <= r) {
                 cells.push({ col: cc + dc, row: rc + dr });
             }
         }
@@ -732,28 +752,42 @@ function squareCells(cc, rc, halfSize) {
     return cells;
 }
 
-// 90-degree cone from start toward end
+// Directional cone — circular sector logic for pixel-perfect diagonal precision.
+// A cell is included ONLY if its center satisfies both:
+//   1. distance from origin <= radius (cursor distance)
+//   2. angle from aim direction <= halfAngle (30° → 60° total spread)
 function coneCells(sc, sr, ec, er) {
-    const ddx = ec - sc, ddy = er - sr;
-    const len  = Math.hypot(ddx, ddy);
-    if (len < 0.5) return [{ col: sc, row: sr }];
-    const nx = ddx / len, ny = ddy / len;
-    const halfAngle = Math.PI / 4; // 45° half-angle → 90° cone
-    const maxR = Math.ceil(len);
+    const ax = sc + 0.5, ay = sr + 0.5;   // origin = start cell center
+    const tx = ec + 0.5, ty = er + 0.5;   // aim target = cursor cell center
+    const aimX = tx - ax, aimY = ty - ay;
+    const radius = Math.hypot(aimX, aimY);
+    if (radius < 0.5) return [{ col: sc, row: sr }];
+
+    const halfAngle = Math.PI / 6;           // 30° → 60° total cone width
+    const cosHalf   = Math.cos(halfAngle);   // precomputed threshold for dot-product test
+
+    const maxR = Math.ceil(radius) + 1;
     const cells = [], seen = new Set();
     for (let dc = -maxR; dc <= maxR; dc++) {
         for (let dr = -maxR; dr <= maxR; dr++) {
-            const clen = Math.hypot(dc, dr);
-            if (clen > len + 0.5) continue;
-            const k = (sc + dc) + ',' + (sr + dr);
+            const col = sc + dc, row = sr + dr;
+            const k = col + ',' + row;
             if (seen.has(k)) continue;
-            if (clen < 0.5) {
-                seen.add(k); cells.push({ col: sc, row: sr });
-                continue;
-            }
-            const dot = (dc * nx + dr * ny) / clen;
-            if (dot >= Math.cos(halfAngle)) {
-                seen.add(k); cells.push({ col: sc + dc, row: sr + dr });
+
+            const px = col + 0.5, py = row + 0.5;   // cell center
+            const vx = px - ax,   vy = py - ay;
+            const dist = Math.hypot(vx, vy);
+
+            // Always include origin cell
+            if (dist < 0.5) { seen.add(k); cells.push({ col, row }); continue; }
+
+            // Condition 1: within radius
+            if (dist > radius) continue;
+
+            // Condition 2: within half-angle — dot(unit_cell, unit_aim) >= cos(halfAngle)
+            if ((vx * aimX + vy * aimY) / (dist * radius) >= cosHalf) {
+                seen.add(k);
+                cells.push({ col, row });
             }
         }
     }
@@ -787,9 +821,15 @@ function computeCells(startCell, endCell, shape) {
 function renderDrawings() {
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
     if (!mapData) return;
+    const iw = mapData.header.image.original_width;
+    const ih = mapData.header.image.original_height;
     drawCtx.save();
     drawCtx.translate(view.x, view.y);
     drawCtx.scale(view.scale, view.scale);
+    // Clip all drawings to the map boundary
+    drawCtx.beginPath();
+    drawCtx.rect(0, 0, iw, ih);
+    drawCtx.clip();
     for (const d of drawings) paintDrawing(drawCtx, d, false);
     if (currentDraw)          paintDrawing(drawCtx, currentDraw, true);
     drawCtx.restore();
@@ -902,27 +942,22 @@ function snapCellFromScreen(sx, sy) {
 
 function onDrawStart(sx, sy) {
     if (!mapData) return;
-    const cell = snapCellFromScreen(sx, sy);
+    const cell  = snapCellFromScreen(sx, sy);
+    const shape = (activePhase === 'move') ? 'line' : activeTool;
 
-    if (activePhase === 'move') {
-        currentDraw = { phase: 'move', shape: 'line', startCell: cell, endCell: cell, cells: [cell] };
+    if (shape === 'point') {
+        // Toggle: tap same cell to remove, else add
+        const idx = drawings.findIndex(d =>
+            d.phase === activePhase && d.shape === 'point' &&
+            d.cells.length === 1 &&
+            d.cells[0].col === cell.col && d.cells[0].row === cell.row
+        );
+        if (idx !== -1) drawings.splice(idx, 1);
+        else drawings.push({ phase: activePhase, shape: 'point', startCell: cell, endCell: cell, cells: [{ col: cell.col, row: cell.row }] });
         scheduleRender(false, true);
-
-    } else if (activePhase === 'execution' || activePhase === 'surge') {
-        if (activeShape === 'point') {
-            // Toggle: click same cell to remove, else add
-            const idx = drawings.findIndex(d =>
-                d.phase === activePhase && d.shape === 'point' &&
-                d.cells.length === 1 &&
-                d.cells[0].col === cell.col && d.cells[0].row === cell.row
-            );
-            if (idx !== -1) drawings.splice(idx, 1);
-            else drawings.push({ phase: activePhase, shape: 'point', startCell: cell, endCell: cell, cells: [{ col: cell.col, row: cell.row }] });
-            scheduleRender(false, true);
-        } else {
-            currentDraw = { phase: activePhase, shape: activeShape, startCell: cell, endCell: cell, cells: [cell] };
-            scheduleRender(false, true);
-        }
+    } else {
+        currentDraw = { phase: activePhase, shape, startCell: cell, endCell: cell, cells: [cell] };
+        scheduleRender(false, true);
     }
 }
 
@@ -974,7 +1009,7 @@ function applyZoom(pivotX, pivotY, factor) {
 drawCanvas.addEventListener('mousedown', e => {
     if (e.button !== 0) return;
     e.preventDefault();
-    if (activePhase === 'pan') {
+    if (activeTool === 'pan') {
         isPanning    = true;
         panStart     = { x: e.clientX, y: e.clientY };
         panViewStart = { x: view.x,    y: view.y    };
@@ -1037,7 +1072,7 @@ drawCanvas.addEventListener('touchstart', e => {
 
     } else if (ids.length === 1 && !pinchActive) {
         const t = e.changedTouches[0];
-        if (activePhase === 'pan') {
+        if (activeTool === 'pan') {
             isPanning    = true;
             panStart     = { x: t.clientX, y: t.clientY };
             panViewStart = { x: view.x,    y: view.y    };
@@ -1113,25 +1148,18 @@ drawCanvas.addEventListener('touchcancel', e => {
 // UI CONTROLS
 // ================================================================
 
-const shapeRow = document.getElementById('shapeRow');
-const legend   = document.getElementById('legend');
+const toolSidebar = document.getElementById('toolSidebar');
 
-function setActivePhase(phase) {
-    activePhase = phase;
+function setActiveTool(tool) {
+    activeTool = tool;
 
-    // Update phase button states
-    document.querySelectorAll('.tool-btn[data-phase]').forEach(b => {
-        b.classList.toggle('active', b.dataset.phase === phase);
+    // Sidebar active state
+    document.querySelectorAll('.sidebar-btn[data-tool]').forEach(b => {
+        b.classList.toggle('active', b.dataset.tool === tool);
     });
 
-    // Show/hide shape row for EXEC and SURGE; hide for PAN and MOVE
-    const showShapes = (phase === 'execution' || phase === 'surge');
-    shapeRow.classList.toggle('hidden', !showShapes);
-    if (showShapes) shapeRow.dataset.phase = phase;
-    legend.classList.toggle('with-shape', showShapes);
-
     // Canvas cursor
-    if (phase === 'pan') {
+    if (tool === 'pan') {
         drawCanvas.classList.remove('drawing', 'grabbing');
     } else {
         drawCanvas.classList.add('drawing');
@@ -1142,23 +1170,41 @@ function setActivePhase(phase) {
     scheduleRender(false, true);
 }
 
-function setActiveShape(shape) {
-    activeShape = shape;
-    document.querySelectorAll('.shape-btn[data-shape]').forEach(b => {
-        b.classList.toggle('active', b.dataset.shape === shape);
+function setActivePhase(phase) {
+    activePhase = phase;
+
+    // Update phase button states
+    document.querySelectorAll('.phase-btn[data-phase]').forEach(b => {
+        b.classList.toggle('active', b.dataset.phase === phase);
     });
+
+    // Sidebar phase-colour class
+    toolSidebar.className = 'phase-' + phase;
+
+    // MOVE restricts tools to pan + line only
+    const moveOnly = (phase === 'move');
+    document.querySelectorAll('.sidebar-btn[data-tool]').forEach(b => {
+        const t = b.dataset.tool;
+        b.classList.toggle('tool-disabled', moveOnly && t !== 'pan' && t !== 'line');
+    });
+
+    // If the active tool is now forbidden, fall back to line
+    if (moveOnly && activeTool !== 'pan' && activeTool !== 'line') {
+        setActiveTool('line');
+    }
+
     currentDraw = null;
     scheduleRender(false, true);
 }
 
-// Phase buttons
-document.querySelectorAll('.tool-btn[data-phase]').forEach(btn => {
-    btn.addEventListener('click', () => setActivePhase(btn.dataset.phase));
+// Sidebar tool buttons
+document.querySelectorAll('.sidebar-btn[data-tool]').forEach(btn => {
+    btn.addEventListener('click', () => setActiveTool(btn.dataset.tool));
 });
 
-// Shape buttons
-document.querySelectorAll('.shape-btn[data-shape]').forEach(btn => {
-    btn.addEventListener('click', () => setActiveShape(btn.dataset.shape));
+// Phase buttons
+document.querySelectorAll('.phase-btn[data-phase]').forEach(btn => {
+    btn.addEventListener('click', () => setActivePhase(btn.dataset.phase));
 });
 
 // Undo last drawing
@@ -1225,12 +1271,18 @@ document.addEventListener('drop', e => {
 document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undoLast(); return; }
-    const phaseMap = { p: 'pan', m: 'move', e: 'execution', s: 'surge' };
-    const shapeMap = { '1': 'line', '2': 'wideline', '3': 'point', '4': 'circle' };
+    // Phase keys
+    const phaseMap = { m: 'move', e: 'execution', s: 'surge' };
     const phase = phaseMap[e.key.toLowerCase()];
     if (phase) { setActivePhase(phase); return; }
-    const shape = shapeMap[e.key];
-    if (shape && (activePhase === 'execution' || activePhase === 'surge')) { setActiveShape(shape); return; }
+    // Tool keys (p = pan; 1-6 = drawing tools)
+    const toolMap = { p: 'pan', '1': 'line', '2': 'wideline', '3': 'point', '4': 'circle', '5': 'square', '6': 'triangle' };
+    const tool = toolMap[e.key];
+    if (tool) {
+        const blocked = (activePhase === 'move') && tool !== 'pan' && tool !== 'line';
+        if (!blocked) setActiveTool(tool);
+        return;
+    }
     if (e.key === 'Escape') {
         if (currentDraw) { currentDraw = null; scheduleRender(false, true); }
     }
