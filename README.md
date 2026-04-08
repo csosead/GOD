@@ -1,2 +1,1 @@
 # GOD
-Web planner GOD
