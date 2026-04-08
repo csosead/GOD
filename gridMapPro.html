@@ -630,16 +630,20 @@
             </div>
             <div class="section-body">
                 <div class="file-drop-zone" id="dropZone" onclick="document.getElementById('imageLoader').click()">
-                    <input type="file" id="imageLoader" accept="image/*">
+                    <input type="file" id="imageLoader" accept="image/*,.gridmap">
                     <div class="drop-icon">◈</div>
-                    <div class="drop-text">Click or drag an image here</div>
-                    <div class="drop-text" style="margin-top:2px"><span class="drop-text-accent">PNG · JPG · WEBP</span></div>
+                    <div class="drop-text">Click or drag a file here</div>
+                    <div class="drop-text" style="margin-top:2px"><span class="drop-text-accent">PNG · JPG · WEBP · GRIDMAP</span></div>
                 </div>
                 <div class="filename-display" id="filenameDisplay"></div>
-                <div style="margin-top:8px;">
+                <div class="grid-2" style="margin-top:8px; gap:6px;">
                     <button class="btn btn-reset" onclick="fitToScreen()">
                         <span class="btn-icon">⟲</span> RESET VIEW
                     </button>
+                    <button class="btn btn-reset" id="loadGridmapBtn" onclick="document.getElementById('gridmapLoader').click()">
+                        <span class="btn-icon">⬆</span> LOAD .GRIDMAP
+                    </button>
+                    <input type="file" id="gridmapLoader" accept=".gridmap" style="display:none">
                 </div>
             </div>
         </div>
@@ -798,8 +802,11 @@
 
     <!-- Export -->
     <div class="sidebar-footer">
-        <button class="btn btn-export" id="downloadBtn">
-            <span class="btn-icon">⤓</span> EXPORT MAP
+        <button class="btn btn-export" id="exportGridmapBtn" style="margin-bottom:6px;">
+            <span class="btn-icon">⤓</span> EXPORT .GRIDMAP
+        </button>
+        <button class="btn btn-reset" id="downloadBtn" style="font-size:8px; padding:7px;">
+            <span class="btn-icon">◫</span> EXPORT PNG (FLAT)
         </button>
     </div>
 </div>
@@ -850,6 +857,10 @@
     let img = new Image(), imgLoaded = false;
     let view = { scale: 1, x: 0, y: 0 };
     let crop = { x: 100, y: 100, w: 400, h: 300, active: false };
+
+    // Raw source image bytes — stored for .gridmap export
+    let rawImageData = null;
+    let rawImageMimeType = 'image/png';
 
     let isDragging = false, isResizing = false;
     let dragStart = { x: 0, y: 0 }, resizeType = '';
@@ -913,9 +924,21 @@
     const dropZone = document.getElementById('dropZone');
     const filenameDisplay = document.getElementById('filenameDisplay');
 
+    // Dispatcher: route to importGridMap or loadImage based on extension
+    function handleFileInput(file) {
+        if (file.name.toLowerCase().endsWith('.gridmap')) {
+            importGridMap(file);
+        } else {
+            loadImage(file);
+        }
+    }
+
     function loadImage(file) {
+        rawImageMimeType = file.type || 'image/png';
         const reader = new FileReader();
         reader.onload = (f) => {
+            rawImageData = f.target.result; // ArrayBuffer
+            const objUrl = URL.createObjectURL(new Blob([rawImageData], { type: rawImageMimeType }));
             img = new Image();
             img.onload = () => {
                 imgLoaded = true;
@@ -923,22 +946,25 @@
                 canvas.height = viewport.clientHeight;
                 crop.x = canvas.width / 4; crop.y = canvas.height / 4;
                 crop.w = canvas.width / 2; crop.h = canvas.height / 2;
-                // Ensure crop stays within viewport
                 if (typeof clampCrop === 'function') clampCrop();
                 document.getElementById('emptyState').classList.add('hidden');
                 document.getElementById('hintBar').classList.remove('hidden');
                 document.getElementById('zoomDisplay').classList.remove('hidden');
                 filenameDisplay.textContent = '◈ ' + file.name;
                 filenameDisplay.classList.add('visible');
+                URL.revokeObjectURL(objUrl);
                 fitToScreen();
             };
-            img.src = f.target.result;
+            img.src = objUrl;
         };
-        reader.readAsDataURL(file);
+        reader.readAsArrayBuffer(file);
     }
 
     document.getElementById('imageLoader').onchange = (e) => {
-        if (e.target.files[0]) loadImage(e.target.files[0]);
+        if (e.target.files[0]) handleFileInput(e.target.files[0]);
+    };
+    document.getElementById('gridmapLoader').onchange = (e) => {
+        if (e.target.files[0]) importGridMap(e.target.files[0]);
     };
 
     dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
@@ -946,20 +972,14 @@
     dropZone.ondrop = (e) => {
         e.preventDefault();
         dropZone.classList.remove('drag-over');
-        if (e.dataTransfer.files[0]) {
-            document.getElementById('imageLoader').files = e.dataTransfer.files;
-            loadImage(e.dataTransfer.files[0]);
-        }
+        if (e.dataTransfer.files[0]) handleFileInput(e.dataTransfer.files[0]);
     };
 
     // Also allow drag-drop on viewport
     viewport.ondragover = (e) => { e.preventDefault(); };
     viewport.ondrop = (e) => {
         e.preventDefault();
-        if (e.dataTransfer.files[0]) {
-            document.getElementById('imageLoader').files = e.dataTransfer.files;
-            loadImage(e.dataTransfer.files[0]);
-        }
+        if (e.dataTransfer.files[0]) handleFileInput(e.dataTransfer.files[0]);
     };
 
     // === PAN / ZOOM / CROP CONTROLS ===
@@ -1223,31 +1243,236 @@
         return `rgba(${r},${g},${b},${a})`;
     }
 
-    // === EXPORT ===
+    // =========================================================
+    // === EXPORT / IMPORT — .gridmap binary format ============
+    // =========================================================
+    //
+    // Binary layout:
+    //   [ UTF-8 JSON header ] [ delimiter: "[GRID_DATA_END]" ] [ raw image bytes ]
+    //
+    // The JSON header fully describes every UI parameter so a Player app
+    // can reconstruct the grid overlay without the editor.
+    //
+    // --- PLAYER APP DECODER SNIPPET ---
+    // async function loadGridmap(file) {
+    //     const buf = await file.arrayBuffer();
+    //     const bytes = new Uint8Array(buf);
+    //     const delim = new TextEncoder().encode('[GRID_DATA_END]');
+    //     let split = -1;
+    //     outer: for (let i = 0; i <= bytes.length - delim.length; i++) {
+    //         for (let j = 0; j < delim.length; j++) {
+    //             if (bytes[i+j] !== delim[j]) continue outer;
+    //         }
+    //         split = i; break;
+    //     }
+    //     if (split === -1) throw new Error('Invalid .gridmap file');
+    //     const header  = JSON.parse(new TextDecoder().decode(bytes.slice(0, split)));
+    //     const imgBlob = new Blob([buf.slice(split + delim.length)], { type: header.image.format });
+    //     const imgUrl  = URL.createObjectURL(imgBlob);
+    //     // header.grid, header.macro_lines, header.micro_lines, header.coordinates
+    //     // → use to initialise tactical math (snapping, coordinate rendering, crop region)
+    //     return { header, imgUrl };
+    // }
+    // ----------------------------------
+
+    const GRIDMAP_DELIM = '[GRID_DATA_END]';
+
+    function buildGridMapHeader() {
+        const cropImgX = imgLoaded ? (crop.x - view.x) / view.scale : 0;
+        const cropImgY = imgLoaded ? (crop.y - view.y) / view.scale : 0;
+        const cropImgW = imgLoaded ? crop.w / view.scale : 0;
+        const cropImgH = imgLoaded ? crop.h / view.scale : 0;
+
+        return {
+            version: '1.0',
+            app: 'GOD Tactical Mapper',
+            exported_at: new Date().toISOString(),
+            crop: {
+                active: crop.active,
+                image_x: Math.round(cropImgX),
+                image_y: Math.round(cropImgY),
+                image_w: Math.round(cropImgW),
+                image_h: Math.round(cropImgH)
+            },
+            grid: {
+                sector_size: parseInt(ui.sNum.value),
+                offset_x: parseInt(ui.offX.value),
+                offset_y: parseInt(ui.offY.value)
+            },
+            macro_lines: {
+                color:     ui.cMa.value,
+                opacity:   parseFloat(ui.aMa.value),
+                thickness: parseFloat(ui.lwMa.value)
+            },
+            micro_lines: {
+                color:     ui.cMi.value,
+                opacity:   parseFloat(ui.aMi.value),
+                thickness: parseFloat(ui.lwMi.value)
+            },
+            coordinates: {
+                color:             ui.cTxt.value,
+                opacity:           parseFloat(ui.aTxt.value),
+                label_size:        parseInt(ui.fSize.value),
+                coord_offset_x:    parseInt(ui.driftX.value),
+                coord_offset_y:    parseInt(ui.driftY.value),
+                show_sector_coord: ui.showC.checked,
+                show_numpad:       ui.showN.checked
+            },
+            image: {
+                original_width:  img.width,
+                original_height: img.height,
+                format:          rawImageMimeType
+            }
+        };
+    }
+
+    function exportToGridMap() {
+        if (!imgLoaded || !rawImageData) {
+            alert('No map loaded. Load an image first.');
+            return;
+        }
+
+        const enc = new TextEncoder();
+        const headerBytes = enc.encode(JSON.stringify(buildGridMapHeader(), null, 2));
+        const delimBytes  = enc.encode(GRIDMAP_DELIM);
+        const imgBytes    = new Uint8Array(rawImageData);
+
+        const out = new Uint8Array(headerBytes.length + delimBytes.length + imgBytes.length);
+        out.set(headerBytes, 0);
+        out.set(delimBytes, headerBytes.length);
+        out.set(imgBytes,   headerBytes.length + delimBytes.length);
+
+        const blob = new Blob([out.buffer], { type: 'application/octet-stream' });
+        const a = document.createElement('a');
+        a.download = 'TACTICAL_MAP.gridmap';
+        a.href = URL.createObjectURL(blob);
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 15000);
+    }
+
+    async function importGridMap(file) {
+        const buffer = await file.arrayBuffer();
+        const bytes  = new Uint8Array(buffer);
+        const delim  = new TextEncoder().encode(GRIDMAP_DELIM);
+
+        // Locate delimiter
+        let splitIdx = -1;
+        outer: for (let i = 0; i <= bytes.length - delim.length; i++) {
+            for (let j = 0; j < delim.length; j++) {
+                if (bytes[i + j] !== delim[j]) continue outer;
+            }
+            splitIdx = i;
+            break;
+        }
+        if (splitIdx === -1) { alert('Invalid .gridmap file: header delimiter not found.'); return; }
+
+        let header;
+        try { header = JSON.parse(new TextDecoder().decode(bytes.slice(0, splitIdx))); }
+        catch (e) { alert('Invalid .gridmap file: corrupt JSON header.'); return; }
+
+        const imageBuffer = buffer.slice(splitIdx + delim.length);
+        rawImageData    = imageBuffer;
+        rawImageMimeType = header.image?.format || 'image/png';
+
+        const objUrl = URL.createObjectURL(new Blob([imageBuffer], { type: rawImageMimeType }));
+        img = new Image();
+        img.onload = () => {
+            imgLoaded = true;
+            canvas.width  = viewport.clientWidth;
+            canvas.height = viewport.clientHeight;
+
+            // Apply all UI controls from header
+            applyGridMapHeader(header);
+
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('hintBar').classList.remove('hidden');
+            document.getElementById('zoomDisplay').classList.remove('hidden');
+            filenameDisplay.textContent = '◈ ' + file.name;
+            filenameDisplay.classList.add('visible');
+            URL.revokeObjectURL(objUrl);
+
+            fitToScreen(); // sets view.scale / view.x / view.y
+
+            // Restore crop in screen-space using stored image-space coordinates
+            if (header.crop?.active && header.crop.image_w > 0) {
+                crop.x = view.x + header.crop.image_x * view.scale;
+                crop.y = view.y + header.crop.image_y * view.scale;
+                crop.w = header.crop.image_w * view.scale;
+                crop.h = header.crop.image_h * view.scale;
+                clampCrop();
+                crop.active = true;
+                ui.btnCrop.classList.add('active');
+                document.getElementById('cropIndicator').classList.add('visible');
+                document.querySelectorAll('.hint-crop').forEach(el => el.style.display = 'flex');
+            } else {
+                crop.active = false;
+                ui.btnCrop.classList.remove('active');
+                document.getElementById('cropIndicator').classList.remove('visible');
+                document.querySelectorAll('.hint-crop').forEach(el => el.style.display = 'none');
+            }
+
+            render();
+        };
+        img.src = objUrl;
+    }
+
+    // Helper: sync a linked slider+number pair and their optional display label
+    function _setSliderNum(slide, num, val) { slide.value = val; num.value = val; }
+
+    function applyGridMapHeader(h) {
+        if (h.grid) {
+            _setSliderNum(ui.sSlide, ui.sNum, h.grid.sector_size);
+            _setSliderNum(ui.offXSlide, ui.offX, h.grid.offset_x);
+            _setSliderNum(ui.offYSlide, ui.offY, h.grid.offset_y);
+            document.getElementById('valSize').textContent = h.grid.sector_size;
+            document.getElementById('valOffX').textContent = h.grid.offset_x;
+            document.getElementById('valOffY').textContent = h.grid.offset_y;
+        }
+        if (h.macro_lines) {
+            ui.cMa.value = h.macro_lines.color;
+            ui.aMa.value = h.macro_lines.opacity;
+            _setSliderNum(ui.lwMaSlide, ui.lwMa, h.macro_lines.thickness);
+        }
+        if (h.micro_lines) {
+            ui.cMi.value = h.micro_lines.color;
+            ui.aMi.value = h.micro_lines.opacity;
+            _setSliderNum(ui.lwMiSlide, ui.lwMi, h.micro_lines.thickness);
+        }
+        if (h.coordinates) {
+            ui.cTxt.value = h.coordinates.color;
+            ui.aTxt.value = h.coordinates.opacity;
+            ui.fSize.value = h.coordinates.label_size;
+            _setSliderNum(ui.driftXSlide, ui.driftX, h.coordinates.coord_offset_x);
+            _setSliderNum(ui.driftYSlide, ui.driftY, h.coordinates.coord_offset_y);
+            document.getElementById('valDriftX').textContent = h.coordinates.coord_offset_x;
+            document.getElementById('valDriftY').textContent = h.coordinates.coord_offset_y;
+            ui.showC.checked = h.coordinates.show_sector_coord;
+            ui.showN.checked = h.coordinates.show_numpad;
+        }
+    }
+
+    // Wire up .gridmap export button
+    document.getElementById('exportGridmapBtn').onclick = exportToGridMap;
+
+    // === PNG FLAT EXPORT (legacy) ===
     document.getElementById('downloadBtn').onclick = () => {
         if (!imgLoaded) return;
         const out = document.createElement('canvas');
 
         if (crop.active) {
-            // Convert screen crop coords to original image pixel coords
             const cropImgX = (crop.x - view.x) / view.scale;
             const cropImgY = (crop.y - view.y) / view.scale;
             const cropImgW = crop.w / view.scale;
             const cropImgH = crop.h / view.scale;
-
             out.width  = Math.round(cropImgW);
             out.height = Math.round(cropImgH);
             const octx = out.getContext('2d');
-
-            // Shift so crop origin maps to (0,0), draw at full original resolution
             octx.translate(-cropImgX, -cropImgY);
             drawGridContent(octx, img.width, img.height);
         } else {
-            // Full image at original resolution
             out.width  = img.width;
             out.height = img.height;
-            const octx = out.getContext('2d');
-            drawGridContent(octx, img.width, img.height);
+            drawGridContent(out.getContext('2d'), img.width, img.height);
         }
 
         const a = document.createElement('a');
