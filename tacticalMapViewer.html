@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>GOD: Tactical Viewer</title>
+    <style>
+        :root {
+            --bg:          #04080c;
+            --panel:       rgba(6, 11, 17, 0.92);
+            --border:      #0f2030;
+            --border-glow: #00f0ff22;
+            --cyan:        #00f0ff;
+            --cyan-dim:    #007888;
+            --green:       #00e060;
+            --blue:        #0096ff;
+            --red:         #ff3333;
+            --text:        #b8dcea;
+            --text-dim:    #3a6070;
+            --text-mid:    #6a9cac;
+            --safe-t:      env(safe-area-inset-top,    0px);
+            --safe-b:      env(safe-area-inset-bottom, 0px);
+            --safe-l:      env(safe-area-inset-left,   0px);
+            --safe-r:      env(safe-area-inset-right,  0px);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            touch-action: none;
+            user-select: none;
+        }
+
+        /* ── CANVAS STACK ─────────────────────────────── */
+        #canvasWrap {
+            position: fixed; inset: 0;
+            touch-action: none;
+        }
+        #mapCanvas, #drawCanvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: block;
+        }
+        #drawCanvas { cursor: grab; }
+        #drawCanvas.drawing { cursor: crosshair; }
+        #drawCanvas.grabbing { cursor: grabbing; }
+
+        /* ── TOP BAR ──────────────────────────────────── */
+        #topbar {
+            position: fixed; top: 0; left: 0; right: 0;
+            padding: calc(10px + var(--safe-t)) calc(12px + var(--safe-r)) 10px calc(12px + var(--safe-l));
+            display: flex; align-items: center; gap: 8px;
+            z-index: 100;
+            background: linear-gradient(180deg, rgba(4,8,12,0.96) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        #topbar > * { pointer-events: all; }
+
+        .top-btn {
+            height: 34px; padding: 0 13px;
+            background: rgba(6,11,17,0.88);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            color: var(--text-mid);
+            font-family: inherit; font-size: 10px; letter-spacing: 1.5px;
+            cursor: pointer; white-space: nowrap;
+            transition: border-color .15s, color .15s, box-shadow .15s;
+        }
+        .top-btn:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,.15); }
+        .top-btn:active { opacity: .8; }
+
+        #mapTitle {
+            flex: 1; min-width: 0;
+            font-size: 10px; letter-spacing: 2.5px;
+            color: var(--text-dim);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            pointer-events: none;
+        }
+
+        #zoomLabel {
+            font-size: 10px; letter-spacing: 1.5px;
+            color: var(--text-dim); white-space: nowrap;
+            pointer-events: none; min-width: 50px; text-align: right;
+        }
+
+        /* ── BOTTOM TOOLBAR ───────────────────────────── */
+        #toolbar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            display: flex; flex-direction: column;
+            z-index: 100;
+            background: linear-gradient(0deg, rgba(4,8,12,0.97) 0%, transparent 100%);
+        }
+
+        #phaseRow {
+            display: flex; align-items: stretch; gap: 7px;
+            padding: 8px calc(10px + var(--safe-r)) 6px calc(10px + var(--safe-l));
+        }
+
+        #shapeRow {
+            display: flex; align-items: stretch; gap: 5px;
+            padding: 0 calc(10px + var(--safe-r)) calc(10px + var(--safe-b)) calc(10px + var(--safe-l));
+            transition: opacity .15s;
+        }
+        #shapeRow.hidden {
+            display: none;
+        }
+
+        .tool-btn {
+            flex: 1;
+            min-height: 54px;
+            background: rgba(6,11,17,0.9);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-dim);
+            font-family: inherit; font-size: 9px; letter-spacing: 1.8px;
+            cursor: pointer; touch-action: manipulation;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 4px;
+            transition: all .15s;
+        }
+        .tool-btn .icon { font-size: 18px; line-height: 1; }
+        .tool-btn:hover:not(.active) { border-color: #1a3040; color: var(--text-mid); }
+
+        .tool-btn.active[data-phase="pan"]       { border-color: var(--cyan);  color: var(--cyan);  background: rgba(0,240,255,.07);  box-shadow: inset 0 0 12px rgba(0,240,255,.08); }
+        .tool-btn.active[data-phase="move"]      { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);   box-shadow: inset 0 0 12px rgba(0,224,96,.08);  }
+        .tool-btn.active[data-phase="execution"] { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07);  box-shadow: inset 0 0 12px rgba(0,150,255,.08); }
+        .tool-btn.active[data-phase="surge"]     { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07);  box-shadow: inset 0 0 12px rgba(255,51,51,.08);  }
+
+        /* Shape buttons */
+        .shape-btn {
+            flex: 1;
+            min-height: 40px;
+            background: rgba(6,11,17,0.85);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-dim);
+            font-family: inherit; font-size: 8px; letter-spacing: 1.4px;
+            cursor: pointer; touch-action: manipulation;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 3px;
+            transition: all .15s;
+        }
+        .shape-btn .icon { font-size: 14px; line-height: 1; }
+        .shape-btn:hover:not(.active) { border-color: #1a3040; color: var(--text-mid); }
+
+        #shapeRow[data-phase="execution"] .shape-btn.active {
+            border-color: var(--blue); color: var(--blue);
+            background: rgba(0,150,255,.1);
+            box-shadow: inset 0 0 8px rgba(0,150,255,.1);
+        }
+        #shapeRow[data-phase="surge"] .shape-btn.active {
+            border-color: var(--red); color: var(--red);
+            background: rgba(255,51,51,.1);
+            box-shadow: inset 0 0 8px rgba(255,51,51,.1);
+        }
+
+        #btnClear {
+            flex: none; width: 54px;
+            min-height: 54px;
+            background: rgba(6,11,17,0.9);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-dim);
+            font-size: 20px; cursor: pointer; touch-action: manipulation;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s;
+        }
+        #btnClear:hover { border-color: var(--red); color: var(--red); background: rgba(255,51,51,.07); }
+        #btnClear:active { opacity: .7; }
+
+        /* ── LEGEND PILL ──────────────────────────────── */
+        #legend {
+            position: fixed; bottom: 110px; right: calc(12px + var(--safe-r));
+            display: flex; flex-direction: column; gap: 4px;
+            z-index: 90; pointer-events: none;
+            transition: bottom .15s;
+        }
+        #legend.with-shape { bottom: 162px; }
+        .leg-item {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 9px; letter-spacing: 1.5px;
+            color: var(--text-dim);
+            background: rgba(4,8,12,0.7);
+            padding: 3px 8px 3px 6px; border-radius: 2px;
+        }
+        .leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ── LANDING ──────────────────────────────────── */
+        #landing {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 200; gap: 0;
+        }
+        #landing.hidden { display: none; }
+
+        #landing::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(0,240,255,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,240,255,.025) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+        }
+
+        .ld-eyebrow {
+            font-size: 9px; letter-spacing: 5px;
+            color: var(--text-dim); margin-bottom: 14px;
+        }
+        .ld-title {
+            font-size: clamp(20px, 5vw, 32px);
+            letter-spacing: clamp(6px, 1.5vw, 12px);
+            color: var(--cyan);
+            text-shadow: 0 0 40px rgba(0,240,255,.35), 0 0 80px rgba(0,240,255,.15);
+            margin-bottom: 6px;
+        }
+        .ld-sub {
+            font-size: 10px; letter-spacing: 3px;
+            color: var(--text-dim); margin-bottom: 40px;
+        }
+        .ld-btn {
+            padding: 15px 44px;
+            background: transparent;
+            border: 1px solid var(--cyan);
+            border-radius: 3px;
+            color: var(--cyan);
+            font-family: inherit; font-size: 12px; letter-spacing: 3px;
+            cursor: pointer;
+            box-shadow: 0 0 24px rgba(0,240,255,.1), inset 0 0 24px rgba(0,240,255,.04);
+            transition: all .2s;
+            margin-bottom: 32px;
+        }
+        .ld-btn:hover { background: rgba(0,240,255,.06); box-shadow: 0 0 36px rgba(0,240,255,.2); }
+
+        .ld-features {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+            max-width: 340px; width: 90%;
+        }
+        .ld-feat {
+            font-size: 9px; letter-spacing: 1.5px; color: var(--text-dim);
+            border: 1px solid var(--border); border-radius: 3px;
+            padding: 8px 10px; line-height: 1.6;
+            background: rgba(15,32,48,.4);
+        }
+        .ld-feat strong { color: var(--text-mid); letter-spacing: 1px; }
+
+        /* ── TOAST ────────────────────────────────────── */
+        #toast {
+            position: fixed; top: 56px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(6,11,17,.96);
+            border: 1px solid var(--border);
+            border-radius: 3px; padding: 9px 18px;
+            font-size: 10px; letter-spacing: 1.5px; color: var(--text);
+            z-index: 300; pointer-events: none;
+            opacity: 0; transition: opacity .25s;
+            white-space: nowrap;
+        }
+        #toast.show { opacity: 1; }
+
+        /* ── CONFIRM DIALOG ───────────────────────────── */
+        #confirmOverlay {
+            position: fixed; inset: 0;
+            background: rgba(4,8,12,.85);
+            z-index: 400; display: none;
+            align-items: center; justify-content: center;
+        }
+        #confirmOverlay.show { display: flex; }
+        #confirmBox {
+            background: #080e14; border: 1px solid var(--border);
+            border-radius: 4px; padding: 28px 32px;
+            text-align: center; max-width: 300px;
+        }
+        #confirmBox p { font-size: 11px; letter-spacing: 1.5px; color: var(--text-mid); margin-bottom: 20px; }
+        #confirmBox .row { display: flex; gap: 10px; justify-content: center; }
+        .conf-btn {
+            padding: 10px 24px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 3px; color: var(--text-mid);
+            font-family: inherit; font-size: 10px; letter-spacing: 2px;
+            cursor: pointer; transition: all .15s;
+        }
+        .conf-btn.danger  { border-color: var(--red);  color: var(--red); }
+        .conf-btn.cancel  { border-color: var(--border); }
+        .conf-btn:hover { opacity: .8; }
+    </style>
+</head>
+<body>
+
+<!-- Canvas stack -->
+<div id="canvasWrap">
+    <canvas id="mapCanvas"></canvas>
+    <canvas id="drawCanvas"></canvas>
+</div>
+
+<!-- Top bar -->
+<div id="topbar">
+    <button class="top-btn" id="btnLoad">⬆ LOAD .GRIDMAP</button>
+    <button class="top-btn" id="btnFit"  title="Fit map to screen">⟲ FIT</button>
+    <span id="mapTitle">NO MAP LOADED</span>
+    <span id="zoomLabel">100%</span>
+    <button class="top-btn" id="btnFullscreen">⛶ FULLSCREEN</button>
+</div>
+<input type="file" id="fileInput" accept=".gridmap" style="display:none">
+
+<!-- Bottom toolbar -->
+<div id="toolbar">
+    <!-- Phase selection row -->
+    <div id="phaseRow">
+        <button class="tool-btn active" data-phase="pan" id="btnPan">
+            <span class="icon">✥</span><span>PAN</span>
+        </button>
+        <button class="tool-btn" data-phase="move" id="btnMove">
+            <span class="icon">⟶</span><span>MOVE</span>
+        </button>
+        <button class="tool-btn" data-phase="execution" id="btnExec">
+            <span class="icon">◈</span><span>EXEC</span>
+        </button>
+        <button class="tool-btn" data-phase="surge" id="btnSurge">
+            <span class="icon">◎</span><span>SURGE</span>
+        </button>
+        <button id="btnClear" title="Clear all drawings">✕</button>
+    </div>
+    <!-- Shape selection row (EXEC / SURGE only) -->
+    <div id="shapeRow" class="hidden" data-phase="execution">
+        <button class="shape-btn active" data-shape="line">
+            <span class="icon">╱</span><span>LINE</span>
+        </button>
+        <button class="shape-btn" data-shape="point">
+            <span class="icon">●</span><span>POINT</span>
+        </button>
+        <button class="shape-btn" data-shape="circle">
+            <span class="icon">◯</span><span>CIRCLE</span>
+        </button>
+        <button class="shape-btn" data-shape="square">
+            <span class="icon">□</span><span>SQUARE</span>
+        </button>
+        <button class="shape-btn" data-shape="triangle">
+            <span class="icon">△</span><span>CONE</span>
+        </button>
+    </div>
+</div>
+
+<!-- Legend -->
+<div id="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:#00e060"></div>MOVE</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#0096ff"></div>EXEC</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#ff3333"></div>SURGE</div>
+</div>
+
+<!-- Landing screen -->
+<div id="landing">
+    <div class="ld-eyebrow">GOD · FIELD OPERATIONS</div>
+    <div class="ld-title">TACTICAL VIEWER</div>
+    <div class="ld-sub">CROSS-PLATFORM MAP PLANNING TOOL</div>
+    <button class="ld-btn" id="btnLandingLoad">LOAD .GRIDMAP FILE</button>
+    <div class="ld-features">
+        <div class="ld-feat"><strong>MOVE</strong><br>Draw movement<br>routes on grid</div>
+        <div class="ld-feat"><strong>EXEC</strong><br>Line / AOE on<br>discrete cells</div>
+        <div class="ld-feat"><strong>SURGE</strong><br>Circle / Cone /<br>Square zones</div>
+        <div class="ld-feat"><strong>PAN &amp; ZOOM</strong><br>Pinch/scroll<br>to navigate</div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Clear confirm -->
+<div id="confirmOverlay">
+    <div id="confirmBox">
+        <p>CLEAR ALL DRAWINGS?<br>THIS CANNOT BE UNDONE.</p>
+        <div class="row">
+            <button class="conf-btn danger"  id="confirmYes">CLEAR</button>
+            <button class="conf-btn cancel"  id="confirmNo">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ================================================================
+// GOD: Tactical Map Viewer  —  standalone single-file app
+// ================================================================
+
+// Supported delimiters (new format first, fallback to legacy)
+const GRIDMAP_DELIMITERS = ['###GRID_METADATA_END###', '[GRID_DATA_END]'];
+
+// --- Canvas elements ---
+const mapCanvas  = document.getElementById('mapCanvas');
+const drawCanvas = document.getElementById('drawCanvas');
+const mapCtx     = mapCanvas.getContext('2d');
+const drawCtx    = drawCanvas.getContext('2d');
+
+// --- App state ---
+let mapData     = null;   // { header, img, imgUrl, fileName }
+let view        = { x: 0, y: 0, scale: 1 };
+let activePhase = 'pan';  // 'pan' | 'move' | 'execution' | 'surge'
+let activeShape = 'line'; // 'line' | 'point' | 'circle' | 'square' | 'triangle'
+let drawings    = [];
+let currentDraw = null;   // in-progress stroke
+
+// --- Dirty flags (event-driven rendering) ---
+let mapDirty   = false;
+let drawDirty  = false;
+let rafPending = false;
+
+// --- Pointer tracking ---
+let isPanning    = false;
+let panStart     = { x: 0, y: 0 };
+let panViewStart = { x: 0, y: 0 };
+
+// --- Pinch zoom ---
+const activeTouches = {};
+let pinchActive     = false;
+let pinchStartDist  = 0;
+let pinchStartScale = 1;
+let pinchStartMid   = { x: 0, y: 0 };
+let pinchStartView  = { x: 0, y: 0 };
+
+// ================================================================
+// FILE LOADING
+// ================================================================
+
+async function loadGridmapFile(file) {
+    try {
+        const buffer = await file.arrayBuffer();
+        const bytes  = new Uint8Array(buffer);
+
+        let splitIdx = -1;
+        let delimLen = 0;
+
+        // Try each supported delimiter in priority order
+        for (const delimStr of GRIDMAP_DELIMITERS) {
+            const delim = new TextEncoder().encode(delimStr);
+            outer: for (let i = 0; i <= bytes.length - delim.length; i++) {
+                for (let j = 0; j < delim.length; j++) {
+                    if (bytes[i + j] !== delim[j]) continue outer;
+                }
+                splitIdx = i;
+                delimLen = delim.length;
+                break;
+            }
+            if (splitIdx !== -1) break;
+        }
+
+        if (splitIdx === -1) { showToast('ERROR: DELIMITER NOT FOUND — NOT A VALID .GRIDMAP'); return; }
+
+        let header;
+        try   { header = JSON.parse(new TextDecoder().decode(bytes.slice(0, splitIdx))); }
+        catch { showToast('ERROR: CORRUPT JSON HEADER'); return; }
+
+        const imgBuffer = buffer.slice(splitIdx + delimLen);
+        const mimeType  = header.image?.format || 'image/png';
+        const imgUrl    = URL.createObjectURL(new Blob([imgBuffer], { type: mimeType }));
+
+        const img = new Image();
+        img.onload = () => {
+            if (mapData?.imgUrl) URL.revokeObjectURL(mapData.imgUrl);
+            mapData = { header, img, imgUrl, fileName: file.name };
+            drawings    = [];
+            currentDraw = null;
+            document.getElementById('landing').classList.add('hidden');
+            document.getElementById('mapTitle').textContent =
+                file.name.replace(/\.gridmap$/i, '').toUpperCase();
+            fitToScreen();
+            showToast('MAP LOADED — ' + file.name.toUpperCase());
+        };
+        img.onerror = () => showToast('ERROR: FAILED TO DECODE IMAGE DATA');
+        img.src = imgUrl;
+    } catch (err) {
+        showToast('ERROR: ' + err.message.toUpperCase());
+    }
+}
+
+// ================================================================
+// CANVAS RESIZE
+// ================================================================
+
+function resizeCanvases() {
+    const w = window.innerWidth, h = window.innerHeight;
+    mapCanvas.width  = drawCanvas.width  = w;
+    mapCanvas.height = drawCanvas.height = h;
+    scheduleRender(true, true);
+}
+
+function fitToScreen() {
+    if (!mapData) return;
+    const iw = mapData.header.image.original_width;
+    const ih = mapData.header.image.original_height;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const pad = 80;
+    const scale = Math.min((vw - pad) / iw, (vh - pad * 2) / ih);
+    view.scale = Math.max(scale, 0.02);
+    view.x = (vw - iw * view.scale) / 2;
+    view.y = (vh - ih * view.scale) / 2 + 10;
+    scheduleRender(true, true);
+}
+
+// ================================================================
+// EVENT-DRIVEN RENDER LOOP
+// ================================================================
+
+function scheduleRender(map, draw) {
+    if (map)  mapDirty  = true;
+    if (draw) drawDirty = true;
+    if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(doRender);
+    }
+}
+
+function doRender() {
+    rafPending = false;
+    if (mapDirty)  { renderMap();      mapDirty  = false; }
+    if (drawDirty) { renderDrawings(); drawDirty = false; }
+    updateZoomLabel();
+}
+
+// ================================================================
+// MAP RENDER (bottom canvas — image + clipped grid)
+// ================================================================
+
+function renderMap() {
+    mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+    if (!mapData) return;
+
+    const iw = mapData.header.image.original_width;
+    const ih = mapData.header.image.original_height;
+
+    mapCtx.save();
+    mapCtx.translate(view.x, view.y);
+    mapCtx.scale(view.scale, view.scale);
+
+    // Draw image
+    mapCtx.drawImage(mapData.img, 0, 0);
+
+    // Clip grid and coordinate labels strictly to map bounds
+    mapCtx.save();
+    mapCtx.beginPath();
+    mapCtx.rect(0, 0, iw, ih);
+    mapCtx.clip();
+    drawGrid(mapCtx, mapData.header);
+    mapCtx.restore();
+
+    mapCtx.restore();
+}
+
+function drawGrid(ctx, h) {
+    const { sector_size: sSize, offset_x: oX, offset_y: oY } = h.grid;
+    const cSize = sSize / 3;
+    const iw = h.image.original_width;
+    const ih = h.image.original_height;
+
+    const macroStyle  = hexToRgba(h.macro_lines.color, h.macro_lines.opacity);
+    const microStyle  = hexToRgba(h.micro_lines.color, h.micro_lines.opacity);
+    const macroWidth  = h.macro_lines.thickness;
+    const microWidth  = h.micro_lines.thickness;
+
+    // Vertical lines
+    const colCount = Math.ceil((iw - oX) / cSize) + 1;
+    for (let i = 0; i <= colCount; i++) {
+        const x = oX + i * cSize;
+        if (x < 0 || x > iw) continue;
+        const macro = (i % 3 === 0);
+        ctx.beginPath();
+        ctx.strokeStyle = macro ? macroStyle : microStyle;
+        ctx.lineWidth   = macro ? macroWidth : microWidth;
+        ctx.moveTo(x, 0); ctx.lineTo(x, ih);
+        ctx.stroke();
+    }
+
+    // Horizontal lines
+    const rowCount = Math.ceil((ih - oY) / cSize) + 1;
+    for (let i = 0; i <= rowCount; i++) {
+        const y = oY + i * cSize;
+        if (y < 0 || y > ih) continue;
+        const macro = (i % 3 === 0);
+        ctx.beginPath();
+        ctx.strokeStyle = macro ? macroStyle : microStyle;
+        ctx.lineWidth   = macro ? macroWidth : microWidth;
+        ctx.moveTo(0, y); ctx.lineTo(iw, y);
+        ctx.stroke();
+    }
+
+    // Coordinate labels
+    const co = h.coordinates;
+    if (!co.show_sector_coord && !co.show_numpad) return;
+
+    const driftX = (co.coord_offset_x / 100) * sSize;
+    const driftY = (co.coord_offset_y / 100) * sSize;
+    const fs     = co.label_size;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+
+    const sxMax = Math.ceil((iw - oX) / sSize);
+    const syMax = Math.ceil((ih - oY) / sSize);
+
+    for (let sy = 0; sy < syMax; sy++) {
+        for (let sx = 0; sx < sxMax; sx++) {
+            const lcx = oX + sx * sSize + sSize / 2 + driftX;
+            const lcy = oY + sy * sSize + sSize / 2 + driftY;
+
+            if (co.show_sector_coord) {
+                const lbl = toLetters(sx) + (sy + 1);
+                ctx.font      = `bold ${fs}px Orbitron, monospace`;
+                ctx.fillStyle = hexToRgba('#000000', co.opacity);
+                ctx.fillText(lbl, lcx + 1, lcy + 1);
+                ctx.fillStyle = hexToRgba(co.color, co.opacity);
+                ctx.fillText(lbl, lcx, lcy);
+            }
+
+            if (co.show_numpad) {
+                ctx.font      = `${Math.round(fs * 0.4)}px Orbitron, monospace`;
+                ctx.fillStyle = hexToRgba(co.color, co.opacity * 0.5);
+                for (let dy = 0; dy < 3; dy++) {
+                    for (let dx = 0; dx < 3; dx++) {
+                        const n = (2 - dy) * 3 + (dx + 1);
+                        ctx.fillText(n,
+                            oX + sx * sSize + dx * cSize + cSize / 2,
+                            oY + sy * sSize + dy * cSize + cSize / 2);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ================================================================
+// CELL MATH HELPERS
+// ================================================================
+
+function screenToWorld(sx, sy) {
+    return { x: (sx - view.x) / view.scale, y: (sy - view.y) / view.scale };
+}
+
+function worldToCell(wx, wy) {
+    const { sector_size: sSize, offset_x: oX, offset_y: oY } = mapData.header.grid;
+    const cSize = sSize / 3;
+    return {
+        col: Math.floor((wx - oX) / cSize),
+        row: Math.floor((wy - oY) / cSize),
+    };
+}
+
+function cellRect(col, row) {
+    const { sector_size: sSize, offset_x: oX, offset_y: oY } = mapData.header.grid;
+    const cSize = sSize / 3;
+    return {
+        x:  oX + col * cSize,
+        y:  oY + row * cSize,
+        cx: oX + col * cSize + cSize / 2,
+        cy: oY + row * cSize + cSize / 2,
+        w:  cSize, h: cSize,
+    };
+}
+
+// Bresenham line in cell-space
+function lineCells(c1, r1, c2, r2) {
+    const cells = [], seen = new Set();
+    let x = c1, y = r1;
+    const dx = Math.abs(c2 - c1), dy = Math.abs(r2 - r1);
+    const sx = c1 < c2 ? 1 : -1, sy = r1 < r2 ? 1 : -1;
+    let err = dx - dy;
+    for (let guard = 0; guard < 4000; guard++) {
+        const k = x + ',' + y;
+        if (!seen.has(k)) { seen.add(k); cells.push({ col: x, row: y }); }
+        if (x === c2 && y === r2) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x += sx; }
+        if (e2 <  dx) { err += dx; y += sy; }
+    }
+    return cells;
+}
+
+// Euclidean circle fill in cell-space
+function circleCells(cc, rc, radiusCells) {
+    const cells = [];
+    const r = Math.max(0, radiusCells);
+    const ri = Math.ceil(r);
+    for (let dc = -ri; dc <= ri; dc++) {
+        for (let dr = -ri; dr <= ri; dr++) {
+            if (Math.hypot(dc, dr) <= r + 0.5) {
+                cells.push({ col: cc + dc, row: rc + dr });
+            }
+        }
+    }
+    return cells;
+}
+
+// Chebyshev (square) fill in cell-space
+function squareCells(cc, rc, halfSize) {
+    const cells = [];
+    const h = Math.max(0, Math.round(halfSize));
+    for (let dc = -h; dc <= h; dc++) {
+        for (let dr = -h; dr <= h; dr++) {
+            cells.push({ col: cc + dc, row: rc + dr });
+        }
+    }
+    return cells;
+}
+
+// 90-degree cone from start toward end
+function coneCells(sc, sr, ec, er) {
+    const ddx = ec - sc, ddy = er - sr;
+    const len  = Math.hypot(ddx, ddy);
+    if (len < 0.5) return [{ col: sc, row: sr }];
+    const nx = ddx / len, ny = ddy / len;
+    const halfAngle = Math.PI / 4; // 45° half-angle → 90° cone
+    const maxR = Math.ceil(len);
+    const cells = [], seen = new Set();
+    for (let dc = -maxR; dc <= maxR; dc++) {
+        for (let dr = -maxR; dr <= maxR; dr++) {
+            const clen = Math.hypot(dc, dr);
+            if (clen > len + 0.5) continue;
+            const k = (sc + dc) + ',' + (sr + dr);
+            if (seen.has(k)) continue;
+            if (clen < 0.5) {
+                seen.add(k); cells.push({ col: sc, row: sr });
+                continue;
+            }
+            const dot = (dc * nx + dr * ny) / clen;
+            if (dot >= Math.cos(halfAngle)) {
+                seen.add(k); cells.push({ col: sc + dc, row: sr + dr });
+            }
+        }
+    }
+    return cells;
+}
+
+function computeCells(startCell, endCell, shape) {
+    const { col: sc, row: sr } = startCell;
+    const { col: ec, row: er } = endCell;
+    switch (shape) {
+        case 'line':     return lineCells(sc, sr, ec, er);
+        case 'point':    return [{ col: ec, row: er }];
+        case 'circle': {
+            const r = Math.hypot(ec - sc, er - sr);
+            return circleCells(sc, sr, r);
+        }
+        case 'square': {
+            const h = Math.max(Math.abs(ec - sc), Math.abs(er - sr));
+            return squareCells(sc, sr, h);
+        }
+        case 'triangle': return coneCells(sc, sr, ec, er);
+        default:         return [{ col: ec, row: er }];
+    }
+}
+
+// ================================================================
+// DRAWINGS RENDER (top canvas — player annotations)
+// ================================================================
+
+function renderDrawings() {
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    if (!mapData) return;
+    drawCtx.save();
+    drawCtx.translate(view.x, view.y);
+    drawCtx.scale(view.scale, view.scale);
+    for (const d of drawings) paintDrawing(drawCtx, d, false);
+    if (currentDraw)          paintDrawing(drawCtx, currentDraw, true);
+    drawCtx.restore();
+}
+
+// Phase → colour config
+const PHASE_COLORS = {
+    move:      { fill: [0, 224, 96],   stroke: [0, 255, 120]  },
+    execution: { fill: [0, 140, 255],  stroke: [40, 190, 255] },
+    surge:     { fill: [255, 51, 51],  stroke: [255, 110, 110] },
+};
+
+function paintDrawing(ctx, d, isLive) {
+    if (!d.cells || d.cells.length === 0) return;
+
+    const c      = PHASE_COLORS[d.phase] || PHASE_COLORS.execution;
+    const alpha  = isLive ? 0.55 : 0.88;
+    const fillA  = alpha * 0.32;
+    const strokeA = alpha;
+    const vs     = view.scale;
+
+    const { sector_size: sSize, offset_x: oX, offset_y: oY } = mapData.header.grid;
+    const cSize = sSize / 3;
+
+    ctx.save();
+
+    // ── Fill all affected cells ──────────────────────────────
+    ctx.fillStyle = `rgba(${c.fill.join(',')},${fillA})`;
+    for (const { col, row } of d.cells) {
+        ctx.fillRect(oX + col * cSize, oY + row * cSize, cSize, cSize);
+    }
+
+    // ── Stroke each cell border ──────────────────────────────
+    ctx.strokeStyle = `rgba(${c.stroke.join(',')},${strokeA * 0.7})`;
+    ctx.lineWidth   = 1 / vs;
+    ctx.shadowBlur  = 0;
+    for (const { col, row } of d.cells) {
+        ctx.strokeRect(
+            oX + col * cSize + 0.5 / vs,
+            oY + row * cSize + 0.5 / vs,
+            cSize - 1 / vs,
+            cSize - 1 / vs
+        );
+    }
+
+    // ── Arrow/line overlay for line shapes ───────────────────
+    if (d.shape === 'line' && d.startCell && d.endCell) {
+        const s = cellRect(d.startCell.col, d.startCell.row);
+        const e = cellRect(d.endCell.col,   d.endCell.row);
+        const ddx = e.cx - s.cx, ddy = e.cy - s.cy;
+        const dist = Math.hypot(ddx, ddy);
+
+        ctx.strokeStyle = `rgba(${c.stroke.join(',')},${strokeA})`;
+        ctx.fillStyle   = `rgba(${c.stroke.join(',')},${strokeA})`;
+        ctx.lineWidth   = 2.5 / vs;
+        ctx.shadowColor = `rgba(${c.stroke.join(',')},0.45)`;
+        ctx.shadowBlur  = 8 / vs;
+        ctx.lineCap     = 'round';
+
+        ctx.beginPath();
+        ctx.moveTo(s.cx, s.cy);
+        ctx.lineTo(e.cx, e.cy);
+        ctx.stroke();
+
+        if (dist > 1) {
+            const angle = Math.atan2(ddy, ddx);
+            const hw    = 13 / vs;
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.moveTo(e.cx, e.cy);
+            ctx.lineTo(e.cx - hw * Math.cos(angle - Math.PI / 6), e.cy - hw * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(e.cx - hw * Math.cos(angle + Math.PI / 6), e.cy - hw * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Origin dot
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(s.cx, s.cy, 4 / vs, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // ── Center marker for circle / square / cone ─────────────
+    if ((d.shape === 'circle' || d.shape === 'square' || d.shape === 'triangle') && d.startCell) {
+        const s  = cellRect(d.startCell.col, d.startCell.row);
+        const cr = 6 / vs;
+        ctx.strokeStyle = `rgba(${c.stroke.join(',')},${strokeA})`;
+        ctx.fillStyle   = `rgba(${c.stroke.join(',')},${strokeA * 0.6})`;
+        ctx.lineWidth   = 1.5 / vs;
+        ctx.shadowColor = `rgba(${c.stroke.join(',')},0.4)`;
+        ctx.shadowBlur  = 6 / vs;
+        ctx.beginPath();
+        ctx.arc(s.cx, s.cy, cr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+// ================================================================
+// TOOL ACTIONS
+// ================================================================
+
+function snapCellFromScreen(sx, sy) {
+    const world = screenToWorld(sx, sy);
+    return worldToCell(world.x, world.y);
+}
+
+function onDrawStart(sx, sy) {
+    if (!mapData) return;
+    const cell = snapCellFromScreen(sx, sy);
+
+    if (activePhase === 'move') {
+        currentDraw = { phase: 'move', shape: 'line', startCell: cell, endCell: cell, cells: [cell] };
+        scheduleRender(false, true);
+
+    } else if (activePhase === 'execution' || activePhase === 'surge') {
+        if (activeShape === 'point') {
+            // Toggle: click same cell to remove, else add
+            const idx = drawings.findIndex(d =>
+                d.phase === activePhase && d.shape === 'point' &&
+                d.cells.length === 1 &&
+                d.cells[0].col === cell.col && d.cells[0].row === cell.row
+            );
+            if (idx !== -1) drawings.splice(idx, 1);
+            else drawings.push({ phase: activePhase, shape: 'point', startCell: cell, endCell: cell, cells: [{ col: cell.col, row: cell.row }] });
+            scheduleRender(false, true);
+        } else {
+            currentDraw = { phase: activePhase, shape: activeShape, startCell: cell, endCell: cell, cells: [cell] };
+            scheduleRender(false, true);
+        }
+    }
+}
+
+function onDrawMove(sx, sy) {
+    if (!currentDraw || !mapData) return;
+    const cell = snapCellFromScreen(sx, sy);
+    if (cell.col === currentDraw.endCell.col && cell.row === currentDraw.endCell.row) return;
+    currentDraw.endCell = cell;
+    currentDraw.cells   = computeCells(currentDraw.startCell, currentDraw.endCell, currentDraw.shape);
+    scheduleRender(false, true);
+}
+
+function onDrawEnd() {
+    if (!currentDraw) return;
+    const d = currentDraw;
+    currentDraw = null;
+
+    const sc = d.startCell, ec = d.endCell;
+    const moved = (sc.col !== ec.col || sc.row !== ec.row);
+
+    // Commit unless it's a zero-length line
+    if (d.shape === 'line' && !moved) {
+        scheduleRender(false, true);
+        return;
+    }
+    drawings.push(d);
+    scheduleRender(false, true);
+}
+
+// ================================================================
+// PAN & ZOOM  (world-anchor approach)
+// ================================================================
+
+function applyZoom(pivotX, pivotY, factor) {
+    const newScale = Math.min(Math.max(view.scale * factor, 0.02), 30);
+    // World point under pivot must remain under pivot after scale change
+    const worldX = (pivotX - view.x) / view.scale;
+    const worldY = (pivotY - view.y) / view.scale;
+    view.scale = newScale;
+    view.x = pivotX - worldX * newScale;
+    view.y = pivotY - worldY * newScale;
+    scheduleRender(true, true);
+}
+
+// ================================================================
+// MOUSE EVENTS
+// ================================================================
+
+drawCanvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    if (activePhase === 'pan') {
+        isPanning    = true;
+        panStart     = { x: e.clientX, y: e.clientY };
+        panViewStart = { x: view.x,    y: view.y    };
+        drawCanvas.classList.add('grabbing');
+    } else {
+        onDrawStart(e.clientX, e.clientY);
+    }
+});
+
+drawCanvas.addEventListener('mousemove', e => {
+    if (isPanning) {
+        view.x = panViewStart.x + (e.clientX - panStart.x);
+        view.y = panViewStart.y + (e.clientY - panStart.y);
+        scheduleRender(true, true);
+    } else if (currentDraw) {
+        onDrawMove(e.clientX, e.clientY);
+    }
+});
+
+function endMouseAction() {
+    if (isPanning) {
+        isPanning = false;
+        drawCanvas.classList.remove('grabbing');
+    } else {
+        onDrawEnd();
+    }
+}
+
+drawCanvas.addEventListener('mouseup',    e => { if (e.button === 0) endMouseAction(); });
+drawCanvas.addEventListener('mouseleave', endMouseAction);
+
+drawCanvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    applyZoom(e.clientX, e.clientY, factor);
+}, { passive: false });
+
+// ================================================================
+// TOUCH EVENTS
+// ================================================================
+
+drawCanvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) activeTouches[t.identifier] = { x: t.clientX, y: t.clientY };
+
+    const ids = Object.keys(activeTouches);
+
+    if (ids.length >= 2) {
+        currentDraw = null;
+        isPanning   = false;
+        scheduleRender(false, true);
+
+        const t1 = activeTouches[ids[0]], t2 = activeTouches[ids[1]];
+        pinchActive     = true;
+        pinchStartDist  = Math.hypot(t2.x - t1.x, t2.y - t1.y);
+        pinchStartScale = view.scale;
+        pinchStartMid   = { x: (t1.x + t2.x) / 2, y: (t1.y + t2.y) / 2 };
+        // World point under the initial mid stays fixed
+        pinchStartView  = { x: view.x, y: view.y };
+
+    } else if (ids.length === 1 && !pinchActive) {
+        const t = e.changedTouches[0];
+        if (activePhase === 'pan') {
+            isPanning    = true;
+            panStart     = { x: t.clientX, y: t.clientY };
+            panViewStart = { x: view.x,    y: view.y    };
+        } else {
+            onDrawStart(t.clientX, t.clientY);
+        }
+    }
+}, { passive: false });
+
+drawCanvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) activeTouches[t.identifier] = { x: t.clientX, y: t.clientY };
+
+    const ids = Object.keys(activeTouches);
+
+    if (pinchActive && ids.length >= 2) {
+        const t1 = activeTouches[ids[0]], t2 = activeTouches[ids[1]];
+        const dist    = Math.hypot(t2.x - t1.x, t2.y - t1.y);
+        const mid     = { x: (t1.x + t2.x) / 2, y: (t1.y + t2.y) / 2 };
+        const newScale = Math.min(Math.max(pinchStartScale * (dist / pinchStartDist), 0.02), 30);
+
+        // World point under initial mid-point stays under current mid-point
+        const worldX = (pinchStartMid.x - pinchStartView.x) / pinchStartScale;
+        const worldY = (pinchStartMid.y - pinchStartView.y) / pinchStartScale;
+        view.scale = newScale;
+        view.x = mid.x - worldX * newScale;
+        view.y = mid.y - worldY * newScale;
+        scheduleRender(true, true);
+
+    } else if (!pinchActive && ids.length === 1) {
+        const t = e.changedTouches[0];
+        if (isPanning) {
+            view.x = panViewStart.x + (t.clientX - panStart.x);
+            view.y = panViewStart.y + (t.clientY - panStart.y);
+            scheduleRender(true, true);
+        } else {
+            onDrawMove(t.clientX, t.clientY);
+        }
+    }
+}, { passive: false });
+
+drawCanvas.addEventListener('touchend', e => {
+    for (const t of e.changedTouches) delete activeTouches[t.identifier];
+
+    const ids = Object.keys(activeTouches);
+
+    if (ids.length < 2 && pinchActive) {
+        pinchActive = false;
+        if (ids.length === 1) {
+            const rem = activeTouches[ids[0]];
+            isPanning    = true;
+            panStart     = { x: rem.x, y: rem.y };
+            panViewStart = { x: view.x, y: view.y };
+        }
+    } else if (ids.length === 0 && !pinchActive) {
+        if (isPanning) {
+            isPanning = false;
+        } else {
+            onDrawEnd();
+        }
+    }
+}, { passive: false });
+
+drawCanvas.addEventListener('touchcancel', e => {
+    for (const t of e.changedTouches) delete activeTouches[t.identifier];
+    pinchActive = false;
+    isPanning   = false;
+    currentDraw = null;
+    scheduleRender(false, true);
+}, { passive: false });
+
+// ================================================================
+// UI CONTROLS
+// ================================================================
+
+const shapeRow = document.getElementById('shapeRow');
+const legend   = document.getElementById('legend');
+
+function setActivePhase(phase) {
+    activePhase = phase;
+
+    // Update phase button states
+    document.querySelectorAll('.tool-btn[data-phase]').forEach(b => {
+        b.classList.toggle('active', b.dataset.phase === phase);
+    });
+
+    // Show/hide shape row for EXEC and SURGE; hide for PAN and MOVE
+    const showShapes = (phase === 'execution' || phase === 'surge');
+    shapeRow.classList.toggle('hidden', !showShapes);
+    if (showShapes) shapeRow.dataset.phase = phase;
+    legend.classList.toggle('with-shape', showShapes);
+
+    // Canvas cursor
+    if (phase === 'pan') {
+        drawCanvas.classList.remove('drawing', 'grabbing');
+    } else {
+        drawCanvas.classList.add('drawing');
+        drawCanvas.classList.remove('grabbing');
+    }
+
+    currentDraw = null;
+    scheduleRender(false, true);
+}
+
+function setActiveShape(shape) {
+    activeShape = shape;
+    document.querySelectorAll('.shape-btn[data-shape]').forEach(b => {
+        b.classList.toggle('active', b.dataset.shape === shape);
+    });
+    currentDraw = null;
+    scheduleRender(false, true);
+}
+
+// Phase buttons
+document.querySelectorAll('.tool-btn[data-phase]').forEach(btn => {
+    btn.addEventListener('click', () => setActivePhase(btn.dataset.phase));
+});
+
+// Shape buttons
+document.querySelectorAll('.shape-btn[data-shape]').forEach(btn => {
+    btn.addEventListener('click', () => setActiveShape(btn.dataset.shape));
+});
+
+// Clear with confirm
+document.getElementById('btnClear').addEventListener('click', () => {
+    if (drawings.length === 0) { showToast('NO DRAWINGS TO CLEAR'); return; }
+    document.getElementById('confirmOverlay').classList.add('show');
+});
+document.getElementById('confirmYes').addEventListener('click', () => {
+    drawings = []; currentDraw = null;
+    document.getElementById('confirmOverlay').classList.remove('show');
+    scheduleRender(false, true);
+    showToast('ALL DRAWINGS CLEARED');
+});
+document.getElementById('confirmNo').addEventListener('click', () => {
+    document.getElementById('confirmOverlay').classList.remove('show');
+});
+
+// Load file
+const fileInput = document.getElementById('fileInput');
+document.getElementById('btnLoad').addEventListener('click',        () => fileInput.click());
+document.getElementById('btnLandingLoad').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) loadGridmapFile(f);
+    fileInput.value = '';
+});
+
+// Fit to screen
+document.getElementById('btnFit').addEventListener('click', fitToScreen);
+
+// Fullscreen
+document.getElementById('btnFullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+        document.exitFullscreen?.();
+    }
+});
+document.addEventListener('fullscreenchange', () => {
+    document.getElementById('btnFullscreen').textContent =
+        document.fullscreenElement ? '✕ EXIT FULL' : '⛶ FULLSCREEN';
+    setTimeout(() => { resizeCanvases(); if (mapData) fitToScreen(); }, 200);
+});
+
+// Drag-and-drop
+document.addEventListener('dragover',  e => e.preventDefault());
+document.addEventListener('drop', e => {
+    e.preventDefault();
+    const f = [...e.dataTransfer.files].find(f => f.name.toLowerCase().endsWith('.gridmap'));
+    if (f) loadGridmapFile(f);
+    else showToast('DROP A .GRIDMAP FILE');
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    const phaseMap = { p: 'pan', m: 'move', e: 'execution', s: 'surge' };
+    const shapeMap = { '1': 'line', '2': 'point', '3': 'circle', '4': 'square', '5': 'triangle' };
+    const phase = phaseMap[e.key.toLowerCase()];
+    if (phase) { setActivePhase(phase); return; }
+    const shape = shapeMap[e.key];
+    if (shape && (activePhase === 'execution' || activePhase === 'surge')) { setActiveShape(shape); return; }
+    if (e.key === 'Escape') {
+        if (currentDraw) { currentDraw = null; scheduleRender(false, true); }
+    }
+    if (e.key === 'Delete') {
+        if (drawings.length) document.getElementById('btnClear').click();
+    }
+    if (e.key === 'f' || e.key === 'F') fitToScreen();
+    if (e.key === '+' || e.key === '=') applyZoom(window.innerWidth / 2, window.innerHeight / 2, 1.2);
+    if (e.key === '-')                   applyZoom(window.innerWidth / 2, window.innerHeight / 2, 1 / 1.2);
+});
+
+// ================================================================
+// UTILITIES
+// ================================================================
+
+function hexToRgba(h, a) {
+    if (!h || h.length < 7) return `rgba(128,128,128,${a})`;
+    return `rgba(${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)},${a})`;
+}
+
+function toLetters(n) {
+    if (n < 0) return '';
+    let r = '';
+    while (n >= 0) { r = String.fromCharCode(n % 26 + 65) + r; n = Math.floor(n / 26) - 1; }
+    return r;
+}
+
+let toastTimer = null;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function updateZoomLabel() {
+    document.getElementById('zoomLabel').textContent = Math.round(view.scale * 100) + '%';
+}
+
+// ================================================================
+// INIT
+// ================================================================
+
+window.addEventListener('resize', resizeCanvases);
+resizeCanvases();
+</script>
+</body>
+</html>
