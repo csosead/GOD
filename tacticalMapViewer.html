@@ -158,7 +158,7 @@
             box-shadow: inset 0 0 8px rgba(255,51,51,.1);
         }
 
-        #btnClear {
+        #btnClear, #btnUndo {
             flex: none; width: 54px;
             min-height: 54px;
             background: rgba(6,11,17,0.9);
@@ -171,6 +171,8 @@
         }
         #btnClear:hover { border-color: var(--red); color: var(--red); background: rgba(255,51,51,.07); }
         #btnClear:active { opacity: .7; }
+        #btnUndo:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,.07); }
+        #btnUndo:active { opacity: .7; }
 
         /* ── LEGEND PILL ──────────────────────────────── */
         #legend {
@@ -326,6 +328,7 @@
         <button class="tool-btn" data-phase="surge" id="btnSurge">
             <span class="icon">◎</span><span>SURGE</span>
         </button>
+        <button id="btnUndo"  title="Undo last drawing (Ctrl+Z)">↩</button>
         <button id="btnClear" title="Clear all drawings">✕</button>
     </div>
     <!-- Shape selection row (EXEC / SURGE only) -->
@@ -333,17 +336,14 @@
         <button class="shape-btn active" data-shape="line">
             <span class="icon">╱</span><span>LINE</span>
         </button>
+        <button class="shape-btn" data-shape="wideline">
+            <span class="icon">▬</span><span>WIDE</span>
+        </button>
         <button class="shape-btn" data-shape="point">
             <span class="icon">●</span><span>POINT</span>
         </button>
         <button class="shape-btn" data-shape="circle">
-            <span class="icon">◯</span><span>CIRCLE</span>
-        </button>
-        <button class="shape-btn" data-shape="square">
-            <span class="icon">□</span><span>SQUARE</span>
-        </button>
-        <button class="shape-btn" data-shape="triangle">
-            <span class="icon">△</span><span>CONE</span>
+            <span class="icon">◯</span><span>AOE</span>
         </button>
     </div>
 </div>
@@ -660,20 +660,47 @@ function cellRect(col, row) {
     };
 }
 
-// Bresenham line in cell-space
+// Supercover line — every cell the line segment intersects (no diagonal gaps)
 function lineCells(c1, r1, c2, r2) {
     const cells = [], seen = new Set();
-    let x = c1, y = r1;
-    const dx = Math.abs(c2 - c1), dy = Math.abs(r2 - r1);
-    const sx = c1 < c2 ? 1 : -1, sy = r1 < r2 ? 1 : -1;
-    let err = dx - dy;
-    for (let guard = 0; guard < 4000; guard++) {
-        const k = x + ',' + y;
-        if (!seen.has(k)) { seen.add(k); cells.push({ col: x, row: y }); }
-        if (x === c2 && y === r2) break;
-        const e2 = 2 * err;
-        if (e2 > -dy) { err -= dy; x += sx; }
-        if (e2 <  dx) { err += dx; y += sy; }
+    const addCell = (c, r) => {
+        const k = c + ',' + r;
+        if (!seen.has(k)) { seen.add(k); cells.push({ col: c, row: r }); }
+    };
+    const dx = c2 - c1, dy = r2 - r1;
+    const nx = Math.abs(dx), ny = Math.abs(dy);
+    const signX = dx > 0 ? 1 : -1, signY = dy > 0 ? 1 : -1;
+    let px = c1, py = r1;
+    addCell(px, py);
+    let ix = 0, iy = 0;
+    while (ix < nx || iy < ny) {
+        const tX = (1 + 2 * ix) * ny;
+        const tY = (1 + 2 * iy) * nx;
+        if (tX === tY) {
+            // Exact corner crossing — include both edge neighbours
+            px += signX; py += signY;
+            ix++; iy++;
+        } else if (tX < tY) {
+            px += signX; ix++;
+        } else {
+            py += signY; iy++;
+        }
+        addCell(px, py);
+    }
+    return cells;
+}
+
+// Wide line — supercover path expanded by 1 cell in all 8 directions
+function wideLineCells(c1, r1, c2, r2) {
+    const core = lineCells(c1, r1, c2, r2);
+    const seen = new Set(), cells = [];
+    for (const { col, row } of core) {
+        for (let dc = -1; dc <= 1; dc++) {
+            for (let dr = -1; dr <= 1; dr++) {
+                const k = (col + dc) + ',' + (row + dr);
+                if (!seen.has(k)) { seen.add(k); cells.push({ col: col + dc, row: row + dr }); }
+            }
+        }
     }
     return cells;
 }
@@ -738,6 +765,7 @@ function computeCells(startCell, endCell, shape) {
     const { col: ec, row: er } = endCell;
     switch (shape) {
         case 'line':     return lineCells(sc, sr, ec, er);
+        case 'wideline': return wideLineCells(sc, sr, ec, er);
         case 'point':    return [{ col: ec, row: er }];
         case 'circle': {
             const r = Math.hypot(ec - sc, er - sr);
@@ -807,8 +835,8 @@ function paintDrawing(ctx, d, isLive) {
         );
     }
 
-    // ── Arrow/line overlay for line shapes ───────────────────
-    if (d.shape === 'line' && d.startCell && d.endCell) {
+    // ── Arrow/line overlay for line and wideline shapes ──────
+    if ((d.shape === 'line' || d.shape === 'wideline') && d.startCell && d.endCell) {
         const s = cellRect(d.startCell.col, d.startCell.row);
         const e = cellRect(d.endCell.col,   d.endCell.row);
         const ddx = e.cx - s.cx, ddy = e.cy - s.cy;
@@ -915,8 +943,8 @@ function onDrawEnd() {
     const sc = d.startCell, ec = d.endCell;
     const moved = (sc.col !== ec.col || sc.row !== ec.row);
 
-    // Commit unless it's a zero-length line
-    if (d.shape === 'line' && !moved) {
+    // Commit unless it's a zero-length line/wideline
+    if ((d.shape === 'line' || d.shape === 'wideline') && !moved) {
         scheduleRender(false, true);
         return;
     }
@@ -1133,6 +1161,15 @@ document.querySelectorAll('.shape-btn[data-shape]').forEach(btn => {
     btn.addEventListener('click', () => setActiveShape(btn.dataset.shape));
 });
 
+// Undo last drawing
+function undoLast() {
+    if (drawings.length === 0) { showToast('NOTHING TO UNDO'); return; }
+    drawings.pop();
+    scheduleRender(false, true);
+    showToast('UNDO');
+}
+document.getElementById('btnUndo').addEventListener('click', undoLast);
+
 // Clear with confirm
 document.getElementById('btnClear').addEventListener('click', () => {
     if (drawings.length === 0) { showToast('NO DRAWINGS TO CLEAR'); return; }
@@ -1187,8 +1224,9 @@ document.addEventListener('drop', e => {
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undoLast(); return; }
     const phaseMap = { p: 'pan', m: 'move', e: 'execution', s: 'surge' };
-    const shapeMap = { '1': 'line', '2': 'point', '3': 'circle', '4': 'square', '5': 'triangle' };
+    const shapeMap = { '1': 'line', '2': 'wideline', '3': 'point', '4': 'circle' };
     const phase = phaseMap[e.key.toLowerCase()];
     if (phase) { setActivePhase(phase); return; }
     const shape = shapeMap[e.key];
