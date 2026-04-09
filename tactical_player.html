@@ -937,7 +937,7 @@ function connectToServer() {
             loadMapFromUrl(state.activeMap.url, state.activeMap.filename);
         } else {
             document.getElementById('landing').classList.add('hidden');
-            showWaiting(true);
+            showWaiting(!isGMMode);
         }
         serverDrawings   = state.drawings || [];
         globalFocusOwner = state.focusOwner || null;
@@ -2254,6 +2254,7 @@ function activateMapFromLib(filename) {
     .then(data => {
         if (data.error) { showToast('ERROR: ' + data.error.toUpperCase()); return; }
         showToast('MAP ACTIVATED: ' + filename.toUpperCase());
+        showWaiting(false);
         document.getElementById('mapLibModal').classList.remove('show');
     })
     .catch(() => showToast('NETWORK ERROR'));
