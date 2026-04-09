@@ -69,6 +69,7 @@
         }
         .top-btn:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,.15); }
         .top-btn:active { opacity: .8; }
+        .top-btn.focus-active { border-color: var(--yellow); color: var(--yellow); background: rgba(255,215,0,.08); box-shadow: 0 0 10px rgba(255,215,0,.2); }
 
         #mapTitle {
             flex: 1; min-width: 0;
@@ -105,12 +106,10 @@
             position: fixed;
             top: calc(54px + var(--safe-t));
             left: 0;
-            bottom: calc(74px + var(--safe-b));
             width: calc(62px + var(--safe-l));
             padding: 6px 6px 6px calc(6px + var(--safe-l));
             display: flex; flex-direction: column; gap: 5px;
             z-index: 100;
-            background: linear-gradient(90deg, rgba(4,8,12,0.94) 0%, transparent 100%);
             pointer-events: none;
         }
         #toolSidebar > * { pointer-events: all; }
@@ -141,6 +140,120 @@
         #toolSidebar.phase-surge     .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
 
         .sidebar-btn.tool-disabled { opacity: 0.28; pointer-events: none; }
+
+        /* ── ACTIVE TOOL BUTTON (single trigger) ──────── */
+        #btnActiveTool {
+            width: 50px; height: 50px;
+            background: rgba(0,240,255,.07);
+            border: 1px solid var(--cyan);
+            border-radius: 5px;
+            color: var(--cyan);
+            box-shadow: inset 0 0 10px rgba(0,240,255,.08);
+            font-family: inherit; font-size: 7px; letter-spacing: 1.3px;
+            cursor: pointer; touch-action: manipulation;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 3px;
+            transition: all .15s; flex-shrink: 0;
+        }
+        #btnActiveTool .icon { font-size: 15px; line-height: 1; }
+        #toolSidebar.phase-move      #btnActiveTool:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
+        #toolSidebar.phase-execution #btnActiveTool:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
+        #toolSidebar.phase-surge     #btnActiveTool:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
+
+        /* ── TOOL POP-OUT MENU ─────────────────────────── */
+        #toolPopup {
+            position: fixed;
+            left: calc(62px + var(--safe-l) + 6px);
+            top: calc(54px + var(--safe-t));
+            display: flex; flex-direction: column; gap: 5px;
+            padding: 7px;
+            background: rgba(4,8,12,0.97);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            z-index: 120;
+            opacity: 0; transform: translateX(-10px);
+            pointer-events: none;
+            transition: opacity .18s, transform .18s;
+            box-shadow: 0 4px 24px rgba(0,0,0,.65);
+        }
+        #toolPopup.open { opacity: 1; transform: translateX(0); pointer-events: all; }
+
+        .tool-popup-btn {
+            width: 54px; height: 44px;
+            background: rgba(6,11,17,0.88);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-dim);
+            font-family: inherit; font-size: 7px; letter-spacing: 1.3px;
+            cursor: pointer; touch-action: manipulation;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 3px;
+            transition: all .15s;
+        }
+        .tool-popup-btn .icon { font-size: 15px; line-height: 1; }
+        .tool-popup-btn:hover:not(.tool-disabled) { border-color: #1a3040; color: var(--text-mid); }
+        .tool-popup-btn.active[data-tool="pan"]             { border-color: var(--cyan);  color: var(--cyan);  background: rgba(0,240,255,.07);  box-shadow: inset 0 0 10px rgba(0,240,255,.08); }
+        #toolPopup.phase-move      .tool-popup-btn.active:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
+        #toolPopup.phase-execution .tool-popup-btn.active:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
+        #toolPopup.phase-surge     .tool-popup-btn.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
+        .tool-popup-btn.tool-disabled { opacity: 0.28; pointer-events: none; }
+
+        /* ── GM CROWN BUTTON ───────────────────────────── */
+        #gmCrownBtn {
+            height: 34px; padding: 0 11px;
+            background: rgba(255,215,0,.07);
+            border: 1px solid rgba(255,215,0,.4);
+            border-radius: 3px;
+            color: var(--yellow);
+            font-size: 16px;
+            cursor: pointer; touch-action: manipulation;
+            transition: all .15s;
+            display: none;
+            align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        #gmCrownBtn.show { display: flex; }
+        #gmCrownBtn:hover { background: rgba(255,215,0,.14); box-shadow: 0 0 10px rgba(255,215,0,.2); }
+
+        /* ── GM MASTER MENU ────────────────────────────── */
+        #gmMenu {
+            position: fixed;
+            top: calc(46px + var(--safe-t));
+            right: calc(8px + var(--safe-r));
+            width: 215px;
+            background: rgba(4,8,12,0.98);
+            border: 1px solid rgba(255,215,0,.22);
+            border-radius: 6px;
+            padding: 6px;
+            z-index: 120;
+            display: flex; flex-direction: column; gap: 4px;
+            opacity: 0; transform: translateY(-10px);
+            pointer-events: none;
+            transition: opacity .18s, transform .18s;
+            box-shadow: 0 4px 24px rgba(0,0,0,.7), 0 0 0 1px rgba(255,215,0,.05);
+        }
+        #gmMenu.open { opacity: 1; transform: translateY(0); pointer-events: all; }
+        #gmMenuSep { height: 1px; background: var(--border); margin: 2px 0; }
+        .gm-menu-btn {
+            width: 100%; min-height: 40px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-mid);
+            font-family: inherit; font-size: 9px; letter-spacing: 1.5px;
+            cursor: pointer; touch-action: manipulation;
+            text-align: left;
+            display: flex; align-items: center; gap: 9px;
+            transition: all .15s;
+        }
+        .gm-menu-btn:hover         { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,.04); }
+        .gm-menu-btn.vis-on        { border-color: rgba(0,224,96,.4);  color: var(--green); }
+        .gm-menu-btn.vis-on:hover  { background: rgba(0,224,96,.06); }
+        .gm-menu-btn.vis-off       { border-color: rgba(255,51,51,.3); color: var(--red); }
+        .gm-menu-btn.vis-off:hover { border-color: var(--red); background: rgba(255,51,51,.06); }
+        .gm-menu-btn.danger        { border-color: rgba(255,51,51,.3); color: var(--red); }
+        .gm-menu-btn.danger:hover  { border-color: var(--red); background: rgba(255,51,51,.06); }
 
         /* ── BOTTOM BAR ───────────────────────────────── */
         #bottomBar {
@@ -286,6 +399,34 @@
         }
         .ld-feat strong { color: var(--text-mid); letter-spacing: 1px; }
 
+        /* GM login toggle inside connect box */
+        .ld-gm-row {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 4px;
+            padding: 8px 10px;
+            border: 1px solid rgba(255,215,0,.2);
+            border-radius: 3px;
+            background: rgba(255,215,0,.03);
+            cursor: pointer;
+            transition: border-color .15s, background .15s;
+        }
+        .ld-gm-row:hover { border-color: rgba(255,215,0,.45); background: rgba(255,215,0,.06); }
+        .ld-gm-row input[type="checkbox"] {
+            accent-color: var(--yellow); width: 13px; height: 13px;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .ld-gm-label {
+            font-size: 8px; letter-spacing: 2px; color: var(--yellow);
+            user-select: none;
+        }
+        #gmPwWrap {
+            display: none; flex-direction: column; gap: 6px;
+        }
+        #gmPwWrap.show { display: flex; }
+        #gmPwWrap .ld-input { border-color: rgba(255,215,0,.3); color: var(--yellow); }
+        #gmPwWrap .ld-input:focus { border-color: var(--yellow); }
+        #ldGmErr { font-size: 9px; letter-spacing: 1.5px; color: var(--red); min-height: 12px; }
+
         /* ── WAITING FOR MAP ──────────────────────────── */
         #waitingOverlay {
             position: fixed; inset: 0;
@@ -360,36 +501,60 @@
 <!-- Top bar -->
 <div id="topbar">
     <button class="top-btn" id="btnFit" title="Fit map to screen">⟲ FIT</button>
+    <button class="top-btn" id="btnFocus" title="Focus on my plans only (dims others)">👁 FOCUS</button>
     <span id="mapTitle">AWAITING MAP FROM SERVER</span>
     <span id="zoomLabel">100%</span>
     <div id="connStatus">
         <div class="conn-dot" id="connDot"></div>
         <span id="connLabel">OFFLINE</span>
     </div>
+    <button id="gmCrownBtn" title="GM Master Menu">♛</button>
     <button class="top-btn" id="btnFullscreen">⛶ FULL</button>
 </div>
 
-<!-- Left tool sidebar -->
+<!-- GM Master Menu (hidden until GM mode active) -->
+<div id="gmMenu">
+    <button class="gm-menu-btn vis-on" id="gmMenuVisBtn">
+        <span>👁</span><span id="gmMenuVisLabel">DRAWINGS VISIBLE</span>
+    </button>
+    <div id="gmMenuSep"></div>
+    <button class="gm-menu-btn danger" id="gmMenuClearBtn">
+        <span>✕</span><span>CLEAR ALL DRAWINGS</span>
+    </button>
+    <button class="gm-menu-btn" id="gmMenuInviteBtn">
+        <span>⬡</span><span>COPY INVITE LINK</span>
+    </button>
+</div>
+
+<!-- Left tool sidebar — single active-tool trigger -->
 <div id="toolSidebar" class="phase-move">
-    <button class="sidebar-btn active" data-tool="pan" id="btnPan">
+    <button id="btnActiveTool" data-tool="pan" title="Switch drawing tool">
+        <span class="icon" id="activeToolIcon">✥</span>
+        <span id="activeToolLabel">PAN</span>
+    </button>
+</div>
+
+<!-- Tool pop-out menu (positioned outside sidebar for z-index) -->
+<div id="toolPopup" class="phase-move">
+    <button class="tool-popup-btn active" data-tool="pan">
         <span class="icon">✥</span><span>PAN</span>
     </button>
-    <button class="sidebar-btn" data-tool="line" id="btnToolLine">
+    <button class="tool-popup-btn" data-tool="line">
         <span class="icon">╱</span><span>LINE</span>
     </button>
-    <button class="sidebar-btn tool-disabled" data-tool="wideline" id="btnToolWide">
+    <button class="tool-popup-btn tool-disabled" data-tool="wideline">
         <span class="icon">▬</span><span>WIDE</span>
     </button>
-    <button class="sidebar-btn tool-disabled" data-tool="point" id="btnToolPoint">
+    <button class="tool-popup-btn tool-disabled" data-tool="point">
         <span class="icon">●</span><span>POINT</span>
     </button>
-    <button class="sidebar-btn tool-disabled" data-tool="circle" id="btnToolCircle">
+    <button class="tool-popup-btn tool-disabled" data-tool="circle">
         <span class="icon">◯</span><span>CIRCLE</span>
     </button>
-    <button class="sidebar-btn tool-disabled" data-tool="square" id="btnToolSquare">
+    <button class="tool-popup-btn tool-disabled" data-tool="square">
         <span class="icon">□</span><span>SQUARE</span>
     </button>
-    <button class="sidebar-btn tool-disabled" data-tool="triangle" id="btnToolTriangle">
+    <button class="tool-popup-btn tool-disabled" data-tool="triangle">
         <span class="icon">△</span><span>CONE</span>
     </button>
 </div>
@@ -429,6 +594,16 @@
         <input class="ld-input" type="text" id="roomInput" placeholder="default" autocomplete="off" spellcheck="false">
         <div class="ld-field-label" style="margin-top:4px">CALLSIGN (OPTIONAL)</div>
         <input class="ld-input" type="text" id="callsignInput" placeholder="BRAVO-1" autocomplete="off" spellcheck="false" maxlength="12">
+        <!-- GM login toggle -->
+        <label class="ld-gm-row" for="gmToggle">
+            <input type="checkbox" id="gmToggle">
+            <span class="ld-gm-label">⬡ LOGIN AS GM</span>
+        </label>
+        <div id="gmPwWrap">
+            <div class="ld-field-label">GM PASSWORD</div>
+            <input class="ld-input" type="password" id="gmPasswordInput" placeholder="enter GM password" autocomplete="off" spellcheck="false">
+            <div id="ldGmErr"></div>
+        </div>
     </div>
 
     <button class="ld-btn" id="btnConnect">CONNECT TO SERVER</button>
@@ -492,9 +667,20 @@ let callsign     = '';
 // Drawing layers:
 //   serverDrawings — submitted plans, synced from server (visible to all)
 //   ghostDrawings  — this player's local plan, not yet submitted
+//   gmLiveStroke   — GM's in-progress stroke received from server (live pointer)
 let serverDrawings = [];
 let ghostDrawings  = [];
 let currentDraw    = null;
+let gmLiveStroke   = null;
+
+// GM mode — confirmed by server via room-state.isGM after join-room with password
+let isGMMode       = false;
+let gmModePassword = '';
+let gmAuthAttempted = false;   // true when user submitted a GM password this session
+
+// Global focus — callsign of whoever holds the spotlight, null = no focus
+// Synced across all clients via set-global-focus / clear-focus socket events
+let globalFocusOwner = null;
 
 // ── Render flags ──────────────────────────────────────────────────
 let mapDirty   = false;
@@ -522,13 +708,23 @@ function connectToServer() {
     currentRoom = roomVal;
     callsign    = csVal;
 
+    // Read GM credentials from the modal (checkbox + password field)
+    const gmChecked = document.getElementById('gmToggle').checked;
+    const gmPw      = document.getElementById('gmPasswordInput').value;
+    gmAuthAttempted = gmChecked && gmPw.length > 0;
+    gmModePassword  = gmAuthAttempted ? gmPw : '';
+
     setLdStatus('CONNECTING…');
 
     socket = io();
 
     socket.on('connect', () => {
         setConnStatus('online', 'ONLINE');
-        socket.emit('join-room', { roomId: currentRoom });
+        socket.emit('join-room', {
+            roomId:   currentRoom,
+            callsign: callsign || null,
+            password: gmAuthAttempted ? gmModePassword : undefined
+        });
         setLdStatus('JOINED ROOM: ' + currentRoom.toUpperCase());
     });
 
@@ -544,14 +740,32 @@ function connectToServer() {
 
     // Server sends full room state on join
     socket.on('room-state', state => {
+        // ── GM auth result ────────────────────────────────────────
+        if (gmAuthAttempted) {
+            if (state.isGM) {
+                applyGMMode();
+                updateGMVisBtn(state.drawingsVisible ?? true);
+            } else {
+                // Password was wrong — show error, stay as player
+                document.getElementById('ldGmErr').textContent = 'WRONG GM PASSWORD';
+                document.getElementById('gmPasswordInput').value = '';
+                document.getElementById('btnConnect').disabled = false;
+                gmAuthAttempted = false;
+                gmModePassword  = '';
+                // Let the socket stay connected but as a regular player
+            }
+        }
+
+        // ── Map + drawings ────────────────────────────────────────
         if (state.activeMap) {
             loadMapFromUrl(state.activeMap.url, state.activeMap.filename);
         } else {
-            // Connected but no map yet — dismiss landing, show waiting overlay
             document.getElementById('landing').classList.add('hidden');
             showWaiting(true);
         }
-        serverDrawings = state.drawings || [];
+        serverDrawings   = state.drawings || [];
+        globalFocusOwner = state.focusOwner || null;
+        updateFocusBtn();
         scheduleRender(false, true);
     });
 
@@ -582,7 +796,31 @@ function connectToServer() {
             serverDrawings = [];
             scheduleRender(false, true);
         }
+        if (isGMMode) updateGMVisBtn(visible);
         showToast(visible ? 'DRAWINGS NOW VISIBLE' : 'DRAWINGS HIDDEN BY GM');
+    });
+
+    // GM live pointer — show the GM's current in-progress stroke
+    socket.on('gm-live-stroke', stroke => {
+        gmLiveStroke = stroke || null;
+        scheduleRender(false, true);
+    });
+
+    // Global focus sync
+    socket.on('focus-switched', ownerCallsign => {
+        globalFocusOwner = ownerCallsign;
+        updateFocusBtn();
+        scheduleRender(false, true);
+        const myLabel = isGMMode ? 'GM' : callsign;
+        if (ownerCallsign === myLabel) showToast('FOCUS: YOUR PLANS ARE SPOTLIGHTED');
+        else showToast('FOCUS: ' + (ownerCallsign || '?') + ' HAS THE SPOTLIGHT');
+    });
+
+    socket.on('focus-cleared', () => {
+        globalFocusOwner = null;
+        updateFocusBtn();
+        scheduleRender(false, true);
+        showToast('FOCUS: SPOTLIGHT OFF');
     });
 }
 
@@ -817,12 +1055,29 @@ function renderDrawings() {
     drawCtx.rect(0, 0, iw, ih);
     drawCtx.clip();
 
-    // Layer 1: server/submitted drawings (solid, full alpha)
-    for (const d of serverDrawings) paintDrawing(drawCtx, d, 'server');
-    // Layer 2: local ghost drawings (slightly dim)
-    for (const d of ghostDrawings)  paintDrawing(drawCtx, d, 'ghost');
-    // Layer 3: in-progress stroke (most transparent)
-    if (currentDraw) paintDrawing(drawCtx, currentDraw, 'live');
+    // Determine focus owner — the callsign whose drawings remain at full opacity
+    const focusActive = globalFocusOwner !== null;
+
+    // Layer 1: server/submitted drawings
+    for (const d of serverDrawings) {
+        // A drawing "belongs to" the focus owner when its callsign matches,
+        // or it is a GM drawing and the GM holds focus.
+        const ownerCs  = d.isGM ? 'GM' : (d.callsign || '');
+        const dimmed   = focusActive && ownerCs !== globalFocusOwner;
+        paintDrawing(drawCtx, d, 'server', dimmed);
+    }
+
+    // Layer 2: local ghost drawings — always full brightness (they are the player's own)
+    for (const d of ghostDrawings) paintDrawing(drawCtx, d, 'ghost', false);
+
+    // Layer 3: in-progress stroke
+    if (currentDraw) paintDrawing(drawCtx, currentDraw, 'live', false);
+
+    // Layer 4: GM live pointer stroke (dim if focus is active and GM isn't the owner)
+    if (gmLiveStroke) {
+        const gmDimmed = focusActive && globalFocusOwner !== 'GM';
+        paintDrawing(drawCtx, gmLiveStroke, 'live', gmDimmed);
+    }
 
     drawCtx.restore();
 }
@@ -833,8 +1088,9 @@ const PHASE_COLORS = {
     surge:     { fill: [255, 51, 51],  stroke: [255, 110, 110] },
 };
 
-function paintDrawing(ctx, d, mode) {
+function paintDrawing(ctx, d, mode, dimmed = false) {
     // mode: 'server' | 'ghost' | 'live'
+    // dimmed: true → render at 0.2 opacity (focus mode, not the spotlight owner)
     if (!d.cells || d.cells.length === 0) return;
 
     const c = PHASE_COLORS[d.phase] || PHASE_COLORS.execution;
@@ -849,6 +1105,9 @@ function paintDrawing(ctx, d, mode) {
     const cSize = sSize / 3;
 
     ctx.save();
+    // Apply focus-dim: set globalAlpha here so every sub-draw (fills, strokes,
+    // arrows, labels) is uniformly affected without relying on external state.
+    if (dimmed) ctx.globalAlpha = 0.2;
 
     // Fill cells
     ctx.fillStyle = `rgba(${c.fill.join(',')},${fillA})`;
@@ -883,8 +1142,8 @@ function paintDrawing(ctx, d, mode) {
         ctx.strokeStyle = `rgba(${c.stroke.join(',')},${strokeA})`;
         ctx.fillStyle   = `rgba(${c.stroke.join(',')},${strokeA})`;
         ctx.lineWidth   = 2.5 / vs;
-        ctx.shadowColor = `rgba(${c.stroke.join(',')},0.35)`;
-        ctx.shadowBlur  = 8 / vs;
+        ctx.shadowColor = dimmed ? 'transparent' : `rgba(${c.stroke.join(',')},0.35)`;
+        ctx.shadowBlur  = dimmed ? 0 : 8 / vs;
         ctx.lineCap     = 'round';
 
         ctx.beginPath();
@@ -917,12 +1176,29 @@ function paintDrawing(ctx, d, mode) {
         ctx.strokeStyle = `rgba(${c.stroke.join(',')},${strokeA})`;
         ctx.fillStyle   = `rgba(${c.stroke.join(',')},${strokeA * 0.6})`;
         ctx.lineWidth   = 1.5 / vs;
-        ctx.shadowColor = `rgba(${c.stroke.join(',')},0.4)`;
-        ctx.shadowBlur  = 6 / vs;
+        ctx.shadowColor = dimmed ? 'transparent' : `rgba(${c.stroke.join(',')},0.4)`;
+        ctx.shadowBlur  = dimmed ? 0 : 6 / vs;
         ctx.beginPath();
         ctx.arc(s.cx, s.cy, cr, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+    }
+
+    // Ownership label — tiny "GM" / callsign tag at the start cell (confirmed drawings only)
+    if (mode === 'server' && d.startCell) {
+        const s     = cellRect(d.startCell.col, d.startCell.row);
+        const label = d.isGM ? 'GM' : (d.callsign ? d.callsign.slice(0, 5) : '?');
+        const fs    = Math.max(5, Math.min(11, 9 / vs));
+        ctx.shadowBlur  = 0;
+        ctx.font        = `bold ${fs}px monospace`;
+        ctx.textAlign   = 'center';
+        ctx.textBaseline = 'middle';
+        // Dark outline for readability
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillText(label, s.cx + 0.6 / vs, s.cy + 0.6 / vs);
+        // Bright label
+        ctx.fillStyle = `rgba(${c.stroke.join(',')},0.95)`;
+        ctx.fillText(label, s.cx, s.cy);
     }
 
     ctx.restore();
@@ -950,20 +1226,49 @@ function snapCellFromScreen(sx, sy) {
     return worldToCell(screenToWorld(sx, sy).x, screenToWorld(sx, sy).y);
 }
 
+// Geometric line-cell intersection with 5% inset margin per cell.
+// This prevents "double-wide" highlights at exact grid corners:
+// a diagonal line through a corner only lights cells it significantly enters.
 function lineCells(c1, r1, c2, r2) {
+    const MARGIN = 0.05;
     const cells = [], seen = new Set();
-    const addCell = (c, r) => { const k = c+','+r; if (!seen.has(k)) { seen.add(k); cells.push({col:c,row:r}); } };
-    const dx = c2-c1, dy = r2-r1;
-    const nx = Math.abs(dx), ny = Math.abs(dy);
-    const signX = dx>0?1:-1, signY = dy>0?1:-1;
-    let px = c1, py = r1; addCell(px, py);
-    let ix = 0, iy = 0;
-    while (ix < nx || iy < ny) {
-        const tX = (1+2*ix)*ny, tY = (1+2*iy)*nx;
-        if (tX === tY) { addCell(px+signX,py); addCell(px,py+signY); px+=signX; py+=signY; ix++; iy++; }
-        else if (tX < tY) { px+=signX; ix++; }
-        else { py+=signY; iy++; }
-        addCell(px, py);
+
+    // Segment in cell-space: center of start cell → center of end cell
+    const ax = c1 + 0.5, ay = r1 + 0.5;
+    const bx = c2 + 0.5, by = r2 + 0.5;
+    const sdx = bx - ax, sdy = by - ay;
+
+    const colMin = Math.min(c1, c2) - 1, colMax = Math.max(c1, c2) + 1;
+    const rowMin = Math.min(r1, r2) - 1, rowMax = Math.max(r1, r2) + 1;
+
+    for (let c = colMin; c <= colMax; c++) {
+        for (let r = rowMin; r <= rowMax; r++) {
+            // Inset hitbox
+            const x0 = c + MARGIN, x1 = c + 1 - MARGIN;
+            const y0 = r + MARGIN, y1 = r + 1 - MARGIN;
+
+            // Quick bounding-box rejection
+            if (Math.max(ax, bx) < x0 || Math.min(ax, bx) > x1) continue;
+            if (Math.max(ay, by) < y0 || Math.min(ay, by) > y1) continue;
+
+            // If the segment has no length, just test the point
+            if (sdx === 0 && sdy === 0) {
+                if (ax >= x0 && ax <= x1 && ay >= y0 && ay <= y1) {
+                    seen.add(c+','+r); cells.push({col:c, row:r});
+                }
+                continue;
+            }
+
+            // All four corners on the same side of the line → no intersection
+            const cross = (px, py) => sdx * (py - ay) - sdy * (px - ax);
+            const c00 = cross(x0, y0), c10 = cross(x1, y0);
+            const c01 = cross(x0, y1), c11 = cross(x1, y1);
+            if ((c00 > 0 && c10 > 0 && c01 > 0 && c11 > 0) ||
+                (c00 < 0 && c10 < 0 && c01 < 0 && c11 < 0)) continue;
+
+            const k = c + ',' + r;
+            if (!seen.has(k)) { seen.add(k); cells.push({col: c, row: r}); }
+        }
     }
     return cells;
 }
@@ -1060,6 +1365,23 @@ function onDrawMove(sx, sy) {
     if (cell.col === currentDraw.endCell.col && cell.row === currentDraw.endCell.row) return;
     currentDraw.endCell = cell;
     currentDraw.cells   = computeCells(currentDraw.startCell, currentDraw.endCell, currentDraw.shape);
+
+    // GM live broadcast — emit current stroke in real-time so players see the pointer
+    if (isGMMode && socket?.connected) {
+        socket.emit('gm-live-stroke', {
+            roomId:   currentRoom,
+            password: gmModePassword,
+            stroke: {
+                phase:     currentDraw.phase,
+                shape:     currentDraw.shape,
+                cells:     currentDraw.cells,
+                startCell: currentDraw.startCell,
+                endCell:   currentDraw.endCell,
+                isGM:      true
+            }
+        });
+    }
+
     scheduleRender(false, true);
 }
 
@@ -1068,7 +1390,37 @@ function onDrawEnd() {
     const d = currentDraw;
     currentDraw = null;
     const moved = (d.startCell.col !== d.endCell.col || d.startCell.row !== d.endCell.row);
-    if ((d.shape === 'line' || d.shape === 'wideline') && !moved) { scheduleRender(false, true); return; }
+    if ((d.shape === 'line' || d.shape === 'wideline') && !moved) {
+        // Clear GM live stroke broadcast
+        if (isGMMode && socket?.connected) {
+            socket.emit('gm-live-stroke', { roomId: currentRoom, password: gmModePassword, stroke: null });
+        }
+        scheduleRender(false, true); return;
+    }
+
+    if (isGMMode) {
+        // GM mode: submit immediately via gm-draw (no ghost queue, no Submit button)
+        if (socket?.connected) {
+            socket.emit('gm-draw', {
+                roomId:   currentRoom,
+                password: gmModePassword,
+                hidden:   false,
+                drawings: [{
+                    phase:     d.phase,
+                    shape:     d.shape,
+                    cells:     d.cells,
+                    startCell: d.startCell,
+                    endCell:   d.endCell,
+                    callsign:  'GM'
+                }]
+            });
+            // Clear live stroke now that it's committed
+            socket.emit('gm-live-stroke', { roomId: currentRoom, password: gmModePassword, stroke: null });
+        }
+        scheduleRender(false, true);
+        return;
+    }
+
     ghostDrawings.push(d);
     updateSubmitBtn();
     scheduleRender(false, true);
@@ -1179,11 +1531,29 @@ drawCanvas.addEventListener('touchcancel', e => {
 // ── UI Controls ───────────────────────────────────────────────────
 const toolSidebar = document.getElementById('toolSidebar');
 
+const TOOL_META = {
+    pan:      { icon: '✥', label: 'PAN'    },
+    line:     { icon: '╱', label: 'LINE'   },
+    wideline: { icon: '▬', label: 'WIDE'   },
+    point:    { icon: '●', label: 'POINT'  },
+    circle:   { icon: '◯', label: 'CIRCLE' },
+    square:   { icon: '□', label: 'SQUARE' },
+    triangle: { icon: '△', label: 'CONE'   },
+};
+
 function setActiveTool(tool) {
     activeTool = tool;
-    document.querySelectorAll('.sidebar-btn[data-tool]').forEach(b => {
+    // Update the trigger button icon/label and data-tool for CSS phase-color
+    const meta = TOOL_META[tool] || TOOL_META.pan;
+    document.getElementById('activeToolIcon').textContent  = meta.icon;
+    document.getElementById('activeToolLabel').textContent = meta.label;
+    document.getElementById('btnActiveTool').dataset.tool  = tool;
+    // Update popup button active states
+    document.querySelectorAll('.tool-popup-btn[data-tool]').forEach(b => {
         b.classList.toggle('active', b.dataset.tool === tool);
     });
+    // Close popup after selection
+    document.getElementById('toolPopup').classList.remove('open');
     if (tool === 'pan') { drawCanvas.classList.remove('drawing', 'grabbing'); }
     else { drawCanvas.classList.add('drawing'); drawCanvas.classList.remove('grabbing'); }
     currentDraw = null; scheduleRender(false, true);
@@ -1194,24 +1564,57 @@ function setActivePhase(phase) {
     document.querySelectorAll('.phase-btn[data-phase]').forEach(b => {
         b.classList.toggle('active', b.dataset.phase === phase);
     });
-    toolSidebar.className = 'phase-' + phase;
+    const phaseClass = 'phase-' + phase;
+    toolSidebar.className = phaseClass;
+    // Sync phase class on popup (preserving open state)
+    const popup = document.getElementById('toolPopup');
+    const wasOpen = popup.classList.contains('open');
+    popup.className = phaseClass + (wasOpen ? ' open' : '');
     const moveOnly = (phase === 'move');
-    document.querySelectorAll('.sidebar-btn[data-tool]').forEach(b => {
+    document.querySelectorAll('.tool-popup-btn[data-tool]').forEach(b => {
         b.classList.toggle('tool-disabled', moveOnly && b.dataset.tool !== 'pan' && b.dataset.tool !== 'line');
     });
     if (moveOnly && activeTool !== 'pan' && activeTool !== 'line') setActiveTool('line');
     currentDraw = null; scheduleRender(false, true);
 }
 
-document.querySelectorAll('.sidebar-btn[data-tool]').forEach(btn => {
+// Active tool trigger — toggle pop-out
+document.getElementById('btnActiveTool').addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('toolPopup').classList.toggle('open');
+});
+
+// Tool popup buttons
+document.querySelectorAll('.tool-popup-btn[data-tool]').forEach(btn => {
     btn.addEventListener('click', () => setActiveTool(btn.dataset.tool));
 });
+
+// Close any open popup on outside click
+document.addEventListener('click', e => {
+    const popup = document.getElementById('toolPopup');
+    if (popup.classList.contains('open') &&
+        !popup.contains(e.target) && e.target.id !== 'btnActiveTool') {
+        popup.classList.remove('open');
+    }
+    const gmMenu = document.getElementById('gmMenu');
+    if (gmMenu.classList.contains('open') &&
+        !gmMenu.contains(e.target) && e.target.id !== 'gmCrownBtn') {
+        gmMenu.classList.remove('open');
+    }
+});
+
 document.querySelectorAll('.phase-btn[data-phase]').forEach(btn => {
     btn.addEventListener('click', () => setActivePhase(btn.dataset.phase));
 });
 
-// Undo — only undo ghost drawings
+// Undo — ghost drawings for players; last GM drawing on server for GM
 function undoLast() {
+    if (isGMMode) {
+        if (!socket?.connected) { showToast('NOT CONNECTED'); return; }
+        socket.emit('gm-undo', { roomId: currentRoom, password: gmModePassword });
+        showToast('UNDO GM DRAWING');
+        return;
+    }
     if (!ghostDrawings.length) { showToast('NOTHING TO UNDO'); return; }
     ghostDrawings.pop();
     updateSubmitBtn();
@@ -1220,8 +1623,9 @@ function undoLast() {
 }
 document.getElementById('btnUndo').addEventListener('click', undoLast);
 
-// Clear ghost drawings only
+// Clear — GM uses nuclear clear-all; players clear their own ghosts
 document.getElementById('btnClear').addEventListener('click', () => {
+    if (isGMMode) { gmClearAll(); return; }
     if (!ghostDrawings.length) { showToast('NO GHOST DRAWINGS TO CLEAR'); return; }
     document.getElementById('confirmOverlay').classList.add('show');
 });
@@ -1237,6 +1641,34 @@ document.getElementById('confirmNo').addEventListener('click', () => {
 
 // Submit Plan
 document.getElementById('btnSubmit').addEventListener('click', submitPlan);
+
+// Focus Mode — global sync via server
+document.getElementById('btnFocus').addEventListener('click', () => {
+    if (!socket?.connected) { showToast('NOT CONNECTED'); return; }
+    const myLabel = isGMMode ? 'GM' : (callsign || socket.id?.slice(0, 6) || '?');
+    if (globalFocusOwner === myLabel) {
+        // I own the spotlight — release it
+        socket.emit('clear-focus', { roomId: currentRoom });
+    } else {
+        // Claim the spotlight
+        socket.emit('set-global-focus', { roomId: currentRoom, callsign: myLabel });
+    }
+});
+
+function updateFocusBtn() {
+    const btn = document.getElementById('btnFocus');
+    const myLabel = isGMMode ? 'GM' : callsign;
+    if (globalFocusOwner === null) {
+        btn.classList.remove('focus-active');
+        btn.textContent = '👁 FOCUS';
+    } else if (globalFocusOwner === myLabel) {
+        btn.classList.add('focus-active');
+        btn.textContent = '👁 RELEASE';
+    } else {
+        btn.classList.remove('focus-active');
+        btn.textContent = '👁 ' + globalFocusOwner;
+    }
+}
 
 // Fit / Fullscreen
 document.getElementById('btnFit').addEventListener('click', fitToScreen);
@@ -1332,7 +1764,133 @@ function updateSubmitBtn() {
     btn.classList.toggle('has-ghost', n > 0);
 }
 
-// ── Auto-read room from URL query param ───────────────────────────
+// ── GM mode activation (called after server confirms isGM) ───────
+function applyGMMode() {
+    if (isGMMode) return;   // already applied
+    isGMMode = true;
+
+    // Hide the player Submit button
+    document.getElementById('btnSubmit').style.display = 'none';
+
+    // Show the crown menu button
+    document.getElementById('gmCrownBtn').classList.add('show');
+
+    // Build invite URL (currentRoom is set before this is called)
+    _inviteUrl = `${location.protocol}//${location.host}/tactical_player.html?room=${encodeURIComponent(currentRoom)}`;
+
+    // Inject GM badge into topbar (only once)
+    if (!document.getElementById('gmBadge')) {
+        const badge = document.createElement('span');
+        badge.id = 'gmBadge';
+        badge.textContent = '⬡ GM';
+        badge.style.cssText = [
+            'font-size:9px', 'letter-spacing:2px', 'color:#ffd700',
+            'border:1px solid rgba(255,215,0,.4)', 'border-radius:3px',
+            'padding:4px 10px', 'white-space:nowrap',
+            'background:rgba(255,215,0,.05)'
+        ].join(';');
+        document.getElementById('topbar').insertBefore(badge, document.getElementById('mapTitle'));
+    }
+
+    // Hide landing and show the map view
+    document.getElementById('landing').classList.add('hidden');
+    setLdStatus('AUTHENTICATED AS GM · ROOM: ' + currentRoom.toUpperCase());
+}
+
+// ── GM Master Menu ────────────────────────────────────────────────
+let drawingsVisible = true;  // local mirror of server visibility state
+let _inviteUrl      = '';    // built once GM mode activates
+
+document.getElementById('gmCrownBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('gmMenu').classList.toggle('open');
+});
+document.getElementById('gmMenuVisBtn').addEventListener('click', () => {
+    document.getElementById('gmMenu').classList.remove('open');
+    gmToggleVisibility();
+});
+document.getElementById('gmMenuClearBtn').addEventListener('click', () => {
+    document.getElementById('gmMenu').classList.remove('open');
+    gmClearAll();
+});
+document.getElementById('gmMenuInviteBtn').addEventListener('click', () => {
+    document.getElementById('gmMenu').classList.remove('open');
+    gmCopyInvite();
+});
+
+function updateGMVisBtn(visible) {
+    drawingsVisible = visible;
+    const btn = document.getElementById('gmMenuVisBtn');
+    const lbl = document.getElementById('gmMenuVisLabel');
+    if (visible) {
+        btn.className = 'gm-menu-btn vis-on';
+        lbl.textContent = 'DRAWINGS VISIBLE';
+    } else {
+        btn.className = 'gm-menu-btn vis-off';
+        lbl.textContent = 'DRAWINGS HIDDEN';
+    }
+}
+
+function gmToggleVisibility() {
+    if (!socket?.connected) { showToast('NOT CONNECTED'); return; }
+    fetch(`/api/visibility/${encodeURIComponent(currentRoom)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-gm-password': gmModePassword },
+        body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(d => {
+        updateGMVisBtn(d.drawingsVisible);
+        showToast(d.drawingsVisible ? 'DRAWINGS NOW VISIBLE TO PLAYERS' : 'DRAWINGS HIDDEN FROM PLAYERS');
+    })
+    .catch(() => showToast('NETWORK ERROR'));
+}
+
+function gmClearAll() {
+    if (!socket?.connected) { showToast('NOT CONNECTED'); return; }
+    if (!confirm('Clear ALL drawings? This cannot be undone.')) return;
+    fetch(`/api/clear/${encodeURIComponent(currentRoom)}`, {
+        method: 'POST',
+        headers: { 'x-gm-password': gmModePassword }
+    })
+    .then(r => r.json())
+    .then(() => showToast('ALL DRAWINGS CLEARED'))
+    .catch(() => showToast('NETWORK ERROR'));
+}
+
+function gmCopyInvite() {
+    if (!_inviteUrl) { showToast('CONNECT FIRST'); return; }
+    if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(_inviteUrl)
+            .then(() => showToast('INVITE LINK COPIED'))
+            .catch(() => _fallbackCopy(_inviteUrl));
+    } else {
+        _fallbackCopy(_inviteUrl);
+    }
+}
+
+function _fallbackCopy(text) {
+    const el = document.createElement('input');
+    el.value = text;
+    el.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+    document.body.appendChild(el);
+    el.focus(); el.select();
+    try { document.execCommand('copy'); showToast('INVITE LINK COPIED'); }
+    catch { showToast('COPY FAILED'); }
+    document.body.removeChild(el);
+}
+
+// ── GM toggle checkbox in landing modal ─────────────────────────
+document.getElementById('gmToggle').addEventListener('change', function () {
+    document.getElementById('gmPwWrap').classList.toggle('show', this.checked);
+    document.getElementById('ldGmErr').textContent = '';
+    if (this.checked) document.getElementById('gmPasswordInput').focus();
+});
+document.getElementById('gmPasswordInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btnConnect').click();
+});
+
+// ── Auto-read room from URL query param (no GM via URL — use modal) ──
 (function initFromURL() {
     const params = new URLSearchParams(location.search);
     const room = params.get('room');
@@ -1340,6 +1898,7 @@ function updateSubmitBtn() {
         document.getElementById('roomInput').value = room;
         currentRoom = room;
     }
+    // Strip any stale ?gm= param — GM auth now goes through the secure modal
 })();
 
 // ── Init ──────────────────────────────────────────────────────────

@@ -69,18 +69,8 @@ const upload = multer({
  * rooms[roomId] = {
  *   activeMap      : { filename, url } | null,
  *   drawings       : Array<DrawingRecord>,
- *   drawingsVisible: boolean   — if false, submitted drawings are GM-only
- * }
- *
- * DrawingRecord = {
- *   id        : string,
- *   socketId  : string,   // who submitted
- *   isGM      : boolean,
- *   phase     : string,
- *   shape     : string,
- *   cells     : Array<{col,row}>,
- *   startCell : {col,row},
- *   endCell   : {col,row}
+ *   drawingsVisible: boolean,
+ *   players        : Map<socketId, { callsign, isGM }>
  * }
  */
 const rooms = {};
@@ -90,10 +80,23 @@ function getRoom(roomId) {
         rooms[roomId] = {
             activeMap:       null,
             drawings:        [],
-            drawingsVisible: true
+            drawingsVisible: true,
+            focusOwner:      null,   // callsign of whoever holds the spotlight, or null
+            players:         new Map()
         };
     }
     return rooms[roomId];
+}
+
+function broadcastPlayerList(roomId) {
+    const room = rooms[roomId];
+    if (!room) return;
+    const list = Array.from(room.players.values())
+        .filter(p => !p.isGM)
+        .map(p => p.callsign);
+    const count = io.sockets.adapter.rooms.get(roomId)?.size || 0;
+    io.to(roomId).emit('player-list', list);
+    io.to(roomId).emit('client-count', count);
 }
 
 /** Return the drawings each client should see based on visibility flag */
@@ -227,19 +230,40 @@ io.on('connection', socket => {
     let clientIsGM  = false;
 
     // Player (or GM viewer) joins a room
-    socket.on('join-room', ({ roomId = 'default', password } = {}) => {
+    socket.on('join-room', ({ roomId = 'default', password, callsign } = {}) => {
+        // Leave previous room if rejoining
+        if (currentRoom && currentRoom !== roomId) {
+            const prevRoom = rooms[currentRoom];
+            if (prevRoom) {
+                prevRoom.players.delete(socket.id);
+                broadcastPlayerList(currentRoom);
+            }
+            socket.leave(currentRoom);
+        }
+
         currentRoom = roomId;
         clientIsGM  = (password === GM_PASSWORD);
 
         socket.join(roomId);
         const room = getRoom(roomId);
 
+        // Track this connection
+        room.players.set(socket.id, {
+            callsign: callsign || `P-${socket.id.slice(0, 4).toUpperCase()}`,
+            isGM: clientIsGM
+        });
+
         // Send the full current state to the new joiner
         socket.emit('room-state', {
             activeMap:       room.activeMap,
             drawings:        visibleDrawings(room, clientIsGM),
-            drawingsVisible: room.drawingsVisible
+            drawingsVisible: room.drawingsVisible,
+            focusOwner:      room.focusOwner,
+            isGM:            clientIsGM   // lets the client confirm it was authenticated as GM
         });
+
+        // Notify everyone of updated player list & count
+        broadcastPlayerList(roomId);
     });
 
     // Player submits their ghost plan — drawings become visible on server
@@ -266,6 +290,27 @@ io.on('connection', socket => {
         }
     });
 
+    // ── Global focus ("Look at me!") ──────────────────────────────
+    // Any client can claim the spotlight; only one holder at a time.
+    socket.on('set-global-focus', ({ roomId = 'default', callsign: cs } = {}) => {
+        const room = getRoom(roomId);
+        room.focusOwner = cs || null;
+        io.to(roomId).emit('focus-switched', room.focusOwner);
+    });
+
+    socket.on('clear-focus', ({ roomId = 'default' } = {}) => {
+        const room = getRoom(roomId);
+        room.focusOwner = null;
+        io.to(roomId).emit('focus-cleared');
+    });
+
+    // GM broadcasts a live in-progress stroke so players can see it as a pointer
+    socket.on('gm-live-stroke', ({ roomId = 'default', stroke, password } = {}) => {
+        if (password !== GM_PASSWORD) return;
+        // Broadcast to everyone else in the room (no persistence)
+        socket.to(roomId).emit('gm-live-stroke', stroke || null);
+    });
+
     // GM submits their own (possibly hidden) template drawings
     socket.on('gm-draw', ({ roomId = 'default', drawings: incoming, password, hidden = false } = {}) => {
         if (password !== GM_PASSWORD) return;
@@ -288,8 +333,28 @@ io.on('connection', socket => {
         }
     });
 
+    // GM undoes their last drawing on the server
+    socket.on('gm-undo', ({ roomId = 'default', password } = {}) => {
+        if (password !== GM_PASSWORD) return;
+        const room = getRoom(roomId);
+        // Remove the most recent GM drawing
+        for (let i = room.drawings.length - 1; i >= 0; i--) {
+            if (room.drawings[i].isGM) {
+                room.drawings.splice(i, 1);
+                break;
+            }
+        }
+        io.to(roomId).emit('drawings-updated', room.drawings);
+    });
+
     socket.on('disconnect', () => {
-        // No automatic cleanup — drawings persist across reconnects
+        if (currentRoom) {
+            const room = rooms[currentRoom];
+            if (room) {
+                room.players.delete(socket.id);
+                broadcastPlayerList(currentRoom);
+            }
+        }
     });
 });
 
