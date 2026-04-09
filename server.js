@@ -347,6 +347,14 @@ io.on('connection', socket => {
         io.to(roomId).emit('drawings-updated', room.drawings);
     });
 
+    // GM clears only their own drawings (keeps player drawings intact)
+    socket.on('gm-clear-own', ({ roomId = 'default', password } = {}) => {
+        if (password !== GM_PASSWORD) return;
+        const room = getRoom(roomId);
+        room.drawings = room.drawings.filter(d => !d.isGM);
+        io.to(roomId).emit('drawings-updated', room.drawings);
+    });
+
     socket.on('disconnect', () => {
         if (currentRoom) {
             const room = rooms[currentRoom];

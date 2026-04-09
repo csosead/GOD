@@ -101,6 +101,89 @@
             color: var(--text-dim); white-space: nowrap;
         }
 
+        /* ── GM CROWN BUTTON ───────────────────────────── */
+        #gmCrownBtn {
+            height: 34px; padding: 0 11px;
+            background: rgba(255,215,0,.07);
+            border: 1px solid rgba(255,215,0,.4);
+            border-radius: 3px;
+            color: var(--yellow);
+            font-size: 16px;
+            cursor: pointer; touch-action: manipulation;
+            transition: all .15s;
+            display: none;
+            align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        #gmCrownBtn.show { display: flex; }
+        #gmCrownBtn:hover { background: rgba(255,215,0,.14); box-shadow: 0 0 10px rgba(255,215,0,.2); }
+
+        /* ── GM MAP LIBRARY BUTTON ─────────────────────── */
+        #gmMapLibBtn {
+            height: 34px; padding: 0 11px;
+            background: rgba(0,150,255,.07);
+            border: 1px solid rgba(0,150,255,.4);
+            border-radius: 3px;
+            color: var(--blue);
+            font-size: 15px;
+            cursor: pointer; touch-action: manipulation;
+            transition: all .15s;
+            display: none;
+            align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        #gmMapLibBtn.show { display: flex; }
+        #gmMapLibBtn:hover { background: rgba(0,150,255,.14); box-shadow: 0 0 10px rgba(0,150,255,.2); }
+
+        /* ── GM MASTER MENU ────────────────────────────── */
+        #gmMenu {
+            position: fixed;
+            top: calc(46px + var(--safe-t));
+            right: calc(8px + var(--safe-r));
+            width: 220px;
+            background: rgba(4,8,12,0.98);
+            border: 1px solid rgba(255,215,0,.22);
+            border-radius: 6px;
+            padding: 6px;
+            z-index: 120;
+            display: flex; flex-direction: column; gap: 3px;
+            opacity: 0; transform: translateY(-10px);
+            pointer-events: none;
+            transition: opacity .18s, transform .18s;
+            box-shadow: 0 4px 24px rgba(0,0,0,.7), 0 0 0 1px rgba(255,215,0,.05);
+        }
+        #gmMenu.open { opacity: 1; transform: translateY(0); pointer-events: all; }
+        .gm-menu-stat {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 4px 10px;
+            font-size: 9px; letter-spacing: 1.5px;
+            color: var(--text-dim);
+            border: 1px solid transparent;
+            border-radius: 3px;
+        }
+        .gm-menu-stat span:last-child { color: var(--cyan); font-size: 10px; letter-spacing: 2px; }
+        #gmMenuSep { height: 1px; background: var(--border); margin: 2px 0; }
+        .gm-menu-btn {
+            width: 100%; min-height: 40px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-mid);
+            font-family: inherit; font-size: 9px; letter-spacing: 1.5px;
+            cursor: pointer; touch-action: manipulation;
+            text-align: left;
+            display: flex; align-items: center; gap: 9px;
+            transition: all .15s;
+        }
+        .gm-menu-btn:hover         { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,.04); }
+        .gm-menu-btn.vis-on        { border-color: rgba(0,224,96,.4);  color: var(--green); }
+        .gm-menu-btn.vis-on:hover  { background: rgba(0,224,96,.06); }
+        .gm-menu-btn.vis-off       { border-color: rgba(255,51,51,.3); color: var(--red); }
+        .gm-menu-btn.vis-off:hover { border-color: var(--red); background: rgba(255,51,51,.06); }
+        .gm-menu-btn.danger        { border-color: rgba(255,51,51,.3); color: var(--red); }
+        .gm-menu-btn.danger:hover  { border-color: var(--red); background: rgba(255,51,51,.06); }
+
         /* ── LEFT TOOL SIDEBAR ───────────────────────── */
         #toolSidebar {
             position: fixed;
@@ -113,6 +196,29 @@
             pointer-events: none;
         }
         #toolSidebar > * { pointer-events: all; }
+
+        /* Dedicated PAN button — always at top of sidebar */
+        #btnPanTool {
+            width: 100%;
+            min-height: 44px; max-height: 60px;
+            background: rgba(6,11,17,0.88);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-dim);
+            font-family: inherit; font-size: 7px; letter-spacing: 1.3px;
+            cursor: pointer; touch-action: manipulation;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 3px;
+            transition: all .15s;
+            flex-shrink: 0;
+        }
+        #btnPanTool .icon { font-size: 15px; line-height: 1; }
+        #btnPanTool:hover:not(.active) { border-color: #1a3040; color: var(--text-mid); }
+        #btnPanTool.active {
+            border-color: var(--cyan); color: var(--cyan);
+            background: rgba(0,240,255,.07);
+            box-shadow: inset 0 0 10px rgba(0,240,255,.08);
+        }
 
         .sidebar-btn {
             width: 100%; flex: 1;
@@ -130,11 +236,6 @@
         .sidebar-btn .icon { font-size: 15px; line-height: 1; }
         .sidebar-btn:hover:not(.active):not(.tool-disabled) { border-color: #1a3040; color: var(--text-mid); }
 
-        .sidebar-btn.active[data-tool="pan"] {
-            border-color: var(--cyan); color: var(--cyan);
-            background: rgba(0,240,255,.07);
-            box-shadow: inset 0 0 10px rgba(0,240,255,.08);
-        }
         #toolSidebar.phase-move      .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
         #toolSidebar.phase-execution .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
         #toolSidebar.phase-surge     .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
@@ -144,11 +245,10 @@
         /* ── ACTIVE TOOL BUTTON (single trigger) ──────── */
         #btnActiveTool {
             width: 50px; height: 50px;
-            background: rgba(0,240,255,.07);
-            border: 1px solid var(--cyan);
+            background: rgba(6,11,17,0.88);
+            border: 1px solid var(--border);
             border-radius: 5px;
-            color: var(--cyan);
-            box-shadow: inset 0 0 10px rgba(0,240,255,.08);
+            color: var(--text-dim);
             font-family: inherit; font-size: 7px; letter-spacing: 1.3px;
             cursor: pointer; touch-action: manipulation;
             display: flex; flex-direction: column;
@@ -156,9 +256,9 @@
             transition: all .15s; flex-shrink: 0;
         }
         #btnActiveTool .icon { font-size: 15px; line-height: 1; }
-        #toolSidebar.phase-move      #btnActiveTool:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
-        #toolSidebar.phase-execution #btnActiveTool:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
-        #toolSidebar.phase-surge     #btnActiveTool:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
+        #toolSidebar.phase-move      #btnActiveTool.active:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
+        #toolSidebar.phase-execution #btnActiveTool.active:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
+        #toolSidebar.phase-surge     #btnActiveTool.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
 
         /* ── TOOL POP-OUT MENU ─────────────────────────── */
         #toolPopup {
@@ -192,68 +292,10 @@
         }
         .tool-popup-btn .icon { font-size: 15px; line-height: 1; }
         .tool-popup-btn:hover:not(.tool-disabled) { border-color: #1a3040; color: var(--text-mid); }
-        .tool-popup-btn.active[data-tool="pan"]             { border-color: var(--cyan);  color: var(--cyan);  background: rgba(0,240,255,.07);  box-shadow: inset 0 0 10px rgba(0,240,255,.08); }
-        #toolPopup.phase-move      .tool-popup-btn.active:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
-        #toolPopup.phase-execution .tool-popup-btn.active:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
-        #toolPopup.phase-surge     .tool-popup-btn.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
+        #toolPopup.phase-move      .tool-popup-btn.active { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
+        #toolPopup.phase-execution .tool-popup-btn.active { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
+        #toolPopup.phase-surge     .tool-popup-btn.active { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
         .tool-popup-btn.tool-disabled { opacity: 0.28; pointer-events: none; }
-
-        /* ── GM CROWN BUTTON ───────────────────────────── */
-        #gmCrownBtn {
-            height: 34px; padding: 0 11px;
-            background: rgba(255,215,0,.07);
-            border: 1px solid rgba(255,215,0,.4);
-            border-radius: 3px;
-            color: var(--yellow);
-            font-size: 16px;
-            cursor: pointer; touch-action: manipulation;
-            transition: all .15s;
-            display: none;
-            align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-        #gmCrownBtn.show { display: flex; }
-        #gmCrownBtn:hover { background: rgba(255,215,0,.14); box-shadow: 0 0 10px rgba(255,215,0,.2); }
-
-        /* ── GM MASTER MENU ────────────────────────────── */
-        #gmMenu {
-            position: fixed;
-            top: calc(46px + var(--safe-t));
-            right: calc(8px + var(--safe-r));
-            width: 215px;
-            background: rgba(4,8,12,0.98);
-            border: 1px solid rgba(255,215,0,.22);
-            border-radius: 6px;
-            padding: 6px;
-            z-index: 120;
-            display: flex; flex-direction: column; gap: 4px;
-            opacity: 0; transform: translateY(-10px);
-            pointer-events: none;
-            transition: opacity .18s, transform .18s;
-            box-shadow: 0 4px 24px rgba(0,0,0,.7), 0 0 0 1px rgba(255,215,0,.05);
-        }
-        #gmMenu.open { opacity: 1; transform: translateY(0); pointer-events: all; }
-        #gmMenuSep { height: 1px; background: var(--border); margin: 2px 0; }
-        .gm-menu-btn {
-            width: 100%; min-height: 40px;
-            padding: 8px 12px;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            color: var(--text-mid);
-            font-family: inherit; font-size: 9px; letter-spacing: 1.5px;
-            cursor: pointer; touch-action: manipulation;
-            text-align: left;
-            display: flex; align-items: center; gap: 9px;
-            transition: all .15s;
-        }
-        .gm-menu-btn:hover         { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,.04); }
-        .gm-menu-btn.vis-on        { border-color: rgba(0,224,96,.4);  color: var(--green); }
-        .gm-menu-btn.vis-on:hover  { background: rgba(0,224,96,.06); }
-        .gm-menu-btn.vis-off       { border-color: rgba(255,51,51,.3); color: var(--red); }
-        .gm-menu-btn.vis-off:hover { border-color: var(--red); background: rgba(255,51,51,.06); }
-        .gm-menu-btn.danger        { border-color: rgba(255,51,51,.3); color: var(--red); }
-        .gm-menu-btn.danger:hover  { border-color: var(--red); background: rgba(255,51,51,.06); }
 
         /* ── BOTTOM BAR ───────────────────────────────── */
         #bottomBar {
@@ -488,6 +530,116 @@
         }
         .conf-btn.danger { border-color: var(--red); color: var(--red); }
         .conf-btn:hover  { opacity: .8; }
+
+        /* ── MAP LIBRARY MODAL ────────────────────────── */
+        #mapLibModal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.75);
+            z-index: 250; display: none;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        #mapLibModal.show { display: flex; }
+        #mapLibBox {
+            width: min(580px, 96vw);
+            max-height: 82vh;
+            background: rgba(4,8,12,0.98);
+            border: 1px solid rgba(0,150,255,.3);
+            border-radius: 6px;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0,0,0,.85);
+        }
+        #mapLibHdr {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,150,255,.03);
+            flex-shrink: 0;
+        }
+        #mapLibTitle { font-size: 10px; letter-spacing: 3px; color: var(--blue); flex: 1; }
+        #mapLibRoomLabel { font-size: 9px; letter-spacing: 1.5px; color: var(--text-dim); }
+        #mapLibCount { font-size: 9px; letter-spacing: 2px; color: var(--text-dim); }
+        #mapLibClose {
+            width: 28px; height: 28px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            color: var(--text-dim);
+            font-family: inherit; font-size: 12px;
+            cursor: pointer; transition: all .15s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #mapLibClose:hover { border-color: var(--red); color: var(--red); }
+        #mapLibUploadArea {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .mlib-label { font-size: 8px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 7px; }
+        #mapLibDrop {
+            border: 1px dashed var(--border);
+            border-radius: 4px; padding: 10px;
+            text-align: center; cursor: pointer;
+            transition: all .2s;
+            background: rgba(0,150,255,.01);
+        }
+        #mapLibDrop:hover, #mapLibDrop.drag-over {
+            border-color: var(--blue); background: rgba(0,150,255,.04);
+        }
+        #mapLibDrop p { font-size: 8px; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 7px; }
+        #mapLibPickBtn {
+            padding: 5px 12px;
+            background: transparent;
+            border: 1px solid var(--border); border-radius: 3px;
+            color: var(--text-mid); font-family: inherit;
+            font-size: 9px; letter-spacing: 2px; cursor: pointer; transition: all .15s;
+        }
+        #mapLibPickBtn:hover { border-color: var(--blue); color: var(--blue); }
+        #mapLibProgress {
+            margin-top: 6px; font-size: 9px; letter-spacing: 1.5px;
+            color: var(--blue); min-height: 13px; text-align: center;
+        }
+        #mapLibList {
+            flex: 1; overflow-y: auto; padding: 8px;
+        }
+        #mapLibList::-webkit-scrollbar { width: 3px; }
+        #mapLibList::-webkit-scrollbar-track { background: transparent; }
+        #mapLibList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .lib-map-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 10px;
+            border: 1px solid var(--border); border-radius: 4px;
+            margin-bottom: 5px; background: rgba(6,11,17,.6);
+            transition: all .15s;
+        }
+        .lib-map-item:hover { border-color: rgba(0,150,255,.2); }
+        .lib-map-item.active-map { border-color: var(--blue); background: rgba(0,150,255,.05); }
+        .lib-map-name {
+            flex: 1; min-width: 0; font-size: 10px; letter-spacing: 1px;
+            color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .lib-map-size { font-size: 9px; color: var(--text-dim); white-space: nowrap; }
+        .lib-map-activate {
+            padding: 4px 9px; background: transparent;
+            border: 1px solid var(--border); border-radius: 2px;
+            color: var(--text-dim); font-family: inherit; font-size: 8px; letter-spacing: 1.5px;
+            cursor: pointer; white-space: nowrap; transition: all .15s;
+        }
+        .lib-map-activate:hover, .lib-map-item.active-map .lib-map-activate {
+            border-color: var(--blue); color: var(--blue);
+        }
+        .lib-map-del {
+            padding: 4px 7px; background: transparent;
+            border: 1px solid transparent; border-radius: 2px;
+            color: var(--text-dim); font-family: inherit; font-size: 10px;
+            cursor: pointer; transition: all .15s;
+        }
+        .lib-map-del:hover { border-color: var(--red); color: var(--red); }
+        .lib-empty {
+            padding: 28px; text-align: center;
+            font-size: 10px; letter-spacing: 1.5px; color: var(--text-dim);
+        }
     </style>
 </head>
 <body>
@@ -509,15 +661,18 @@
         <span id="connLabel">OFFLINE</span>
     </div>
     <button id="gmCrownBtn" title="GM Master Menu">♛</button>
+    <button id="gmMapLibBtn" title="Map Library">📁</button>
     <button class="top-btn" id="btnFullscreen">⛶ FULL</button>
 </div>
 
 <!-- GM Master Menu (hidden until GM mode active) -->
 <div id="gmMenu">
+    <div class="gm-menu-stat"><span>PLAYERS</span><span id="gmMenuPlayerCount">0</span></div>
+    <div class="gm-menu-stat"><span>DRAWINGS</span><span id="gmMenuDrawCount">0</span></div>
+    <div id="gmMenuSep"></div>
     <button class="gm-menu-btn vis-on" id="gmMenuVisBtn">
         <span>👁</span><span id="gmMenuVisLabel">DRAWINGS VISIBLE</span>
     </button>
-    <div id="gmMenuSep"></div>
     <button class="gm-menu-btn danger" id="gmMenuClearBtn">
         <span>✕</span><span>CLEAR ALL DRAWINGS</span>
     </button>
@@ -526,20 +681,21 @@
     </button>
 </div>
 
-<!-- Left tool sidebar — single active-tool trigger -->
+<!-- Left tool sidebar — PAN at top, then drawing tool trigger -->
 <div id="toolSidebar" class="phase-move">
-    <button id="btnActiveTool" data-tool="pan" title="Switch drawing tool">
-        <span class="icon" id="activeToolIcon">✥</span>
-        <span id="activeToolLabel">PAN</span>
+    <button id="btnPanTool" class="active" title="PAN — Right-click to pan at any time">
+        <span class="icon">✥</span>
+        <span>PAN</span>
+    </button>
+    <button id="btnActiveTool" class="sidebar-btn" data-tool="line" title="Drawing tools (tap to open)">
+        <span class="icon" id="activeToolIcon">╱</span>
+        <span id="activeToolLabel">LINE</span>
     </button>
 </div>
 
-<!-- Tool pop-out menu (positioned outside sidebar for z-index) -->
+<!-- Tool pop-out menu (drawing tools only — PAN has its own button) -->
 <div id="toolPopup" class="phase-move">
-    <button class="tool-popup-btn active" data-tool="pan">
-        <span class="icon">✥</span><span>PAN</span>
-    </button>
-    <button class="tool-popup-btn" data-tool="line">
+    <button class="tool-popup-btn active" data-tool="line">
         <span class="icon">╱</span><span>LINE</span>
     </button>
     <button class="tool-popup-btn tool-disabled" data-tool="wideline">
@@ -573,8 +729,8 @@
         </button>
     </div>
     <div id="actionBtns">
-        <button class="action-btn" id="btnUndo"  title="Undo last ghost drawing (Ctrl+Z)">↩</button>
-        <button class="action-btn" id="btnClear" title="Clear your ghost drawings">✕</button>
+        <button class="action-btn" id="btnUndo"  title="Undo last drawing (Ctrl+Z)">↩</button>
+        <button class="action-btn" id="btnClear" title="Clear drawings">✕</button>
         <button id="btnSubmit" title="Submit your plan to the GM">
             <span class="icon">⬆</span>
             <span>SUBMIT</span>
@@ -613,7 +769,7 @@
         <div class="ld-feat"><strong>GHOST LAYER</strong><br>Draw plans locally<br>before submitting</div>
         <div class="ld-feat"><strong>SUBMIT</strong><br>Send your plan<br>to the GM</div>
         <div class="ld-feat"><strong>LIVE SYNC</strong><br>See all submitted<br>plans in real-time</div>
-        <div class="ld-feat"><strong>PAN &amp; ZOOM</strong><br>Pinch/scroll<br>to navigate</div>
+        <div class="ld-feat"><strong>PAN &amp; ZOOM</strong><br>Right-click drag<br>or pinch to navigate</div>
     </div>
 </div>
 
@@ -634,7 +790,7 @@
 <!-- Clear ghost confirm -->
 <div id="confirmOverlay">
     <div id="confirmBox">
-        <p>CLEAR YOUR GHOST DRAWINGS?<br>SUBMITTED PLANS STAY ON MAP.</p>
+        <p id="confirmMsg">CLEAR YOUR GHOST DRAWINGS?<br>SUBMITTED PLANS STAY ON MAP.</p>
         <div class="row">
             <button class="conf-btn danger" id="confirmYes">CLEAR</button>
             <button class="conf-btn cancel" id="confirmNo">CANCEL</button>
@@ -642,10 +798,32 @@
     </div>
 </div>
 
+<!-- Map Library Modal (GM only) -->
+<div id="mapLibModal">
+    <div id="mapLibBox">
+        <div id="mapLibHdr">
+            <div id="mapLibTitle">📁 MAP LIBRARY</div>
+            <div id="mapLibRoomLabel"></div>
+            <div id="mapLibCount">0 FILES</div>
+            <button id="mapLibClose">✕</button>
+        </div>
+        <div id="mapLibUploadArea">
+            <div class="mlib-label">UPLOAD NEW MAP</div>
+            <div id="mapLibDrop">
+                <p>DRAG &amp; DROP .GRIDMAP OR</p>
+                <button id="mapLibPickBtn">⬆ SELECT FILE</button>
+            </div>
+            <input type="file" id="mapLibFileInput" accept=".gridmap" multiple>
+            <div id="mapLibProgress"></div>
+        </div>
+        <div id="mapLibList"></div>
+    </div>
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script>
 // ================================================================
-// GOD: Tactical Player  —  networked, ghost-layer edition
+// GOD: Tactical Player  —  networked, ghost-layer + GM consolidated
 // ================================================================
 
 const GRIDMAP_DELIMITERS = ['###GRID_METADATA_END###', '[GRID_DATA_END]'];
@@ -661,25 +839,22 @@ let mapData      = null;  // { header, img, imgUrl, fileName }
 let view         = { x: 0, y: 0, scale: 1 };
 let activePhase  = 'move';
 let activeTool   = 'pan';
+let lastDrawTool = 'line';  // last non-pan tool (for btnActiveTool display)
 let currentRoom  = 'default';
 let callsign     = '';
 
-// Drawing layers:
-//   serverDrawings — submitted plans, synced from server (visible to all)
-//   ghostDrawings  — this player's local plan, not yet submitted
-//   gmLiveStroke   — GM's in-progress stroke received from server (live pointer)
+// Drawing layers
 let serverDrawings = [];
 let ghostDrawings  = [];
 let currentDraw    = null;
 let gmLiveStroke   = null;
 
-// GM mode — confirmed by server via room-state.isGM after join-room with password
-let isGMMode       = false;
-let gmModePassword = '';
-let gmAuthAttempted = false;   // true when user submitted a GM password this session
+// GM mode
+let isGMMode        = false;
+let gmModePassword  = '';
+let gmAuthAttempted = false;
 
-// Global focus — callsign of whoever holds the spotlight, null = no focus
-// Synced across all clients via set-global-focus / clear-focus socket events
+// Global focus
 let globalFocusOwner = null;
 
 // ── Render flags ──────────────────────────────────────────────────
@@ -688,9 +863,10 @@ let drawDirty  = false;
 let rafPending = false;
 
 // ── Pointer state ─────────────────────────────────────────────────
-let isPanning    = false;
-let panStart     = { x: 0, y: 0 };
-let panViewStart = { x: 0, y: 0 };
+let isPanning     = false;
+let isRightPan    = false;   // true when right-click drag is panning
+let panStart      = { x: 0, y: 0 };
+let panViewStart  = { x: 0, y: 0 };
 
 const activeTouches = {};
 let pinchActive     = false;
@@ -708,14 +884,16 @@ function connectToServer() {
     currentRoom = roomVal;
     callsign    = csVal;
 
-    // Read GM credentials from the modal (checkbox + password field)
     const gmChecked = document.getElementById('gmToggle').checked;
     const gmPw      = document.getElementById('gmPasswordInput').value;
     gmAuthAttempted = gmChecked && gmPw.length > 0;
     gmModePassword  = gmAuthAttempted ? gmPw : '';
 
-    setLdStatus('CONNECTING…');
+    // Persist room + callsign immediately
+    localStorage.setItem('tp_room',     currentRoom);
+    if (callsign) localStorage.setItem('tp_callsign', callsign);
 
+    setLdStatus('CONNECTING…');
     socket = io();
 
     socket.on('connect', () => {
@@ -740,23 +918,21 @@ function connectToServer() {
 
     // Server sends full room state on join
     socket.on('room-state', state => {
-        // ── GM auth result ────────────────────────────────────────
         if (gmAuthAttempted) {
             if (state.isGM) {
                 applyGMMode();
                 updateGMVisBtn(state.drawingsVisible ?? true);
+                // Persist GM password on successful auth
+                localStorage.setItem('tp_gm_pw', gmModePassword);
             } else {
-                // Password was wrong — show error, stay as player
                 document.getElementById('ldGmErr').textContent = 'WRONG GM PASSWORD';
                 document.getElementById('gmPasswordInput').value = '';
                 document.getElementById('btnConnect').disabled = false;
                 gmAuthAttempted = false;
                 gmModePassword  = '';
-                // Let the socket stay connected but as a regular player
             }
         }
 
-        // ── Map + drawings ────────────────────────────────────────
         if (state.activeMap) {
             loadMapFromUrl(state.activeMap.url, state.activeMap.filename);
         } else {
@@ -766,47 +942,44 @@ function connectToServer() {
         serverDrawings   = state.drawings || [];
         globalFocusOwner = state.focusOwner || null;
         updateFocusBtn();
+        updateGMDrawCount();
         scheduleRender(false, true);
     });
 
-    // GM activated a new map
     socket.on('map-changed', activeMap => {
         showWaiting(false);
         loadMapFromUrl(activeMap.url, activeMap.filename);
         ghostDrawings  = [];
         serverDrawings = [];
         updateSubmitBtn();
+        updateGMDrawCount();
         showToast('NEW MAP LOADED BY GM');
     });
 
-    // Server pushed updated drawings (all submitted plans)
     socket.on('drawings-updated', drawings => {
         serverDrawings = drawings || [];
+        updateGMDrawCount();
         scheduleRender(false, true);
     });
 
     socket.on('drawings-cleared', () => {
         serverDrawings = [];
+        updateGMDrawCount();
         scheduleRender(false, true);
         showToast('GM CLEARED ALL DRAWINGS');
     });
 
     socket.on('visibility-changed', visible => {
-        if (!visible) {
-            serverDrawings = [];
-            scheduleRender(false, true);
-        }
+        if (!visible) { serverDrawings = []; scheduleRender(false, true); }
         if (isGMMode) updateGMVisBtn(visible);
         showToast(visible ? 'DRAWINGS NOW VISIBLE' : 'DRAWINGS HIDDEN BY GM');
     });
 
-    // GM live pointer — show the GM's current in-progress stroke
     socket.on('gm-live-stroke', stroke => {
         gmLiveStroke = stroke || null;
         scheduleRender(false, true);
     });
 
-    // Global focus sync
     socket.on('focus-switched', ownerCallsign => {
         globalFocusOwner = ownerCallsign;
         updateFocusBtn();
@@ -821,6 +994,16 @@ function connectToServer() {
         updateFocusBtn();
         scheduleRender(false, true);
         showToast('FOCUS: SPOTLIGHT OFF');
+    });
+
+    socket.on('client-count', count => {
+        document.getElementById('gmMenuPlayerCount').textContent = count;
+    });
+
+    socket.on('player-list', list => {
+        if (isGMMode) {
+            document.getElementById('gmMenuPlayerCount').textContent = list.length;
+        }
     });
 }
 
@@ -958,7 +1141,6 @@ function renderMap() {
     mapCtx.clip();
     drawGrid(mapCtx, mapData.header);
     mapCtx.restore();
-
     mapCtx.restore();
 }
 
@@ -1040,8 +1222,6 @@ function drawGrid(ctx, h) {
 }
 
 // ── Drawings render ───────────────────────────────────────────────
-// Server drawings: full opacity
-// Ghost drawings:  translucent + dashed border to distinguish
 function renderDrawings() {
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
     if (!mapData) return;
@@ -1055,25 +1235,18 @@ function renderDrawings() {
     drawCtx.rect(0, 0, iw, ih);
     drawCtx.clip();
 
-    // Determine focus owner — the callsign whose drawings remain at full opacity
     const focusActive = globalFocusOwner !== null;
 
-    // Layer 1: server/submitted drawings
     for (const d of serverDrawings) {
-        // A drawing "belongs to" the focus owner when its callsign matches,
-        // or it is a GM drawing and the GM holds focus.
-        const ownerCs  = d.isGM ? 'GM' : (d.callsign || '');
-        const dimmed   = focusActive && ownerCs !== globalFocusOwner;
+        const ownerCs = d.isGM ? 'GM' : (d.callsign || '');
+        const dimmed  = focusActive && ownerCs !== globalFocusOwner;
         paintDrawing(drawCtx, d, 'server', dimmed);
     }
 
-    // Layer 2: local ghost drawings — always full brightness (they are the player's own)
     for (const d of ghostDrawings) paintDrawing(drawCtx, d, 'ghost', false);
 
-    // Layer 3: in-progress stroke
     if (currentDraw) paintDrawing(drawCtx, currentDraw, 'live', false);
 
-    // Layer 4: GM live pointer stroke (dim if focus is active and GM isn't the owner)
     if (gmLiveStroke) {
         const gmDimmed = focusActive && globalFocusOwner !== 'GM';
         paintDrawing(drawCtx, gmLiveStroke, 'live', gmDimmed);
@@ -1088,117 +1261,174 @@ const PHASE_COLORS = {
     surge:     { fill: [255, 51, 51],  stroke: [255, 110, 110] },
 };
 
+// ── Wargame-style painting ────────────────────────────────────────
+// Separates grid cell highlights from crisp geometric outlines.
 function paintDrawing(ctx, d, mode, dimmed = false) {
-    // mode: 'server' | 'ghost' | 'live'
-    // dimmed: true → render at 0.2 opacity (focus mode, not the spotlight owner)
     if (!d.cells || d.cells.length === 0) return;
 
     const c = PHASE_COLORS[d.phase] || PHASE_COLORS.execution;
     const vs = view.scale;
-
-    let fillA, strokeA;
-    if (mode === 'server') { fillA = 0.28; strokeA = 0.88; }
-    else if (mode === 'ghost') { fillA = 0.18; strokeA = 0.52; }
-    else { fillA = 0.14; strokeA = 0.38; }
-
     const { sector_size: sSize, offset_x: oX, offset_y: oY } = mapData.header.grid;
     const cSize = sSize / 3;
 
-    ctx.save();
-    // Apply focus-dim: set globalAlpha here so every sub-draw (fills, strokes,
-    // arrows, labels) is uniformly affected without relying on external state.
-    if (dimmed) ctx.globalAlpha = 0.2;
+    // Opacity levels per mode
+    let outlineA, isGhost;
+    if      (mode === 'server') { outlineA = 0.92; isGhost = false; }
+    else if (mode === 'ghost' ) { outlineA = 0.65; isGhost = true;  }
+    else                        { outlineA = 0.50; isGhost = true;  }
 
-    // Fill cells
-    ctx.fillStyle = `rgba(${c.fill.join(',')},${fillA})`;
+    ctx.save();
+    if (dimmed) ctx.globalAlpha = 0.18;
+
+    // ── 1. Cell Fill (Grid Highlight) ─────────────────────────────
+    ctx.fillStyle = `rgba(${c.fill.join(',')},0.20)`;
     for (const { col, row } of d.cells) {
         ctx.fillRect(oX + col * cSize, oY + row * cSize, cSize, cSize);
     }
 
-    // Ghost drawings get a dashed border to distinguish them from submitted ones
-    if (mode === 'ghost' || mode === 'live') {
-        ctx.setLineDash([3 / vs, 3 / vs]);
-    }
+    // ── 2. Geometric Outline ──────────────────────────────────────
+    ctx.strokeStyle = `rgba(${c.stroke.join(',')},${outlineA})`;
+    ctx.fillStyle   = `rgba(${c.stroke.join(',')},${outlineA})`;
+    ctx.lineWidth   = 2.5 / vs;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+    ctx.shadowColor = dimmed ? 'transparent' : `rgba(${c.stroke.join(',')},0.45)`;
+    ctx.shadowBlur  = dimmed ? 0 : 9 / vs;
+    if (isGhost) ctx.setLineDash([4 / vs, 3 / vs]);
+    else         ctx.setLineDash([]);
 
-    ctx.strokeStyle = `rgba(${c.stroke.join(',')},${strokeA * 0.7})`;
-    ctx.lineWidth   = 1 / vs;
-    ctx.shadowBlur  = 0;
-    for (const { col, row } of d.cells) {
-        ctx.strokeRect(
-            oX + col * cSize + 0.5 / vs,
-            oY + row * cSize + 0.5 / vs,
-            cSize - 1 / vs, cSize - 1 / vs
-        );
-    }
-    ctx.setLineDash([]);
+    const shape = d.shape;
 
-    // Arrow overlay for line/wideline
-    if ((d.shape === 'line' || d.shape === 'wideline') && d.startCell && d.endCell) {
-        const s = cellRect(d.startCell.col, d.startCell.row);
-        const e = cellRect(d.endCell.col,   d.endCell.row);
-        const ddx = e.cx - s.cx, ddy = e.cy - s.cy;
+    if ((shape === 'line' || shape === 'wideline') && d.startCell && d.endCell) {
+        const ax = oX + (d.startCell.col + 0.5) * cSize;
+        const ay = oY + (d.startCell.row + 0.5) * cSize;
+        const bx = oX + (d.endCell.col   + 0.5) * cSize;
+        const by = oY + (d.endCell.row   + 0.5) * cSize;
+        const ddx = bx - ax, ddy = by - ay;
         const dist = Math.hypot(ddx, ddy);
 
-        ctx.strokeStyle = `rgba(${c.stroke.join(',')},${strokeA})`;
-        ctx.fillStyle   = `rgba(${c.stroke.join(',')},${strokeA})`;
-        ctx.lineWidth   = 2.5 / vs;
-        ctx.shadowColor = dimmed ? 'transparent' : `rgba(${c.stroke.join(',')},0.35)`;
-        ctx.shadowBlur  = dimmed ? 0 : 8 / vs;
-        ctx.lineCap     = 'round';
+        if (shape === 'wideline' && dist > 0.1) {
+            // Crisp rectangular corridor outline
+            const len = dist;
+            const ux = ddx / len, uy = ddy / len;
+            const halfW = 1.5 * cSize;
+            const px = -uy * halfW, py = ux * halfW;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(ax + px, ay + py);
+            ctx.lineTo(bx + px, by + py);
+            ctx.lineTo(bx - px, by - py);
+            ctx.lineTo(ax - px, ay - py);
+            ctx.closePath();
+            ctx.stroke();
+            if (isGhost) ctx.setLineDash([4 / vs, 3 / vs]);
+        }
 
+        // Vector arrow line
+        ctx.lineWidth = 2.5 / vs;
         ctx.beginPath();
-        ctx.moveTo(s.cx, s.cy);
-        ctx.lineTo(e.cx, e.cy);
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
         ctx.stroke();
 
-        if (dist > 1) {
-            const angle = Math.atan2(ddy, ddx);
-            const hw = 13 / vs;
+        // Arrowhead
+        if (dist > 2) {
+            ctx.setLineDash([]);
             ctx.shadowBlur = 0;
+            const angle = Math.atan2(ddy, ddx);
+            const hw = Math.min(14 / vs, dist * 0.35);
             ctx.beginPath();
-            ctx.moveTo(e.cx, e.cy);
-            ctx.lineTo(e.cx - hw * Math.cos(angle - Math.PI / 6), e.cy - hw * Math.sin(angle - Math.PI / 6));
-            ctx.lineTo(e.cx - hw * Math.cos(angle + Math.PI / 6), e.cy - hw * Math.sin(angle + Math.PI / 6));
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx - hw * Math.cos(angle - Math.PI / 6), by - hw * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(bx - hw * Math.cos(angle + Math.PI / 6), by - hw * Math.sin(angle + Math.PI / 6));
             ctx.closePath();
             ctx.fill();
         }
 
+        // Start dot
+        ctx.setLineDash([]);
         ctx.shadowBlur = 0;
         ctx.beginPath();
-        ctx.arc(s.cx, s.cy, 4 / vs, 0, Math.PI * 2);
+        ctx.arc(ax, ay, 4 / vs, 0, Math.PI * 2);
         ctx.fill();
-    }
 
-    // Center marker for area shapes
-    if ((d.shape === 'circle' || d.shape === 'square' || d.shape === 'triangle') && d.startCell) {
-        const s  = cellRect(d.startCell.col, d.startCell.row);
-        const cr = 6 / vs;
-        ctx.strokeStyle = `rgba(${c.stroke.join(',')},${strokeA})`;
-        ctx.fillStyle   = `rgba(${c.stroke.join(',')},${strokeA * 0.6})`;
-        ctx.lineWidth   = 1.5 / vs;
-        ctx.shadowColor = dimmed ? 'transparent' : `rgba(${c.stroke.join(',')},0.4)`;
-        ctx.shadowBlur  = dimmed ? 0 : 6 / vs;
+    } else if (shape === 'circle' && d.startCell && d.endCell) {
+        const cx = oX + (d.startCell.col + 0.5) * cSize;
+        const cy = oY + (d.startCell.row + 0.5) * cSize;
+        const radius = Math.hypot(d.endCell.col - d.startCell.col, d.endCell.row - d.startCell.row) * cSize;
+        ctx.lineWidth = 2.5 / vs;
         ctx.beginPath();
-        ctx.arc(s.cx, s.cy, cr, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.arc(cx, cy, Math.max(radius, 2 / vs), 0, Math.PI * 2);
         ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 4 / vs, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else if (shape === 'square' && d.startCell && d.endCell) {
+        const sc = d.startCell, ec = d.endCell;
+        const halfSize = Math.max(Math.abs(ec.col - sc.col), Math.abs(ec.row - sc.row));
+        const sqX = oX + (sc.col - halfSize) * cSize;
+        const sqY = oY + (sc.row - halfSize) * cSize;
+        const sqW = (halfSize * 2 + 1) * cSize;
+        ctx.lineWidth = 2.5 / vs;
+        ctx.strokeRect(sqX, sqY, sqW, sqW);
+        ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(oX + (sc.col + 0.5) * cSize, oY + (sc.row + 0.5) * cSize, 4 / vs, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else if (shape === 'triangle' && d.startCell && d.endCell) {
+        const sc = d.startCell, ec = d.endCell;
+        const cx = oX + (sc.col + 0.5) * cSize;
+        const cy = oY + (sc.row + 0.5) * cSize;
+        const tx = oX + (ec.col + 0.5) * cSize;
+        const ty = oY + (ec.row + 0.5) * cSize;
+        const radius = Math.hypot(tx - cx, ty - cy);
+        if (radius > 1 / vs) {
+            const aimAngle = Math.atan2(ty - cy, tx - cx);
+            ctx.lineWidth = 2.5 / vs;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, radius, aimAngle - Math.PI / 6, aimAngle + Math.PI / 6);
+            ctx.closePath();
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 4 / vs, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else if (shape === 'point' && d.startCell) {
+        const cx = oX + (d.startCell.col + 0.5) * cSize;
+        const cy = oY + (d.startCell.row + 0.5) * cSize;
+        ctx.setLineDash([]);
+        ctx.shadowColor = dimmed ? 'transparent' : `rgba(${c.stroke.join(',')},0.5)`;
+        ctx.shadowBlur  = dimmed ? 0 : 10 / vs;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 6 / vs, 0, Math.PI * 2);
+        ctx.fill();
     }
 
-    // Ownership label — tiny "GM" / callsign tag at the start cell (confirmed drawings only)
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+
+    // ── 3. Ownership label (server mode only) ─────────────────────
     if (mode === 'server' && d.startCell) {
-        const s     = cellRect(d.startCell.col, d.startCell.row);
-        const label = d.isGM ? 'GM' : (d.callsign ? d.callsign.slice(0, 5) : '?');
-        const fs    = Math.max(5, Math.min(11, 9 / vs));
-        ctx.shadowBlur  = 0;
-        ctx.font        = `bold ${fs}px monospace`;
-        ctx.textAlign   = 'center';
+        const sx     = oX + (d.startCell.col + 0.5) * cSize;
+        const sy     = oY + (d.startCell.row + 0.5) * cSize;
+        const label  = d.isGM ? 'GM' : (d.callsign ? d.callsign.slice(0, 5) : '?');
+        const fs     = Math.max(5, Math.min(11, 9 / vs));
+        ctx.font     = `bold ${fs}px monospace`;
+        ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
-        // Dark outline for readability
         ctx.fillStyle = 'rgba(0,0,0,0.75)';
-        ctx.fillText(label, s.cx + 0.6 / vs, s.cy + 0.6 / vs);
-        // Bright label
+        ctx.fillText(label, sx + 0.6 / vs, sy + 0.6 / vs);
         ctx.fillStyle = `rgba(${c.stroke.join(',')},0.95)`;
-        ctx.fillText(label, s.cx, s.cy);
+        ctx.fillText(label, sx, sy);
     }
 
     ctx.restore();
@@ -1226,68 +1456,60 @@ function snapCellFromScreen(sx, sy) {
     return worldToCell(screenToWorld(sx, sy).x, screenToWorld(sx, sy).y);
 }
 
-// Geometric line-cell intersection with 5% inset margin per cell.
-// This prevents "double-wide" highlights at exact grid corners:
-// a diagonal line through a corner only lights cells it significantly enters.
+// ── Supercover DDA line — all cells the segment passes through ────
+// Includes corner-touching cells (true supercover), replacing the
+// old margin-based intersection approach.
 function lineCells(c1, r1, c2, r2) {
-    const MARGIN = 0.05;
     const cells = [], seen = new Set();
+    const add = (c, r) => {
+        const k = c + ',' + r;
+        if (!seen.has(k)) { seen.add(k); cells.push({ col: c, row: r }); }
+    };
 
-    // Segment in cell-space: center of start cell → center of end cell
-    const ax = c1 + 0.5, ay = r1 + 0.5;
-    const bx = c2 + 0.5, by = r2 + 0.5;
-    const sdx = bx - ax, sdy = by - ay;
+    let x = c1, y = r1;
+    const dx = Math.abs(c2 - c1), dy = Math.abs(r2 - r1);
+    const sx = c2 >= c1 ? 1 : -1, sy = r2 >= r1 ? 1 : -1;
+    let err = dx - dy;
 
-    const colMin = Math.min(c1, c2) - 1, colMax = Math.max(c1, c2) + 1;
-    const rowMin = Math.min(r1, r2) - 1, rowMax = Math.max(r1, r2) + 1;
-
-    for (let c = colMin; c <= colMax; c++) {
-        for (let r = rowMin; r <= rowMax; r++) {
-            // Inset hitbox
-            const x0 = c + MARGIN, x1 = c + 1 - MARGIN;
-            const y0 = r + MARGIN, y1 = r + 1 - MARGIN;
-
-            // Quick bounding-box rejection
-            if (Math.max(ax, bx) < x0 || Math.min(ax, bx) > x1) continue;
-            if (Math.max(ay, by) < y0 || Math.min(ay, by) > y1) continue;
-
-            // If the segment has no length, just test the point
-            if (sdx === 0 && sdy === 0) {
-                if (ax >= x0 && ax <= x1 && ay >= y0 && ay <= y1) {
-                    seen.add(c+','+r); cells.push({col:c, row:r});
-                }
-                continue;
-            }
-
-            // All four corners on the same side of the line → no intersection
-            const cross = (px, py) => sdx * (py - ay) - sdy * (px - ax);
-            const c00 = cross(x0, y0), c10 = cross(x1, y0);
-            const c01 = cross(x0, y1), c11 = cross(x1, y1);
-            if ((c00 > 0 && c10 > 0 && c01 > 0 && c11 > 0) ||
-                (c00 < 0 && c10 < 0 && c01 < 0 && c11 < 0)) continue;
-
-            const k = c + ',' + r;
-            if (!seen.has(k)) { seen.add(k); cells.push({col: c, row: r}); }
+    add(x, y);
+    while (x !== c2 || y !== r2) {
+        const e2 = 2 * err;
+        const moveX = e2 > -dy;
+        const moveY = e2 < dx;
+        // Corner crossing: include both adjacent cells (supercover)
+        if (moveX && moveY) {
+            add(x + sx, y);
+            add(x, y + sy);
         }
+        if (moveX) { err -= dy; x += sx; }
+        if (moveY) { err += dx; y += sy; }
+        add(x, y);
     }
     return cells;
 }
 
+// ── Wide line cells — forward-only corridor, no cells behind start ─
 function wideLineCells(c1, r1, c2, r2) {
     const halfW = 1.5;
-    const ax = c1+0.5, ay = r1+0.5, bx = c2+0.5, by = r2+0.5;
-    const dx = bx-ax, dy = by-ay, lenSq = dx*dx+dy*dy;
-    const margin = 2;
-    const colMin = Math.min(c1,c2)-margin, colMax = Math.max(c1,c2)+margin;
-    const rowMin = Math.min(r1,r2)-margin, rowMax = Math.max(r1,r2)+margin;
+    const ax = c1 + 0.5, ay = r1 + 0.5;
+    const bx = c2 + 0.5, by = r2 + 0.5;
+    const dx = bx - ax, dy = by - ay;
+    const len = Math.hypot(dx, dy);
+    if (len < 0.01) return [{ col: c1, row: r1 }];
+
+    const ux = dx / len, uy = dy / len;  // forward unit vector
+    const margin = Math.ceil(halfW) + 2;
+    const colMin = Math.min(c1, c2) - margin, colMax = Math.max(c1, c2) + margin;
+    const rowMin = Math.min(r1, r2) - margin, rowMax = Math.max(r1, r2) + margin;
     const cells = [];
+
     for (let col = colMin; col <= colMax; col++) {
         for (let row = rowMin; row <= rowMax; row++) {
-            const px = col+0.5, py = row+0.5;
-            let dist;
-            if (lenSq === 0) { dist = Math.hypot(px-ax, py-ay); }
-            else { const t = Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/lenSq)); dist = Math.hypot(ax+t*dx-px, ay+t*dy-py); }
-            if (dist <= halfW) cells.push({col, row});
+            const vx = col + 0.5 - ax, vy = row + 0.5 - ay;
+            const fwd  = vx * ux + vy * uy;         // projection along forward axis
+            if (fwd < 0 || fwd > len) continue;      // strictly exclude behind start & past end
+            const perp = Math.abs(vx * (-uy) + vy * ux);  // perpendicular distance
+            if (perp <= halfW) cells.push({ col, row });
         }
     }
     return cells;
@@ -1295,46 +1517,51 @@ function wideLineCells(c1, r1, c2, r2) {
 
 function circleCells(cc, rc, radiusCells) {
     const cells = [], r = Math.max(0, radiusCells), ri = Math.ceil(r);
-    for (let dc=-ri; dc<=ri; dc++) for (let dr=-ri; dr<=ri; dr++) if (Math.hypot(dc,dr)<=r) cells.push({col:cc+dc,row:rc+dr});
+    for (let dc = -ri; dc <= ri; dc++)
+        for (let dr = -ri; dr <= ri; dr++)
+            if (Math.hypot(dc, dr) <= r) cells.push({ col: cc + dc, row: rc + dr });
     return cells;
 }
 
 function squareCells(cc, rc, halfSize) {
     const cells = [], h = Math.max(0, Math.round(halfSize));
-    for (let dc=-h; dc<=h; dc++) for (let dr=-h; dr<=h; dr++) cells.push({col:cc+dc,row:rc+dr});
+    for (let dc = -h; dc <= h; dc++)
+        for (let dr = -h; dr <= h; dr++)
+            cells.push({ col: cc + dc, row: rc + dr });
     return cells;
 }
 
 function coneCells(sc, sr, ec, er) {
-    const ax=sc+0.5, ay=sr+0.5, tx=ec+0.5, ty=er+0.5;
-    const aimX=tx-ax, aimY=ty-ay, radius=Math.hypot(aimX,aimY);
-    if (radius < 0.5) return [{col:sc,row:sr}];
-    const halfAngle=Math.PI/6, cosHalf=Math.cos(halfAngle);
-    const maxR = Math.ceil(radius)+1;
-    const cells=[], seen=new Set();
-    for (let dc=-maxR; dc<=maxR; dc++) {
-        for (let dr=-maxR; dr<=maxR; dr++) {
-            const col=sc+dc, row=sr+dr, k=col+','+row;
+    const ax = sc+0.5, ay = sr+0.5, tx = ec+0.5, ty = er+0.5;
+    const aimX = tx - ax, aimY = ty - ay, radius = Math.hypot(aimX, aimY);
+    if (radius < 0.5) return [{ col: sc, row: sr }];
+    const halfAngle = Math.PI / 6, cosHalf = Math.cos(halfAngle);
+    const maxR = Math.ceil(radius) + 1;
+    const cells = [], seen = new Set();
+    for (let dc = -maxR; dc <= maxR; dc++) {
+        for (let dr = -maxR; dr <= maxR; dr++) {
+            const col = sc+dc, row = sr+dr, k = col+','+row;
             if (seen.has(k)) continue;
-            const px=col+0.5, py=row+0.5, vx=px-ax, vy=py-ay, dist=Math.hypot(vx,vy);
-            if (dist < 0.5) { seen.add(k); cells.push({col,row}); continue; }
+            const px = col+0.5, py = row+0.5;
+            const vx = px-ax, vy = py-ay, dist = Math.hypot(vx, vy);
+            if (dist < 0.5) { seen.add(k); cells.push({ col, row }); continue; }
             if (dist > radius) continue;
-            if ((vx*aimX+vy*aimY)/(dist*radius) >= cosHalf) { seen.add(k); cells.push({col,row}); }
+            if ((vx*aimX + vy*aimY) / (dist*radius) >= cosHalf) { seen.add(k); cells.push({ col, row }); }
         }
     }
     return cells;
 }
 
 function computeCells(startCell, endCell, shape) {
-    const {col:sc, row:sr} = startCell, {col:ec, row:er} = endCell;
+    const { col: sc, row: sr } = startCell, { col: ec, row: er } = endCell;
     switch (shape) {
-        case 'line':     return lineCells(sc,sr,ec,er);
-        case 'wideline': return wideLineCells(sc,sr,ec,er);
-        case 'point':    return [{col:ec,row:er}];
-        case 'circle':   return circleCells(sc,sr,Math.hypot(ec-sc,er-sr));
-        case 'square':   return squareCells(sc,sr,Math.max(Math.abs(ec-sc),Math.abs(er-sr)));
-        case 'triangle': return coneCells(sc,sr,ec,er);
-        default:         return [{col:ec,row:er}];
+        case 'line':     return lineCells(sc, sr, ec, er);
+        case 'wideline': return wideLineCells(sc, sr, ec, er);
+        case 'point':    return [{ col: ec, row: er }];
+        case 'circle':   return circleCells(sc, sr, Math.hypot(ec-sc, er-sr));
+        case 'square':   return squareCells(sc, sr, Math.max(Math.abs(ec-sc), Math.abs(er-sr)));
+        case 'triangle': return coneCells(sc, sr, ec, er);
+        default:         return [{ col: ec, row: er }];
     }
 }
 
@@ -1351,7 +1578,7 @@ function onDrawStart(sx, sy) {
             d.cells[0].col === cell.col && d.cells[0].row === cell.row
         );
         if (idx !== -1) { ghostDrawings.splice(idx, 1); updateSubmitBtn(); }
-        else { ghostDrawings.push({ phase: activePhase, shape: 'point', startCell: cell, endCell: cell, cells: [{col:cell.col,row:cell.row}] }); updateSubmitBtn(); }
+        else { ghostDrawings.push({ phase: activePhase, shape: 'point', startCell: cell, endCell: cell, cells: [{ col: cell.col, row: cell.row }] }); updateSubmitBtn(); }
         scheduleRender(false, true);
     } else {
         currentDraw = { phase: activePhase, shape, startCell: cell, endCell: cell, cells: [cell] };
@@ -1366,7 +1593,6 @@ function onDrawMove(sx, sy) {
     currentDraw.endCell = cell;
     currentDraw.cells   = computeCells(currentDraw.startCell, currentDraw.endCell, currentDraw.shape);
 
-    // GM live broadcast — emit current stroke in real-time so players see the pointer
     if (isGMMode && socket?.connected) {
         socket.emit('gm-live-stroke', {
             roomId:   currentRoom,
@@ -1381,7 +1607,6 @@ function onDrawMove(sx, sy) {
             }
         });
     }
-
     scheduleRender(false, true);
 }
 
@@ -1390,16 +1615,14 @@ function onDrawEnd() {
     const d = currentDraw;
     currentDraw = null;
     const moved = (d.startCell.col !== d.endCell.col || d.startCell.row !== d.endCell.row);
+
     if ((d.shape === 'line' || d.shape === 'wideline') && !moved) {
-        // Clear GM live stroke broadcast
-        if (isGMMode && socket?.connected) {
+        if (isGMMode && socket?.connected)
             socket.emit('gm-live-stroke', { roomId: currentRoom, password: gmModePassword, stroke: null });
-        }
         scheduleRender(false, true); return;
     }
 
     if (isGMMode) {
-        // GM mode: submit immediately via gm-draw (no ghost queue, no Submit button)
         if (socket?.connected) {
             socket.emit('gm-draw', {
                 roomId:   currentRoom,
@@ -1414,7 +1637,6 @@ function onDrawEnd() {
                     callsign:  'GM'
                 }]
             });
-            // Clear live stroke now that it's committed
             socket.emit('gm-live-stroke', { roomId: currentRoom, password: gmModePassword, stroke: null });
         }
         scheduleRender(false, true);
@@ -1438,72 +1660,115 @@ function applyZoom(pivotX, pivotY, factor) {
 }
 
 // ── Mouse events ──────────────────────────────────────────────────
+// Right-click always pans regardless of the active tool.
+drawCanvas.addEventListener('contextmenu', e => e.preventDefault());
+
 drawCanvas.addEventListener('mousedown', e => {
+    // Right-click → always pan
+    if (e.button === 2) {
+        e.preventDefault();
+        isRightPan   = true;
+        isPanning    = true;
+        panStart     = { x: e.clientX, y: e.clientY };
+        panViewStart = { x: view.x, y: view.y };
+        drawCanvas.classList.add('grabbing');
+        return;
+    }
     if (e.button !== 0) return;
     e.preventDefault();
     if (activeTool === 'pan') {
-        isPanning = true; panStart = {x:e.clientX,y:e.clientY}; panViewStart = {x:view.x,y:view.y};
+        isPanning    = true;
+        panStart     = { x: e.clientX, y: e.clientY };
+        panViewStart = { x: view.x, y: view.y };
         drawCanvas.classList.add('grabbing');
-    } else { onDrawStart(e.clientX, e.clientY); }
+    } else {
+        onDrawStart(e.clientX, e.clientY);
+    }
 });
+
 drawCanvas.addEventListener('mousemove', e => {
     if (isPanning) {
         view.x = panViewStart.x + (e.clientX - panStart.x);
         view.y = panViewStart.y + (e.clientY - panStart.y);
         scheduleRender(true, true);
-    } else if (currentDraw) { onDrawMove(e.clientX, e.clientY); }
+    } else if (currentDraw) {
+        onDrawMove(e.clientX, e.clientY);
+    }
 });
-function endMouseAction() {
+
+function endMouseAction(btn) {
+    if (btn === 2 && isRightPan) {
+        isRightPan = false; isPanning = false;
+        drawCanvas.classList.remove('grabbing');
+        return;
+    }
+    if (btn !== 0) return;
     if (isPanning) { isPanning = false; drawCanvas.classList.remove('grabbing'); }
-    else { onDrawEnd(); }
+    else           { onDrawEnd(); }
 }
-drawCanvas.addEventListener('mouseup',    e => { if (e.button === 0) endMouseAction(); });
-drawCanvas.addEventListener('mouseleave', endMouseAction);
+
+drawCanvas.addEventListener('mouseup',    e => endMouseAction(e.button));
+drawCanvas.addEventListener('mouseleave', e => { if (!isRightPan) endMouseAction(0); });
+
 drawCanvas.addEventListener('wheel', e => {
     e.preventDefault();
     applyZoom(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12);
 }, { passive: false });
 
-// ── Touch events ──────────────────────────────────────────────────
+// ── Touch events (single-finger draw, two-finger pan/zoom) ────────
 drawCanvas.addEventListener('touchstart', e => {
     e.preventDefault();
-    for (const t of e.changedTouches) activeTouches[t.identifier] = {x:t.clientX,y:t.clientY};
+    for (const t of e.changedTouches) activeTouches[t.identifier] = { x: t.clientX, y: t.clientY };
     const ids = Object.keys(activeTouches);
+
     if (ids.length >= 2) {
+        // Two or more fingers — switch to pinch/pan; cancel any ongoing draw
         currentDraw = null; isPanning = false; scheduleRender(false, true);
         const t1 = activeTouches[ids[0]], t2 = activeTouches[ids[1]];
-        pinchActive = true;
-        pinchStartDist  = Math.hypot(t2.x-t1.x, t2.y-t1.y);
+        pinchActive     = true;
+        pinchStartDist  = Math.hypot(t2.x - t1.x, t2.y - t1.y);
         pinchStartScale = view.scale;
-        pinchStartMid   = {x:(t1.x+t2.x)/2, y:(t1.y+t2.y)/2};
-        pinchStartView  = {x:view.x, y:view.y};
+        pinchStartMid   = { x: (t1.x + t2.x) / 2, y: (t1.y + t2.y) / 2 };
+        pinchStartView  = { x: view.x, y: view.y };
     } else if (ids.length === 1 && !pinchActive) {
+        // Single finger — pan or draw based on active tool
         const t = e.changedTouches[0];
-        if (activeTool === 'pan') { isPanning=true; panStart={x:t.clientX,y:t.clientY}; panViewStart={x:view.x,y:view.y}; }
-        else { onDrawStart(t.clientX, t.clientY); }
+        if (activeTool === 'pan') {
+            isPanning    = true;
+            panStart     = { x: t.clientX, y: t.clientY };
+            panViewStart = { x: view.x, y: view.y };
+        } else {
+            onDrawStart(t.clientX, t.clientY);
+        }
     }
 }, { passive: false });
 
 drawCanvas.addEventListener('touchmove', e => {
     e.preventDefault();
-    for (const t of e.changedTouches) activeTouches[t.identifier] = {x:t.clientX,y:t.clientY};
+    for (const t of e.changedTouches) activeTouches[t.identifier] = { x: t.clientX, y: t.clientY };
     const ids = Object.keys(activeTouches);
+
     if (pinchActive && ids.length >= 2) {
-        const t1=activeTouches[ids[0]], t2=activeTouches[ids[1]];
-        const dist = Math.hypot(t2.x-t1.x, t2.y-t1.y);
-        const mid  = {x:(t1.x+t2.x)/2, y:(t1.y+t2.y)/2};
-        const newScale = Math.min(Math.max(pinchStartScale*(dist/pinchStartDist),0.02),30);
-        const worldX = (pinchStartMid.x-pinchStartView.x)/pinchStartScale;
-        const worldY = (pinchStartMid.y-pinchStartView.y)/pinchStartScale;
-        view.scale=newScale; view.x=mid.x-worldX*newScale; view.y=mid.y-worldY*newScale;
+        const t1 = activeTouches[ids[0]], t2 = activeTouches[ids[1]];
+        const dist = Math.hypot(t2.x - t1.x, t2.y - t1.y);
+        const mid  = { x: (t1.x + t2.x) / 2, y: (t1.y + t2.y) / 2 };
+        // Anchor the world point under the initial pinch midpoint to the current midpoint
+        const worldX = (pinchStartMid.x - pinchStartView.x) / pinchStartScale;
+        const worldY = (pinchStartMid.y - pinchStartView.y) / pinchStartScale;
+        const newScale = Math.min(Math.max(pinchStartScale * (dist / pinchStartDist), 0.02), 30);
+        view.scale = newScale;
+        view.x = mid.x - worldX * newScale;
+        view.y = mid.y - worldY * newScale;
         scheduleRender(true, true);
     } else if (!pinchActive && ids.length === 1) {
         const t = e.changedTouches[0];
         if (isPanning) {
-            view.x = panViewStart.x+(t.clientX-panStart.x);
-            view.y = panViewStart.y+(t.clientY-panStart.y);
+            view.x = panViewStart.x + (t.clientX - panStart.x);
+            view.y = panViewStart.y + (t.clientY - panStart.y);
             scheduleRender(true, true);
-        } else { onDrawMove(t.clientX, t.clientY); }
+        } else {
+            onDrawMove(t.clientX, t.clientY);
+        }
     }
 }, { passive: false });
 
@@ -1514,11 +1779,13 @@ drawCanvas.addEventListener('touchend', e => {
         pinchActive = false;
         if (ids.length === 1) {
             const rem = activeTouches[ids[0]];
-            isPanning=true; panStart={x:rem.x,y:rem.y}; panViewStart={x:view.x,y:view.y};
+            isPanning    = true;
+            panStart     = { x: rem.x, y: rem.y };
+            panViewStart = { x: view.x, y: view.y };
         }
     } else if (ids.length === 0 && !pinchActive) {
         if (isPanning) isPanning = false;
-        else onDrawEnd();
+        else           onDrawEnd();
     }
 }, { passive: false });
 
@@ -1543,19 +1810,27 @@ const TOOL_META = {
 
 function setActiveTool(tool) {
     activeTool = tool;
-    // Update the trigger button icon/label and data-tool for CSS phase-color
-    const meta = TOOL_META[tool] || TOOL_META.pan;
-    document.getElementById('activeToolIcon').textContent  = meta.icon;
-    document.getElementById('activeToolLabel').textContent = meta.label;
-    document.getElementById('btnActiveTool').dataset.tool  = tool;
-    // Update popup button active states
+    if (tool !== 'pan') lastDrawTool = tool;
+
+    const drawMeta = TOOL_META[lastDrawTool] || TOOL_META.line;
+
+    // Dedicated PAN button
+    document.getElementById('btnPanTool').classList.toggle('active', tool === 'pan');
+
+    // Drawing tool trigger button — always shows last drawing tool
+    document.getElementById('activeToolIcon').textContent  = drawMeta.icon;
+    document.getElementById('activeToolLabel').textContent = drawMeta.label;
+    document.getElementById('btnActiveTool').dataset.tool  = lastDrawTool;
+    document.getElementById('btnActiveTool').classList.toggle('active', tool !== 'pan');
+
+    // Popup button states
     document.querySelectorAll('.tool-popup-btn[data-tool]').forEach(b => {
         b.classList.toggle('active', b.dataset.tool === tool);
     });
-    // Close popup after selection
+
     document.getElementById('toolPopup').classList.remove('open');
     if (tool === 'pan') { drawCanvas.classList.remove('drawing', 'grabbing'); }
-    else { drawCanvas.classList.add('drawing'); drawCanvas.classList.remove('grabbing'); }
+    else                { drawCanvas.classList.add('drawing'); drawCanvas.classList.remove('grabbing'); }
     currentDraw = null; scheduleRender(false, true);
 }
 
@@ -1566,19 +1841,21 @@ function setActivePhase(phase) {
     });
     const phaseClass = 'phase-' + phase;
     toolSidebar.className = phaseClass;
-    // Sync phase class on popup (preserving open state)
     const popup = document.getElementById('toolPopup');
     const wasOpen = popup.classList.contains('open');
     popup.className = phaseClass + (wasOpen ? ' open' : '');
     const moveOnly = (phase === 'move');
     document.querySelectorAll('.tool-popup-btn[data-tool]').forEach(b => {
-        b.classList.toggle('tool-disabled', moveOnly && b.dataset.tool !== 'pan' && b.dataset.tool !== 'line');
+        b.classList.toggle('tool-disabled', moveOnly && b.dataset.tool !== 'line');
     });
     if (moveOnly && activeTool !== 'pan' && activeTool !== 'line') setActiveTool('line');
     currentDraw = null; scheduleRender(false, true);
 }
 
-// Active tool trigger — toggle pop-out
+// Dedicated PAN button
+document.getElementById('btnPanTool').addEventListener('click', () => setActiveTool('pan'));
+
+// Drawing tool trigger — toggle pop-out
 document.getElementById('btnActiveTool').addEventListener('click', e => {
     e.stopPropagation();
     document.getElementById('toolPopup').classList.toggle('open');
@@ -1589,7 +1866,7 @@ document.querySelectorAll('.tool-popup-btn[data-tool]').forEach(btn => {
     btn.addEventListener('click', () => setActiveTool(btn.dataset.tool));
 });
 
-// Close any open popup on outside click
+// Close any open popup/menu on outside click
 document.addEventListener('click', e => {
     const popup = document.getElementById('toolPopup');
     if (popup.classList.contains('open') &&
@@ -1607,7 +1884,7 @@ document.querySelectorAll('.phase-btn[data-phase]').forEach(btn => {
     btn.addEventListener('click', () => setActivePhase(btn.dataset.phase));
 });
 
-// Undo — ghost drawings for players; last GM drawing on server for GM
+// Undo — GM: removes last GM drawing from server; Player: undoes last ghost
 function undoLast() {
     if (isGMMode) {
         if (!socket?.connected) { showToast('NOT CONNECTED'); return; }
@@ -1623,15 +1900,27 @@ function undoLast() {
 }
 document.getElementById('btnUndo').addEventListener('click', undoLast);
 
-// Clear — GM uses nuclear clear-all; players clear their own ghosts
+// Clear — GM: clears only GM's own drawings; Player: clears ghost drawings
 document.getElementById('btnClear').addEventListener('click', () => {
-    if (isGMMode) { gmClearAll(); return; }
+    if (isGMMode) {
+        if (!socket?.connected) { showToast('NOT CONNECTED'); return; }
+        document.getElementById('confirmMsg').innerHTML = 'CLEAR YOUR GM DRAWINGS?<br>PLAYER DRAWINGS WILL REMAIN.';
+        document.getElementById('confirmOverlay').classList.add('show');
+        return;
+    }
     if (!ghostDrawings.length) { showToast('NO GHOST DRAWINGS TO CLEAR'); return; }
+    document.getElementById('confirmMsg').innerHTML = 'CLEAR YOUR GHOST DRAWINGS?<br>SUBMITTED PLANS STAY ON MAP.';
     document.getElementById('confirmOverlay').classList.add('show');
 });
 document.getElementById('confirmYes').addEventListener('click', () => {
-    ghostDrawings = []; currentDraw = null;
     document.getElementById('confirmOverlay').classList.remove('show');
+    if (isGMMode) {
+        if (socket?.connected)
+            socket.emit('gm-clear-own', { roomId: currentRoom, password: gmModePassword });
+        showToast('GM DRAWINGS CLEARED');
+        return;
+    }
+    ghostDrawings = []; currentDraw = null;
     updateSubmitBtn(); scheduleRender(false, true);
     showToast('GHOST DRAWINGS CLEARED');
 });
@@ -1642,15 +1931,13 @@ document.getElementById('confirmNo').addEventListener('click', () => {
 // Submit Plan
 document.getElementById('btnSubmit').addEventListener('click', submitPlan);
 
-// Focus Mode — global sync via server
+// Focus Mode
 document.getElementById('btnFocus').addEventListener('click', () => {
     if (!socket?.connected) { showToast('NOT CONNECTED'); return; }
     const myLabel = isGMMode ? 'GM' : (callsign || socket.id?.slice(0, 6) || '?');
     if (globalFocusOwner === myLabel) {
-        // I own the spotlight — release it
         socket.emit('clear-focus', { roomId: currentRoom });
     } else {
-        // Claim the spotlight
         socket.emit('set-global-focus', { roomId: currentRoom, callsign: myLabel });
     }
 });
@@ -1673,7 +1960,7 @@ function updateFocusBtn() {
 // Fit / Fullscreen
 document.getElementById('btnFit').addEventListener('click', fitToScreen);
 document.getElementById('btnFullscreen').addEventListener('click', () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(()=>{});
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
     else document.exitFullscreen?.();
 });
 document.addEventListener('fullscreenchange', () => {
@@ -1699,10 +1986,10 @@ document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undoLast(); return; }
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); submitPlan(); return; }
-    const phaseMap = {m:'move', e:'execution', s:'surge'};
+    const phaseMap = { m: 'move', e: 'execution', s: 'surge' };
     const phase = phaseMap[e.key.toLowerCase()];
     if (phase) { setActivePhase(phase); return; }
-    const toolMap = {p:'pan','1':'line','2':'wideline','3':'point','4':'circle','5':'square','6':'triangle'};
+    const toolMap = { p: 'pan', '1': 'line', '2': 'wideline', '3': 'point', '4': 'circle', '5': 'square', '6': 'triangle' };
     const tool = toolMap[e.key];
     if (tool) {
         const blocked = (activePhase === 'move') && tool !== 'pan' && tool !== 'line';
@@ -1712,8 +1999,8 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && currentDraw) { currentDraw = null; scheduleRender(false, true); }
     if (e.key === 'Delete' && ghostDrawings.length) document.getElementById('btnClear').click();
     if (e.key === 'f' || e.key === 'F') fitToScreen();
-    if (e.key === '+' || e.key === '=') applyZoom(window.innerWidth/2, window.innerHeight/2, 1.2);
-    if (e.key === '-') applyZoom(window.innerWidth/2, window.innerHeight/2, 1/1.2);
+    if (e.key === '+' || e.key === '=') applyZoom(window.innerWidth / 2, window.innerHeight / 2, 1.2);
+    if (e.key === '-') applyZoom(window.innerWidth / 2, window.innerHeight / 2, 1 / 1.2);
 });
 
 // ── Utilities ─────────────────────────────────────────────────────
@@ -1726,6 +2013,16 @@ function toLetters(n) {
     let r = '';
     while (n >= 0) { r = String.fromCharCode(n % 26 + 65) + r; n = Math.floor(n / 26) - 1; }
     return r;
+}
+function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return (b / 1024).toFixed(0) + ' KB';
+    return (b / (1048576)).toFixed(1) + ' MB';
+}
+function esc(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 let toastTimer = null;
@@ -1752,8 +2049,7 @@ function setLdStatus(msg) {
 }
 
 function showWaiting(show) {
-    const el = document.getElementById('waitingOverlay');
-    el.classList.toggle('show', show);
+    document.getElementById('waitingOverlay').classList.toggle('show', show);
 }
 
 function updateSubmitBtn() {
@@ -1764,21 +2060,22 @@ function updateSubmitBtn() {
     btn.classList.toggle('has-ghost', n > 0);
 }
 
-// ── GM mode activation (called after server confirms isGM) ───────
+function updateGMDrawCount() {
+    if (isGMMode)
+        document.getElementById('gmMenuDrawCount').textContent = serverDrawings.length;
+}
+
+// ── GM mode activation ────────────────────────────────────────────
 function applyGMMode() {
-    if (isGMMode) return;   // already applied
+    if (isGMMode) return;
     isGMMode = true;
 
-    // Hide the player Submit button
     document.getElementById('btnSubmit').style.display = 'none';
-
-    // Show the crown menu button
     document.getElementById('gmCrownBtn').classList.add('show');
+    document.getElementById('gmMapLibBtn').classList.add('show');
 
-    // Build invite URL (currentRoom is set before this is called)
     _inviteUrl = `${location.protocol}//${location.host}/tactical_player.html?room=${encodeURIComponent(currentRoom)}`;
 
-    // Inject GM badge into topbar (only once)
     if (!document.getElementById('gmBadge')) {
         const badge = document.createElement('span');
         badge.id = 'gmBadge';
@@ -1792,14 +2089,14 @@ function applyGMMode() {
         document.getElementById('topbar').insertBefore(badge, document.getElementById('mapTitle'));
     }
 
-    // Hide landing and show the map view
     document.getElementById('landing').classList.add('hidden');
     setLdStatus('AUTHENTICATED AS GM · ROOM: ' + currentRoom.toUpperCase());
+    document.getElementById('mapLibRoomLabel').textContent = 'ROOM: ' + currentRoom.toUpperCase();
 }
 
 // ── GM Master Menu ────────────────────────────────────────────────
-let drawingsVisible = true;  // local mirror of server visibility state
-let _inviteUrl      = '';    // built once GM mode activates
+let drawingsVisible = true;
+let _inviteUrl      = '';
 
 document.getElementById('gmCrownBtn').addEventListener('click', e => {
     e.stopPropagation();
@@ -1848,7 +2145,7 @@ function gmToggleVisibility() {
 
 function gmClearAll() {
     if (!socket?.connected) { showToast('NOT CONNECTED'); return; }
-    if (!confirm('Clear ALL drawings? This cannot be undone.')) return;
+    if (!confirm('Clear ALL drawings including player plans? This cannot be undone.')) return;
     fetch(`/api/clear/${encodeURIComponent(currentRoom)}`, {
         method: 'POST',
         headers: { 'x-gm-password': gmModePassword }
@@ -1871,8 +2168,7 @@ function gmCopyInvite() {
 
 function _fallbackCopy(text) {
     const el = document.createElement('input');
-    el.value = text;
-    el.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+    el.value = text; el.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
     document.body.appendChild(el);
     el.focus(); el.select();
     try { document.execCommand('copy'); showToast('INVITE LINK COPIED'); }
@@ -1880,7 +2176,125 @@ function _fallbackCopy(text) {
     document.body.removeChild(el);
 }
 
-// ── GM toggle checkbox in landing modal ─────────────────────────
+// ── Map Library Modal (GM only) ───────────────────────────────────
+document.getElementById('gmMapLibBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('gmMenu').classList.remove('open');
+    const modal = document.getElementById('mapLibModal');
+    modal.classList.toggle('show');
+    if (modal.classList.contains('show')) loadMapLibrary();
+});
+document.getElementById('mapLibClose').addEventListener('click', () => {
+    document.getElementById('mapLibModal').classList.remove('show');
+});
+document.getElementById('mapLibModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('mapLibModal'))
+        document.getElementById('mapLibModal').classList.remove('show');
+});
+
+// Upload handlers
+document.getElementById('mapLibPickBtn').addEventListener('click', () => {
+    document.getElementById('mapLibFileInput').click();
+});
+document.getElementById('mapLibFileInput').addEventListener('change', e => {
+    [...e.target.files].forEach(f => uploadMapFile(f));
+    e.target.value = '';
+});
+const mapLibDrop = document.getElementById('mapLibDrop');
+mapLibDrop.addEventListener('dragover', e => { e.preventDefault(); mapLibDrop.classList.add('drag-over'); });
+mapLibDrop.addEventListener('dragleave', () => mapLibDrop.classList.remove('drag-over'));
+mapLibDrop.addEventListener('drop', e => {
+    e.preventDefault(); mapLibDrop.classList.remove('drag-over');
+    const files = [...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith('.gridmap'));
+    if (!files.length) { showToast('DROP .GRIDMAP FILES ONLY'); return; }
+    files.forEach(f => uploadMapFile(f));
+});
+
+function loadMapLibrary() {
+    fetch('/api/maps', { headers: { 'x-gm-password': gmModePassword } })
+        .then(r => r.json())
+        .then(files => renderMapLibrary(files))
+        .catch(() => showToast('ERROR LOADING MAP LIBRARY'));
+}
+
+function renderMapLibrary(files) {
+    const list = document.getElementById('mapLibList');
+    document.getElementById('mapLibCount').textContent = `${files.length} FILE${files.length !== 1 ? 'S' : ''}`;
+
+    if (!files.length) {
+        list.innerHTML = '<div class="lib-empty">NO MAPS UPLOADED<br>UPLOAD A .GRIDMAP ABOVE TO BEGIN</div>';
+        return;
+    }
+
+    const activeFilename = mapData?.fileName || null;
+    list.innerHTML = '';
+
+    files.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'lib-map-item' + (f.filename === activeFilename ? ' active-map' : '');
+        item.innerHTML = `
+            <div class="lib-map-name" title="${esc(f.filename)}">${esc(f.filename)}</div>
+            <div class="lib-map-size">${formatBytes(f.size)}</div>
+            <button class="lib-map-activate">${f.filename === activeFilename ? '● ACTIVE' : 'ACTIVATE'}</button>
+            <button class="lib-map-del" title="Delete">✕</button>
+        `;
+        item.querySelector('.lib-map-activate').addEventListener('click', () => activateMapFromLib(f.filename));
+        item.querySelector('.lib-map-del').addEventListener('click', () => deleteMapFromLib(f.filename));
+        list.appendChild(item);
+    });
+}
+
+function activateMapFromLib(filename) {
+    fetch('/api/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-gm-password': gmModePassword },
+        body: JSON.stringify({ roomId: currentRoom, filename })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) { showToast('ERROR: ' + data.error.toUpperCase()); return; }
+        showToast('MAP ACTIVATED: ' + filename.toUpperCase());
+        document.getElementById('mapLibModal').classList.remove('show');
+    })
+    .catch(() => showToast('NETWORK ERROR'));
+}
+
+function deleteMapFromLib(filename) {
+    if (!confirm(`Delete "${filename}"?`)) return;
+    fetch(`/api/maps/${encodeURIComponent(filename)}`, {
+        method: 'DELETE',
+        headers: { 'x-gm-password': gmModePassword }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.error) { showToast('ERROR: ' + d.error.toUpperCase()); return; }
+        loadMapLibrary();
+        showToast('FILE DELETED');
+    })
+    .catch(() => showToast('NETWORK ERROR'));
+}
+
+function uploadMapFile(file) {
+    const prog = document.getElementById('mapLibProgress');
+    prog.textContent = `UPLOADING ${file.name.toUpperCase()}…`;
+    const fd = new FormData();
+    fd.append('map', file);
+    fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'x-gm-password': gmModePassword },
+        body: fd
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.error) { prog.textContent = 'ERROR: ' + d.error.toUpperCase(); return; }
+        prog.textContent = '';
+        loadMapLibrary();
+        showToast('UPLOADED: ' + d.filename.toUpperCase());
+    })
+    .catch(() => { prog.textContent = 'UPLOAD FAILED'; });
+}
+
+// ── GM toggle checkbox in landing modal ──────────────────────────
 document.getElementById('gmToggle').addEventListener('change', function () {
     document.getElementById('gmPwWrap').classList.toggle('show', this.checked);
     document.getElementById('ldGmErr').textContent = '';
@@ -1890,18 +2304,35 @@ document.getElementById('gmPasswordInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btnConnect').click();
 });
 
-// ── Auto-read room from URL query param (no GM via URL — use modal) ──
+// ── Init from URL + localStorage ─────────────────────────────────
 (function initFromURL() {
     const params = new URLSearchParams(location.search);
-    const room = params.get('room');
-    if (room) {
-        document.getElementById('roomInput').value = room;
-        currentRoom = room;
+    const urlRoom = params.get('room');
+
+    // Room: URL param takes precedence, then localStorage
+    const savedRoom = localStorage.getItem('tp_room');
+    const room = urlRoom || savedRoom || 'default';
+    document.getElementById('roomInput').value = room;
+    currentRoom = room;
+
+    // Callsign from localStorage
+    const savedCallsign = localStorage.getItem('tp_callsign');
+    if (savedCallsign) {
+        document.getElementById('callsignInput').value = savedCallsign;
     }
-    // Strip any stale ?gm= param — GM auth now goes through the secure modal
+
+    // GM password from localStorage — pre-fill for convenience
+    const savedGmPw = localStorage.getItem('tp_gm_pw');
+    if (savedGmPw) {
+        document.getElementById('gmToggle').checked = true;
+        document.getElementById('gmPwWrap').classList.add('show');
+        document.getElementById('gmPasswordInput').value = savedGmPw;
+    }
 })();
 
 // ── Init ──────────────────────────────────────────────────────────
+// Set initial tool state properly
+setActiveTool('pan');
 window.addEventListener('resize', resizeCanvases);
 resizeCanvases();
 </script>
