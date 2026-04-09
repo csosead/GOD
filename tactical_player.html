@@ -12,9 +12,9 @@
             --border-glow: #00f0ff22;
             --cyan:        #00f0ff;
             --cyan-dim:    #007888;
-            --green:       #00e060;
-            --blue:        #0096ff;
-            --red:         #ff3333;
+            --green:       #00ff50;
+            --blue:        #00b4ff;
+            --red:         #ff1432;
             --yellow:      #ffd700;
             --text:        #b8dcea;
             --text-dim:    #3a6070;
@@ -121,7 +121,7 @@
         /* ── GM MAP LIBRARY BUTTON ─────────────────────── */
         #gmMapLibBtn {
             height: 34px; padding: 0 11px;
-            background: rgba(0,150,255,.07);
+            background: rgba(0,180,255,.10);
             border: 1px solid rgba(0,150,255,.4);
             border-radius: 3px;
             color: var(--blue);
@@ -236,9 +236,9 @@
         .sidebar-btn .icon { font-size: 15px; line-height: 1; }
         .sidebar-btn:hover:not(.active):not(.tool-disabled) { border-color: #1a3040; color: var(--text-mid); }
 
-        #toolSidebar.phase-move      .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
-        #toolSidebar.phase-execution .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
-        #toolSidebar.phase-surge     .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
+        #toolSidebar.phase-move      .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,255,80,.10);  box-shadow: inset 0 0 10px rgba(0,255,80,.10); }
+        #toolSidebar.phase-execution .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,180,255,.10); box-shadow: inset 0 0 10px rgba(0,180,255,.10); }
+        #toolSidebar.phase-surge     .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,20,50,.10); box-shadow: inset 0 0 10px rgba(255,20,50,.10); }
 
         .sidebar-btn.tool-disabled { opacity: 0.28; pointer-events: none; }
 
@@ -256,9 +256,9 @@
             transition: all .15s; flex-shrink: 0;
         }
         #btnActiveTool .icon { font-size: 15px; line-height: 1; }
-        #toolSidebar.phase-move      #btnActiveTool.active:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
-        #toolSidebar.phase-execution #btnActiveTool.active:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
-        #toolSidebar.phase-surge     #btnActiveTool.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
+        #toolSidebar.phase-move      #btnActiveTool.active:not([data-tool="pan"]) { border-color: var(--green); color: var(--green); background: rgba(0,255,80,.10);  box-shadow: inset 0 0 10px rgba(0,255,80,.10); }
+        #toolSidebar.phase-execution #btnActiveTool.active:not([data-tool="pan"]) { border-color: var(--blue);  color: var(--blue);  background: rgba(0,180,255,.10); box-shadow: inset 0 0 10px rgba(0,180,255,.10); }
+        #toolSidebar.phase-surge     #btnActiveTool.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,20,50,.10); box-shadow: inset 0 0 10px rgba(255,20,50,.10); }
 
         /* ── TOOL POP-OUT MENU ─────────────────────────── */
         #toolPopup {
@@ -292,9 +292,9 @@
         }
         .tool-popup-btn .icon { font-size: 15px; line-height: 1; }
         .tool-popup-btn:hover:not(.tool-disabled) { border-color: #1a3040; color: var(--text-mid); }
-        #toolPopup.phase-move      .tool-popup-btn.active { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 10px rgba(0,224,96,.08); }
-        #toolPopup.phase-execution .tool-popup-btn.active { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 10px rgba(0,150,255,.08); }
-        #toolPopup.phase-surge     .tool-popup-btn.active { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 10px rgba(255,51,51,.08); }
+        #toolPopup.phase-move      .tool-popup-btn.active { border-color: var(--green); color: var(--green); background: rgba(0,255,80,.10);  box-shadow: inset 0 0 10px rgba(0,255,80,.10); }
+        #toolPopup.phase-execution .tool-popup-btn.active { border-color: var(--blue);  color: var(--blue);  background: rgba(0,180,255,.10); box-shadow: inset 0 0 10px rgba(0,180,255,.10); }
+        #toolPopup.phase-surge     .tool-popup-btn.active { border-color: var(--red);   color: var(--red);   background: rgba(255,20,50,.10); box-shadow: inset 0 0 10px rgba(255,20,50,.10); }
         .tool-popup-btn.tool-disabled { opacity: 0.28; pointer-events: none; }
 
         /* ── BOTTOM BAR ───────────────────────────────── */
@@ -321,9 +321,9 @@
         }
         .phase-btn .icon { font-size: 18px; line-height: 1; }
         .phase-btn:hover:not(.active) { border-color: #1a3040; color: var(--text-mid); }
-        .phase-btn.active[data-phase="move"]      { border-color: var(--green); color: var(--green); background: rgba(0,224,96,.07);  box-shadow: inset 0 0 12px rgba(0,224,96,.08); }
-        .phase-btn.active[data-phase="execution"] { border-color: var(--blue);  color: var(--blue);  background: rgba(0,150,255,.07); box-shadow: inset 0 0 12px rgba(0,150,255,.08); }
-        .phase-btn.active[data-phase="surge"]     { border-color: var(--red);   color: var(--red);   background: rgba(255,51,51,.07); box-shadow: inset 0 0 12px rgba(255,51,51,.08); }
+        .phase-btn.active[data-phase="move"]      { border-color: var(--green); color: var(--green); background: rgba(0,255,80,.10);  box-shadow: inset 0 0 12px rgba(0,255,80,.10); }
+        .phase-btn.active[data-phase="execution"] { border-color: var(--blue);  color: var(--blue);  background: rgba(0,180,255,.10); box-shadow: inset 0 0 12px rgba(0,180,255,.10); }
+        .phase-btn.active[data-phase="surge"]     { border-color: var(--red);   color: var(--red);   background: rgba(255,20,50,.10); box-shadow: inset 0 0 12px rgba(255,20,50,.10); }
 
         #actionBtns { display: flex; gap: 6px; align-items: stretch; }
 
@@ -338,7 +338,7 @@
             transition: all .15s;
         }
         #btnUndo:hover  { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,.07); }
-        #btnClear:hover { border-color: var(--red);  color: var(--red);  background: rgba(255,51,51,.07); }
+        #btnClear:hover { border-color: var(--red);  color: var(--red);  background: rgba(255,20,50,.10); }
         .action-btn:active { opacity: .7; }
 
         /* Submit Plan button */
@@ -354,7 +354,7 @@
             align-items: center; justify-content: center; gap: 3px;
             transition: all .15s;
         }
-        #btnSubmit:hover { background: rgba(0,224,96,.12); box-shadow: inset 0 0 14px rgba(0,224,96,.1); }
+        #btnSubmit:hover { background: rgba(0,255,80,.14); box-shadow: inset 0 0 14px rgba(0,224,96,.1); }
         #btnSubmit:active { opacity: .7; }
         #btnSubmit .icon { font-size: 18px; }
         #btnSubmit .ghost-count {
@@ -365,8 +365,8 @@
             animation: pulse-green 2.2s ease-in-out infinite;
         }
         @keyframes pulse-green {
-            0%, 100% { box-shadow: inset 0 0 10px rgba(0,224,96,.08), 0 0 0 rgba(0,224,96,0); }
-            50%       { box-shadow: inset 0 0 16px rgba(0,224,96,.15), 0 0 12px rgba(0,224,96,.12); }
+            0%, 100% { box-shadow: inset 0 0 10px rgba(0,255,80,.10), 0 0 0 rgba(0,224,96,0); }
+            50%       { box-shadow: inset 0 0 16px rgba(0,224,96,.15), 0 0 12px rgba(0,255,80,.14); }
         }
 
         /* ── LANDING ──────────────────────────────────── */
@@ -936,8 +936,13 @@ function connectToServer() {
         if (state.activeMap) {
             loadMapFromUrl(state.activeMap.url, state.activeMap.filename);
         } else {
-            document.getElementById('landing').classList.add('hidden');
-            showWaiting(!isGMMode);
+            if (isGMMode) {
+                // GM with no active map: keep landing visible so they can open Map Library
+                showWaiting(false);
+            } else {
+                document.getElementById('landing').classList.add('hidden');
+                showWaiting(true);
+            }
         }
         serverDrawings   = state.drawings || [];
         globalFocusOwner = state.focusOwner || null;
@@ -1256,9 +1261,9 @@ function renderDrawings() {
 }
 
 const PHASE_COLORS = {
-    move:      { fill: [0, 224, 96],   stroke: [0, 255, 120]   },
-    execution: { fill: [0, 140, 255],  stroke: [40, 190, 255]  },
-    surge:     { fill: [255, 51, 51],  stroke: [255, 110, 110] },
+    move:      { fill: [0, 255, 80],   stroke: [80, 255, 130],  shadow: 'rgba(0,255,80,0.7)'   },  // Vivid Neon Green
+    execution: { fill: [0, 180, 255],  stroke: [0, 220, 255],   shadow: 'rgba(0,200,255,0.7)'  },  // Electric Cyan/Blue
+    surge:     { fill: [255, 20, 50],  stroke: [255, 80, 100],  shadow: 'rgba(255,30,60,0.7)'  },  // Bright Crimson/Red
 };
 
 // ── Wargame-style painting ────────────────────────────────────────
@@ -1281,19 +1286,33 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
     if (dimmed) ctx.globalAlpha = 0.18;
 
     // ── 1. Cell Fill (Grid Highlight) ─────────────────────────────
-    ctx.fillStyle = `rgba(${c.fill.join(',')},0.20)`;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = `rgba(${c.fill.join(',')},0.38)`;
     for (const { col, row } of d.cells) {
         ctx.fillRect(oX + col * cSize, oY + row * cSize, cSize, cSize);
     }
 
-    // ── 2. Geometric Outline ──────────────────────────────────────
+    // ── 1b. Cell Border (brightened grid lines for occupied cells) ──
+    ctx.strokeStyle = `rgba(${c.stroke.join(',')},${outlineA * 0.65})`;
+    ctx.lineWidth   = 1.2 / vs;
+    ctx.shadowBlur  = 0;
+    for (const { col, row } of d.cells) {
+        ctx.strokeRect(
+            oX + col * cSize + 0.6 / vs,
+            oY + row * cSize + 0.6 / vs,
+            cSize - 1.2 / vs,
+            cSize - 1.2 / vs
+        );
+    }
+
+        // ── 2. Geometric Outline ──────────────────────────────────────
     ctx.strokeStyle = `rgba(${c.stroke.join(',')},${outlineA})`;
     ctx.fillStyle   = `rgba(${c.stroke.join(',')},${outlineA})`;
-    ctx.lineWidth   = 2.5 / vs;
+    ctx.lineWidth   = 3 / vs;
     ctx.lineCap     = 'round';
     ctx.lineJoin    = 'round';
-    ctx.shadowColor = dimmed ? 'transparent' : `rgba(${c.stroke.join(',')},0.45)`;
-    ctx.shadowBlur  = dimmed ? 0 : 9 / vs;
+    ctx.shadowColor = dimmed ? 'transparent' : c.shadow;
+    ctx.shadowBlur  = dimmed ? 0 : 10 / vs;
     if (isGhost) ctx.setLineDash([4 / vs, 3 / vs]);
     else         ctx.setLineDash([]);
 
@@ -1325,7 +1344,7 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
         }
 
         // Vector arrow line
-        ctx.lineWidth = 2.5 / vs;
+        ctx.lineWidth = 3 / vs;
         ctx.beginPath();
         ctx.moveTo(ax, ay);
         ctx.lineTo(bx, by);
@@ -1334,7 +1353,7 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
         // Arrowhead
         if (dist > 2) {
             ctx.setLineDash([]);
-            ctx.shadowBlur = 0;
+            ctx.shadowBlur = dimmed ? 0 : 10 / vs;
             const angle = Math.atan2(ddy, ddx);
             const hw = Math.min(14 / vs, dist * 0.35);
             ctx.beginPath();
@@ -1347,16 +1366,16 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
 
         // Start dot
         ctx.setLineDash([]);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = dimmed ? 0 : 8 / vs;
         ctx.beginPath();
-        ctx.arc(ax, ay, 4 / vs, 0, Math.PI * 2);
+        ctx.arc(ax, ay, 4.5 / vs, 0, Math.PI * 2);
         ctx.fill();
 
     } else if (shape === 'circle' && d.startCell && d.endCell) {
         const cx = oX + (d.startCell.col + 0.5) * cSize;
         const cy = oY + (d.startCell.row + 0.5) * cSize;
         const radius = Math.hypot(d.endCell.col - d.startCell.col, d.endCell.row - d.startCell.row) * cSize;
-        ctx.lineWidth = 2.5 / vs;
+        ctx.lineWidth = 3 / vs;
         ctx.beginPath();
         ctx.arc(cx, cy, Math.max(radius, 2 / vs), 0, Math.PI * 2);
         ctx.stroke();
@@ -1372,7 +1391,7 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
         const sqX = oX + (sc.col - halfSize) * cSize;
         const sqY = oY + (sc.row - halfSize) * cSize;
         const sqW = (halfSize * 2 + 1) * cSize;
-        ctx.lineWidth = 2.5 / vs;
+        ctx.lineWidth = 3 / vs;
         ctx.strokeRect(sqX, sqY, sqW, sqW);
         ctx.setLineDash([]);
         ctx.shadowBlur = 0;
@@ -1389,7 +1408,7 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
         const radius = Math.hypot(tx - cx, ty - cy);
         if (radius > 1 / vs) {
             const aimAngle = Math.atan2(ty - cy, tx - cx);
-            ctx.lineWidth = 2.5 / vs;
+            ctx.lineWidth = 3 / vs;
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.arc(cx, cy, radius, aimAngle - Math.PI / 6, aimAngle + Math.PI / 6);
