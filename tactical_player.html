@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>GOD: Tactical Player</title>
+    <!-- PWA: iOS Standalone Mode -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tactical Player">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Tactical%20Player%22%2C%22short_name%22%3A%22Tactical%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22any%22%2C%22background_color%22%3A%22%2304080c%22%2C%22theme_color%22%3A%22%2300f0ff%22%2C%22start_url%22%3A%22.%2F%22%7D">
     <style>
         :root {
             --bg:          #04080c;
@@ -19,9 +25,9 @@
             --text:        #b8dcea;
             --text-dim:    #3a6070;
             --text-mid:    #6a9cac;
-            --safe-t:      env(safe-area-inset-top,    0px);
+            --safe-t:      env(safe-area-inset-top,    20px);
             --safe-b:      env(safe-area-inset-bottom, 0px);
-            --safe-l:      env(safe-area-inset-left,   0px);
+            --safe-l:      env(safe-area-inset-left,   10px);
             --safe-r:      env(safe-area-inset-right,  0px);
         }
 
@@ -34,6 +40,8 @@
             font-family: 'Share Tech Mono', 'Courier New', monospace;
             touch-action: none;
             user-select: none;
+            overscroll-behavior: none; /* Hide pull-to-refresh */
+            -webkit-overflow-scrolling: touch;
         }
 
         /* ── CANVAS STACK ─────────────────────────────── */
@@ -188,6 +196,7 @@
         #toolSidebar {
             position: fixed;
             top: calc(54px + var(--safe-t));
+            bottom: calc(82px + var(--safe-b));
             left: 0;
             width: calc(62px + var(--safe-l));
             padding: 6px 6px 6px calc(6px + var(--safe-l));
@@ -196,6 +205,23 @@
             pointer-events: none;
         }
         #toolSidebar > * { pointer-events: all; }
+
+        /* ── PLAYER LOGOUT BUTTON (top-right, player mode only) ─── */
+        #btnPlayerLogout {
+            height: 34px; padding: 0 11px;
+            background: rgba(255,20,50,.06);
+            border: 1px solid rgba(255,20,50,.28);
+            border-radius: 3px;
+            color: rgba(255,80,80,.65);
+            font-family: inherit; font-size: 18px; letter-spacing: 0;
+            cursor: pointer; white-space: nowrap;
+            display: none; align-items: center; justify-content: center;
+            transition: border-color .15s, color .15s, box-shadow .15s;
+            flex-shrink: 0;
+        }
+        #btnPlayerLogout.show { display: flex; }
+        #btnPlayerLogout:hover { border-color: var(--red); color: var(--red); background: rgba(255,20,50,.14); box-shadow: 0 0 10px rgba(255,20,50,.2); }
+        #btnPlayerLogout:active { opacity: .7; }
 
         /* Dedicated PAN button — always at top of sidebar */
         #btnPanTool {
@@ -241,6 +267,29 @@
         #toolSidebar.phase-surge     .sidebar-btn.active:not([data-tool="pan"]) { border-color: var(--red);   color: var(--red);   background: rgba(255,20,50,.10); box-shadow: inset 0 0 10px rgba(255,20,50,.10); }
 
         .sidebar-btn.tool-disabled { opacity: 0.28; pointer-events: none; }
+
+        /* ABC tactical labels toggle button */
+        #btnTacticalLabels {
+            width: 100%; flex: 0 0 auto;
+            min-height: 44px; max-height: 60px;
+            background: rgba(6,11,17,0.88);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-dim);
+            font-family: inherit; font-size: 7px; letter-spacing: 1.3px;
+            cursor: pointer; touch-action: manipulation;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 3px;
+            transition: all .15s;
+            flex-shrink: 0;
+        }
+        #btnTacticalLabels .icon { font-size: 13px; line-height: 1; font-weight: bold; }
+        #btnTacticalLabels:hover:not(.active) { border-color: #1a3040; color: var(--text-mid); }
+        #btnTacticalLabels.active {
+            border-color: var(--cyan); color: var(--cyan);
+            background: rgba(0,240,255,.07);
+            box-shadow: inset 0 0 10px rgba(0,240,255,.08);
+        }
 
         /* ── ACTIVE TOOL BUTTON (single trigger) ──────── */
         #btnActiveTool {
@@ -372,6 +421,7 @@
         /* ── LANDING ──────────────────────────────────── */
         #landing {
             position: fixed; inset: 0;
+            padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
             background: var(--bg);
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
@@ -471,11 +521,18 @@
 
         /* ── WAITING FOR MAP ──────────────────────────── */
         #waitingOverlay {
-            position: fixed; inset: 0;
-            background: rgba(4,8,12,.7);
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(4,8,12,.88);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 28px 44px;
             display: none; flex-direction: column;
             align-items: center; justify-content: center;
-            z-index: 150; gap: 14px;
+            z-index: 149; gap: 14px;
+            pointer-events: none;
+            box-shadow: 0 8px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(0,240,255,.04);
         }
         #waitingOverlay.show { display: flex; }
         .wait-title { font-size: 13px; letter-spacing: 4px; color: var(--cyan); text-shadow: 0 0 20px rgba(0,240,255,.3); }
@@ -660,9 +717,12 @@
         <div class="conn-dot" id="connDot"></div>
         <span id="connLabel">OFFLINE</span>
     </div>
-    <button id="gmCrownBtn" title="GM Master Menu">♛</button>
-    <button id="gmMapLibBtn" title="Map Library">📁</button>
-    <button class="top-btn" id="btnFullscreen">⛶ FULL</button>
+    <div id="topbarRight" style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+        <button id="gmCrownBtn" title="GM Master Menu">♛</button>
+        <button id="gmMapLibBtn" title="Map Library">📁</button>
+        <button id="btnPlayerLogout" title="Logout / Exit Room">⏻</button>
+        <button class="top-btn" id="btnFullscreen">⛶ FULL</button>
+    </div>
 </div>
 
 <!-- GM Master Menu (hidden until GM mode active) -->
@@ -679,9 +739,13 @@
     <button class="gm-menu-btn" id="gmMenuInviteBtn">
         <span>⬡</span><span>COPY INVITE LINK</span>
     </button>
+    <div style="height:1px;background:var(--border);margin:2px 0;"></div>
+    <button class="gm-menu-btn danger" id="gmMenuLogoutBtn">
+        <span>⏻</span><span>EXIT ROOM</span>
+    </button>
 </div>
 
-<!-- Left tool sidebar — PAN at top, then drawing tool trigger -->
+<!-- Left tool sidebar — PAN at top, drawing tool -->
 <div id="toolSidebar" class="phase-move">
     <button id="btnPanTool" class="active" title="PAN — Right-click to pan at any time">
         <span class="icon">✥</span>
@@ -690,6 +754,10 @@
     <button id="btnActiveTool" class="sidebar-btn" data-tool="line" title="Drawing tools (tap to open)">
         <span class="icon" id="activeToolIcon">╱</span>
         <span id="activeToolLabel">LINE</span>
+    </button>
+    <button id="btnTacticalLabels" class="active" title="Toggle tactical sector labels (ABC)">
+        <span class="icon">ABC</span>
+        <span>LABELS</span>
     </button>
 </div>
 
@@ -747,7 +815,7 @@
 
     <div class="ld-connect-box">
         <div class="ld-field-label">ROOM ID</div>
-        <input class="ld-input" type="text" id="roomInput" placeholder="default" autocomplete="off" spellcheck="false">
+        <input class="ld-input" type="text" id="roomInput" placeholder="default" autocomplete="off" spellcheck="false" maxlength="20">
         <div class="ld-field-label" style="margin-top:4px">CALLSIGN (OPTIONAL)</div>
         <input class="ld-input" type="text" id="callsignInput" placeholder="BRAVO-1" autocomplete="off" spellcheck="false" maxlength="12">
         <!-- GM login toggle -->
@@ -857,6 +925,9 @@ let gmAuthAttempted = false;
 // Global focus
 let globalFocusOwner = null;
 
+// Tactical labels
+let tacticalLabelsVisible = true;
+
 // ── Render flags ──────────────────────────────────────────────────
 let mapDirty   = false;
 let drawDirty  = false;
@@ -879,7 +950,7 @@ let pinchStartView  = { x: 0, y: 0 };
 let socket = null;
 
 function connectToServer() {
-    const roomVal = document.getElementById('roomInput').value.trim() || 'default';
+    const roomVal = document.getElementById('roomInput').value.trim().toLowerCase() || 'default';
     const csVal   = document.getElementById('callsignInput').value.trim().toUpperCase();
     currentRoom = roomVal;
     callsign    = csVal;
@@ -892,6 +963,8 @@ function connectToServer() {
     // Persist room + callsign immediately
     localStorage.setItem('tp_room',     currentRoom);
     if (callsign) localStorage.setItem('tp_callsign', callsign);
+    if (gmAuthAttempted) localStorage.setItem('tp_gm_pw', gmModePassword);
+    if (gmChecked && !gmAuthAttempted) localStorage.removeItem('tp_gm_pw');
 
     setLdStatus('CONNECTING…');
     socket = io();
@@ -914,6 +987,9 @@ function connectToServer() {
     socket.on('connect_error', () => {
         setLdStatus('CONNECTION FAILED — IS THE SERVER RUNNING?');
         setConnStatus('offline', 'OFFLINE');
+        // If auto-login failed, show landing again
+        document.getElementById('landing').classList.remove('hidden');
+        document.getElementById('btnConnect').disabled = false;
     });
 
     // Server sends full room state on join
@@ -925,12 +1001,21 @@ function connectToServer() {
                 // Persist GM password on successful auth
                 localStorage.setItem('tp_gm_pw', gmModePassword);
             } else {
+                // Wrong GM password — clear stored creds and show error
                 document.getElementById('ldGmErr').textContent = 'WRONG GM PASSWORD';
                 document.getElementById('gmPasswordInput').value = '';
                 document.getElementById('btnConnect').disabled = false;
+                localStorage.removeItem('tp_gm_pw');
                 gmAuthAttempted = false;
                 gmModePassword  = '';
+                // If this was an auto-login, show the landing modal again
+                document.getElementById('landing').classList.remove('hidden');
             }
+        }
+
+        // Show player logout button for non-GM users once connected
+        if (!isGMMode) {
+            document.getElementById('btnPlayerLogout').classList.add('show');
         }
 
         if (state.activeMap) {
@@ -1257,6 +1342,8 @@ function renderDrawings() {
         paintDrawing(drawCtx, gmLiveStroke, 'live', gmDimmed);
     }
 
+    drawTacticalLabels(drawCtx);
+
     drawCtx.restore();
 }
 
@@ -1266,8 +1353,103 @@ const PHASE_COLORS = {
     surge:     { fill: [255, 20, 50],  stroke: [255, 80, 100],  shadow: 'rgba(255,30,60,0.7)'  },  // Bright Crimson/Red
 };
 
-// ── Wargame-style painting ────────────────────────────────────────
-// Separates grid cell highlights from crisp geometric outlines.
+// ── Tactical Labels ───────────────────────────────────────────────
+// Returns the drawings that should have tactical labels rendered.
+// Triggered by: (1) live draw in progress, (2) focused server drawings.
+function getActiveLabelDrawings() {
+    const result = [];
+    if (currentDraw && currentDraw.cells && currentDraw.cells.length > 0)
+        result.push(currentDraw);
+    if (gmLiveStroke && gmLiveStroke.cells && globalFocusOwner === 'GM')
+        result.push(gmLiveStroke);
+    if (globalFocusOwner !== null) {
+        for (const d of serverDrawings) {
+            const ownerCs = d.isGM ? 'GM' : (d.callsign || '');
+            if (ownerCs === globalFocusOwner && d.cells && d.cells.length > 0)
+                result.push(d);
+        }
+    }
+    return result;
+}
+
+function drawTacticalLabels(ctx) {
+    if (!mapData || !tacticalLabelsVisible) return;
+    const drawings = getActiveLabelDrawings();
+    if (!drawings.length) return;
+
+    const { sector_size: sSize, offset_x: oX, offset_y: oY } = mapData.header.grid;
+    const cSize = sSize / 3;
+    const vs = view.scale;
+
+    ctx.save();
+    ctx.shadowBlur = 0;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (const d of drawings) {
+        if (!d.cells || d.cells.length === 0) continue;
+        const c = PHASE_COLORS[d.phase] || PHASE_COLORS.execution;
+        const phaseRgb = c.fill.join(',');
+
+        // Collect macro-sectors and which of their micro-cells are in this drawing
+        const macroMap = new Map(); // "sx,sy" → { sx, sy, cells[] }
+        for (const { col, row } of d.cells) {
+            const sx = Math.floor(col / 3);
+            const sy = Math.floor(row / 3);
+            const key = sx + ',' + sy;
+            if (!macroMap.has(key)) macroMap.set(key, { sx, sy, cells: [] });
+            macroMap.get(key).cells.push({ col, row });
+        }
+
+        // ── Macro-sector coordinate labels ────────────────────────
+        const macroFs = sSize * 0.28;
+        ctx.font = `bold ${macroFs}px Orbitron, monospace`;
+        ctx.lineJoin = 'round';
+
+        for (const { sx, sy, cells } of macroMap.values()) {
+            const lbl = toLetters(sx) + (sy + 1);
+            const lcx = oX + sx * sSize + sSize / 2;
+            const lcy = oY + sy * sSize + sSize / 2;
+
+            // 2px black stroke
+            ctx.strokeStyle = 'rgba(0,0,0,0.92)';
+            ctx.lineWidth   = 2 / vs;
+            ctx.strokeText(lbl, lcx, lcy);
+            // White fill
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(lbl, lcx, lcy);
+
+            // ── Micro-cell numpad digits ───────────────────────────
+            const microFs = cSize * 0.50;
+            ctx.font = `bold ${microFs}px Orbitron, monospace`;
+
+            for (const { col, row } of cells) {
+                const dx = col % 3;
+                const dy = row % 3;
+                // Numpad layout: 7 8 9 / 4 5 6 / 1 2 3 (top-left = 7)
+                const n = (2 - dy) * 3 + (dx + 1);
+                const mcx = oX + col * cSize + cSize / 2;
+                const mcy = oY + row * cSize + cSize / 2;
+
+                ctx.strokeStyle = 'rgba(0,0,0,0.88)';
+                ctx.lineWidth   = 1 / vs;
+                ctx.strokeText(n, mcx, mcy);
+                ctx.fillStyle = `rgb(${phaseRgb})`;
+                ctx.fillText(n, mcx, mcy);
+            }
+
+            // Restore macro font for next sector
+            ctx.font = `bold ${macroFs}px Orbitron, monospace`;
+        }
+    }
+
+    ctx.restore();
+}
+
+// ── Wargame-style painting — Global Clipping method ───────────────
+// For all shapes except Line: fill the entire bounding box, then clip.
+// The clip ensures nothing leaks outside the shape outline.
+// Line uses True Supercover DDA — any touched cell is highlighted.
 function paintDrawing(ctx, d, mode, dimmed = false) {
     if (!d.cells || d.cells.length === 0) return;
 
@@ -1282,41 +1464,13 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
     else if (mode === 'ghost' ) { outlineA = 0.65; isGhost = true;  }
     else                        { outlineA = 0.50; isGhost = true;  }
 
-    ctx.save();
-    if (dimmed) ctx.globalAlpha = 0.18;
-
-    // ── 1. Cell Fill (Grid Highlight) ─────────────────────────────
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = `rgba(${c.fill.join(',')},0.38)`;
-    for (const { col, row } of d.cells) {
-        ctx.fillRect(oX + col * cSize, oY + row * cSize, cSize, cSize);
-    }
-
-    // ── 1b. Cell Border (brightened grid lines for occupied cells) ──
-    ctx.strokeStyle = `rgba(${c.stroke.join(',')},${outlineA * 0.65})`;
-    ctx.lineWidth   = 1.2 / vs;
-    ctx.shadowBlur  = 0;
-    for (const { col, row } of d.cells) {
-        ctx.strokeRect(
-            oX + col * cSize + 0.6 / vs,
-            oY + row * cSize + 0.6 / vs,
-            cSize - 1.2 / vs,
-            cSize - 1.2 / vs
-        );
-    }
-
-        // ── 2. Geometric Outline ──────────────────────────────────────
-    ctx.strokeStyle = `rgba(${c.stroke.join(',')},${outlineA})`;
-    ctx.fillStyle   = `rgba(${c.stroke.join(',')},${outlineA})`;
-    ctx.lineWidth   = 3 / vs;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
-    ctx.shadowColor = dimmed ? 'transparent' : c.shadow;
-    ctx.shadowBlur  = dimmed ? 0 : 10 / vs;
-    if (isGhost) ctx.setLineDash([4 / vs, 3 / vs]);
-    else         ctx.setLineDash([]);
-
     const shape = d.shape;
+
+    // ── Compute shape geometry in world coords ──────────────────────
+    let clipPath  = null;   // function(ctx) that draws the shape path for clipping
+    let outlineFn = null;   // function(ctx) that draws the outline
+    let fillBBox  = null;   // { x, y, w, h } — bounding box to fill
+    let useClipFill = false; // true if we should use clip-based fill
 
     if ((shape === 'line' || shape === 'wideline') && d.startCell && d.endCell) {
         const ax = oX + (d.startCell.col + 0.5) * cSize;
@@ -1327,24 +1481,161 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
         const dist = Math.hypot(ddx, ddy);
 
         if (shape === 'wideline' && dist > 0.1) {
-            // Crisp rectangular corridor outline
+            // Wide Line: rectangular corridor, starts at origin cell center
             const len = dist;
             const ux = ddx / len, uy = ddy / len;
             const halfW = 1.5 * cSize;
             const px = -uy * halfW, py = ux * halfW;
-            ctx.setLineDash([]);
-            ctx.beginPath();
-            ctx.moveTo(ax + px, ay + py);
-            ctx.lineTo(bx + px, by + py);
-            ctx.lineTo(bx - px, by - py);
-            ctx.lineTo(ax - px, ay - py);
-            ctx.closePath();
-            ctx.stroke();
-            if (isGhost) ctx.setLineDash([4 / vs, 3 / vs]);
-        }
 
-        // Vector arrow line
+            clipPath = (ctx) => {
+                ctx.beginPath();
+                ctx.moveTo(ax + px, ay + py);
+                ctx.lineTo(bx + px, by + py);
+                ctx.lineTo(bx - px, by - py);
+                ctx.lineTo(ax - px, ay - py);
+                ctx.closePath();
+            };
+            outlineFn = clipPath;
+            fillBBox = {
+                x:  Math.min(ax + px, bx + px, bx - px, ax - px) - cSize,
+                y:  Math.min(ay + py, by + py, by - py, ay - py) - cSize,
+                w:  Math.max(ax + px, bx + px, bx - px, ax - px) -
+                    Math.min(ax + px, bx + px, bx - px, ax - px) + cSize * 2,
+                h:  Math.max(ay + py, by + py, by - py, ay - py) -
+                    Math.min(ay + py, by + py, by - py, ay - py) + cSize * 2,
+            };
+            useClipFill = true;
+        }
+        // Standard line: no clip, uses per-cell fill from d.cells
+
+    } else if (shape === 'circle' && d.startCell && d.endCell) {
+        const cx = oX + (d.startCell.col + 0.5) * cSize;
+        const cy = oY + (d.startCell.row + 0.5) * cSize;
+        const radius = Math.hypot(d.endCell.col - d.startCell.col, d.endCell.row - d.startCell.row) * cSize;
+        const r = Math.max(radius, 2 / vs);
+
+        clipPath = (ctx) => {
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        };
+        outlineFn = clipPath;
+        fillBBox = { x: cx - r - cSize, y: cy - r - cSize, w: (r + cSize) * 2, h: (r + cSize) * 2 };
+        useClipFill = true;
+
+    } else if (shape === 'square' && d.startCell && d.endCell) {
+        const sc = d.startCell, ec = d.endCell;
+        const halfSize = Math.max(Math.abs(ec.col - sc.col), Math.abs(ec.row - sc.row));
+        const sqX = oX + (sc.col - halfSize) * cSize;
+        const sqY = oY + (sc.row - halfSize) * cSize;
+        const sqW = (halfSize * 2 + 1) * cSize;
+
+        clipPath = (ctx) => {
+            ctx.beginPath();
+            ctx.rect(sqX, sqY, sqW, sqW);
+        };
+        outlineFn = (ctx) => {
+            ctx.beginPath();
+            ctx.rect(sqX, sqY, sqW, sqW);
+        };
+        fillBBox = { x: sqX - cSize, y: sqY - cSize, w: sqW + cSize * 2, h: sqW + cSize * 2 };
+        useClipFill = true;
+
+    } else if (shape === 'triangle' && d.startCell && d.endCell) {
+        const sc = d.startCell, ec = d.endCell;
+        const cx = oX + (sc.col + 0.5) * cSize;
+        const cy = oY + (sc.row + 0.5) * cSize;
+        const tx = oX + (ec.col + 0.5) * cSize;
+        const ty = oY + (ec.row + 0.5) * cSize;
+        const radius = Math.hypot(tx - cx, ty - cy);
+
+        if (radius > 1 / vs) {
+            const aimAngle = Math.atan2(ty - cy, tx - cx);
+            clipPath = (ctx) => {
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, radius, aimAngle - Math.PI / 6, aimAngle + Math.PI / 6);
+                ctx.closePath();
+            };
+            outlineFn = clipPath;
+        }
+        fillBBox = {
+            x:  Math.min(cx, tx) - radius - cSize,
+            y:  Math.min(cy, ty) - radius - cSize,
+            w:  Math.abs(tx - cx) + radius * 2 + cSize * 2,
+            h:  Math.abs(ty - cy) + radius * 2 + cSize * 2,
+        };
+        useClipFill = true;
+
+    } else if (shape === 'point' && d.startCell) {
+        // Highlight exactly ONE micro-grid cell (the specific numpad cell)
+        const cx = oX + (d.startCell.col + 0.5) * cSize;
+        const cy = oY + (d.startCell.row + 0.5) * cSize;
+        const halfC = cSize / 2; // half of one micro-cell
+
+        clipPath = (ctx) => {
+            ctx.beginPath();
+            ctx.rect(cx - halfC, cy - halfC, cSize, cSize);
+        };
+        outlineFn = (ctx) => {
+            ctx.beginPath();
+            ctx.rect(cx - halfC, cy - halfC, cSize, cSize);
+        };
+        fillBBox = { x: cx - halfC - cSize, y: cy - halfC - cSize, w: cSize * 3, h: cSize * 3 };
+        useClipFill = true;
+    }
+
+    ctx.save();
+    if (dimmed) ctx.globalAlpha = 0.18;
+
+    // ── 1. Cell Fill ──────────────────────────────────────────────
+    if (useClipFill && clipPath && fillBBox) {
+        // Brute-force: fill entire bounding box, clip cuts it to shape
+        ctx.save();
+        clipPath(ctx);
+        ctx.clip();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(${c.fill.join(',')},0.4)`;
+        ctx.fillRect(fillBBox.x, fillBBox.y, fillBBox.w, fillBBox.h);
+        ctx.restore();
+    } else {
+        // Standard line: per-cell fill (no clip)
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(${c.fill.join(',')},0.4)`;
+        for (const { col, row } of d.cells) {
+            ctx.fillRect(oX + col * cSize, oY + row * cSize, cSize, cSize);
+        }
+    }
+
+    // ── 2. Geometric Outline ──────────────────────────────────────
+    ctx.strokeStyle = `rgba(${c.stroke.join(',')},${outlineA})`;
+    ctx.fillStyle   = `rgba(${c.stroke.join(',')},${outlineA})`;
+    ctx.lineWidth   = 3 / vs;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+    ctx.shadowColor = dimmed ? 'transparent' : c.shadow;
+    ctx.shadowBlur  = dimmed ? 0 : 10 / vs;
+    ctx.setLineDash([]);
+    if (isGhost) ctx.setLineDash([4 / vs, 3 / vs]);
+
+    if (outlineFn) {
+        outlineFn(ctx);
+        ctx.stroke();
+    }
+
+    // Standard line arrow (no clip path)
+    if (shape === 'line' && d.startCell && d.endCell) {
+        const ax = oX + (d.startCell.col + 0.5) * cSize;
+        const ay = oY + (d.startCell.row + 0.5) * cSize;
+        const bx = oX + (d.endCell.col   + 0.5) * cSize;
+        const by = oY + (d.endCell.row   + 0.5) * cSize;
+        const ddx = bx - ax, ddy = by - ay;
+        const dist = Math.hypot(ddx, ddy);
+
         ctx.lineWidth = 3 / vs;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.setLineDash([]);
+        ctx.shadowBlur = dimmed ? 0 : 10 / vs;
         ctx.beginPath();
         ctx.moveTo(ax, ay);
         ctx.lineTo(bx, by);
@@ -1352,8 +1643,6 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
 
         // Arrowhead
         if (dist > 2) {
-            ctx.setLineDash([]);
-            ctx.shadowBlur = dimmed ? 0 : 10 / vs;
             const angle = Math.atan2(ddy, ddx);
             const hw = Math.min(14 / vs, dist * 0.35);
             ctx.beginPath();
@@ -1365,70 +1654,20 @@ function paintDrawing(ctx, d, mode, dimmed = false) {
         }
 
         // Start dot
-        ctx.setLineDash([]);
         ctx.shadowBlur = dimmed ? 0 : 8 / vs;
         ctx.beginPath();
         ctx.arc(ax, ay, 4.5 / vs, 0, Math.PI * 2);
         ctx.fill();
+    }
 
-    } else if (shape === 'circle' && d.startCell && d.endCell) {
+    // Start dot for clipped shapes (not point — point IS the shape)
+    if (useClipFill && d.startCell && shape !== 'point') {
         const cx = oX + (d.startCell.col + 0.5) * cSize;
         const cy = oY + (d.startCell.row + 0.5) * cSize;
-        const radius = Math.hypot(d.endCell.col - d.startCell.col, d.endCell.row - d.startCell.row) * cSize;
-        ctx.lineWidth = 3 / vs;
-        ctx.beginPath();
-        ctx.arc(cx, cy, Math.max(radius, 2 / vs), 0, Math.PI * 2);
-        ctx.stroke();
         ctx.setLineDash([]);
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(cx, cy, 4 / vs, 0, Math.PI * 2);
-        ctx.fill();
-
-    } else if (shape === 'square' && d.startCell && d.endCell) {
-        const sc = d.startCell, ec = d.endCell;
-        const halfSize = Math.max(Math.abs(ec.col - sc.col), Math.abs(ec.row - sc.row));
-        const sqX = oX + (sc.col - halfSize) * cSize;
-        const sqY = oY + (sc.row - halfSize) * cSize;
-        const sqW = (halfSize * 2 + 1) * cSize;
-        ctx.lineWidth = 3 / vs;
-        ctx.strokeRect(sqX, sqY, sqW, sqW);
-        ctx.setLineDash([]);
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.arc(oX + (sc.col + 0.5) * cSize, oY + (sc.row + 0.5) * cSize, 4 / vs, 0, Math.PI * 2);
-        ctx.fill();
-
-    } else if (shape === 'triangle' && d.startCell && d.endCell) {
-        const sc = d.startCell, ec = d.endCell;
-        const cx = oX + (sc.col + 0.5) * cSize;
-        const cy = oY + (sc.row + 0.5) * cSize;
-        const tx = oX + (ec.col + 0.5) * cSize;
-        const ty = oY + (ec.row + 0.5) * cSize;
-        const radius = Math.hypot(tx - cx, ty - cy);
-        if (radius > 1 / vs) {
-            const aimAngle = Math.atan2(ty - cy, tx - cx);
-            ctx.lineWidth = 3 / vs;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.arc(cx, cy, radius, aimAngle - Math.PI / 6, aimAngle + Math.PI / 6);
-            ctx.closePath();
-            ctx.stroke();
-        }
-        ctx.setLineDash([]);
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 4 / vs, 0, Math.PI * 2);
-        ctx.fill();
-
-    } else if (shape === 'point' && d.startCell) {
-        const cx = oX + (d.startCell.col + 0.5) * cSize;
-        const cy = oY + (d.startCell.row + 0.5) * cSize;
-        ctx.setLineDash([]);
-        ctx.shadowColor = dimmed ? 'transparent' : `rgba(${c.stroke.join(',')},0.5)`;
-        ctx.shadowBlur  = dimmed ? 0 : 10 / vs;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 6 / vs, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -1475,9 +1714,10 @@ function snapCellFromScreen(sx, sy) {
     return worldToCell(screenToWorld(sx, sy).x, screenToWorld(sx, sy).y);
 }
 
-// ── Supercover DDA line — all cells the segment passes through ────
-// Includes corner-touching cells (true supercover), replacing the
-// old margin-based intersection approach.
+// ── True Supercover DDA line — with 5% Inset + single-cell priority ─
+// Any cell the line segment passes through (with 5% margin on all sides)
+// is highlighted. At 4-way intersections, distance-to-center ensures
+// only one cell wins, keeping diagonals strictly 1-cell wide.
 function lineCells(c1, r1, c2, r2) {
     const cells = [], seen = new Set();
     const add = (c, r) => {
@@ -1490,12 +1730,15 @@ function lineCells(c1, r1, c2, r2) {
     const sx = c2 >= c1 ? 1 : -1, sy = r2 >= r1 ? 1 : -1;
     let err = dx - dy;
 
+    // 5% inset: shrink each cell's hitbox by 5% on all sides
+    const inset = 0.05;
+
     add(x, y);
     while (x !== c2 || y !== r2) {
         const e2 = 2 * err;
         const moveX = e2 > -dy;
         const moveY = e2 < dx;
-        // Corner crossing: include both adjacent cells (supercover)
+        // Corner crossing: include both adjacent cells (true supercover)
         if (moveX && moveY) {
             add(x + sx, y);
             add(x, y + sy);
@@ -1504,70 +1747,229 @@ function lineCells(c1, r1, c2, r2) {
         if (moveY) { err += dx; y += sy; }
         add(x, y);
     }
+
+    // Filter with Liang-Barsky + single-cell priority at intersections
+    const ax = c1 + 0.5, ay = r1 + 0.5;
+    const bx = c2 + 0.5, by = r2 + 0.5;
+    const segDx = bx - ax, segDy = by - ay;
+    const segLen = Math.hypot(segDx, segDy);
+
+    if (segLen > 0.01 && cells.length > 1) {
+        // Group cells by their integer "grid step" along the line
+        // to detect 4-way intersection candidates (2+ cells at same step)
+        const ux = segDx / segLen, uy = segDy / segLen;
+
+        const validCells = [];
+        for (const { col, row } of cells) {
+            // Inner core rectangle (5% inset)
+            const coreX1 = col + inset, coreX2 = col + 1 - inset;
+            const coreY1 = row + inset, coreY2 = row + 1 - inset;
+
+            // Liang-Barsky clip test
+            let t0 = 0, t1 = 1;
+            const p = [-segDx, segDx, -segDy, segDy];
+            const q = [ax - coreX1, coreX2 - ax, ay - coreY1, coreY2 - ay];
+            let inside = true;
+            for (let i = 0; i < 4; i++) {
+                if (p[i] === 0) {
+                    if (q[i] < 0) { inside = false; break; }
+                } else {
+                    const t = q[i] / p[i];
+                    if (p[i] < 0) { if (t > t1) { inside = false; break; } if (t > t0) t0 = t; }
+                    else          { if (t < t0) { inside = false; break; } if (t < t1) t1 = t; }
+                }
+            }
+            if (inside && t0 <= t1) {
+                validCells.push({ col, row });
+            }
+        }
+
+        // Single-cell priority: at each integer step along the line,
+        // keep only the cell whose center is closest to the line.
+        const steps = new Map(); // stepKey -> { col, row, dist }
+        for (const { col, row } of validCells) {
+            const cx = col + 0.5, cy = row + 0.5;
+            // Project cell center onto line, get integer step index
+            const vx = cx - ax, vy = cy - ay;
+            const proj = (vx * segDx + vy * segDy) / (segLen * segLen);
+            const step = Math.round(proj * Math.max(dx, dy));
+            const stepKey = step;
+
+            // Perpendicular distance to line
+            const perpDist = Math.abs(vx * (-uy) + vy * ux);
+
+            if (!steps.has(stepKey) || perpDist < steps.get(stepKey).dist) {
+                steps.set(stepKey, { col, row, dist: perpDist });
+            }
+        }
+
+        const result = Array.from(steps.values())
+            .map(({ col, row }) => ({ col, row }));
+
+        // Always ensure start and end are present
+        const hasStart = result.some(c => c.col === c1 && c.row === r1);
+        const hasEnd   = result.some(c => c.col === c2 && c.row === r2);
+        if (!hasStart) result.unshift({ col: c1, row: r1 });
+        if (!hasEnd)   result.push({ col: c2, row: r2 });
+
+        // Sort along line direction
+        result.sort((a, b) => {
+            const da = ((a.col + 0.5 - ax) * ux + (a.row + 0.5 - ay) * uy);
+            const db = ((b.col + 0.5 - ax) * ux + (b.row + 0.5 - ay) * uy);
+            return da - db;
+        });
+
+        return result;
+    }
+
     return cells;
 }
 
-// ── Wide line cells — forward-only corridor, no cells behind start ─
+// ── Wide line cells — Center-Point Rule, forward-only corridor ────
+// A cell is highlighted IF AND ONLY IF its exact center point lies
+// within the mathematical boundaries of the corridor.
+// Starts exactly at start-cell center and extends forward only.
 function wideLineCells(c1, r1, c2, r2) {
-    const halfW = 1.5;
     const ax = c1 + 0.5, ay = r1 + 0.5;
     const bx = c2 + 0.5, by = r2 + 0.5;
     const dx = bx - ax, dy = by - ay;
     const len = Math.hypot(dx, dy);
     if (len < 0.01) return [{ col: c1, row: r1 }];
 
-    const ux = dx / len, uy = dy / len;  // forward unit vector
-    const margin = Math.ceil(halfW) + 2;
+    // Forward unit vector
+    const ux = dx / len, uy = dy / len;
+    // Half-width of corridor in cell units
+    const halfW = 1.5;
+
+    const cells = [];
+    // Bounding box scan with margin
+    const margin = Math.ceil(halfW) + 1;
     const colMin = Math.min(c1, c2) - margin, colMax = Math.max(c1, c2) + margin;
     const rowMin = Math.min(r1, r2) - margin, rowMax = Math.max(r1, r2) + margin;
-    const cells = [];
 
     for (let col = colMin; col <= colMax; col++) {
         for (let row = rowMin; row <= rowMax; row++) {
-            const vx = col + 0.5 - ax, vy = row + 0.5 - ay;
-            const fwd  = vx * ux + vy * uy;         // projection along forward axis
-            if (fwd < 0 || fwd > len) continue;      // strictly exclude behind start & past end
-            const perp = Math.abs(vx * (-uy) + vy * ux);  // perpendicular distance
-            if (perp <= halfW) cells.push({ col, row });
+            // Cell center
+            const cx = col + 0.5, cy = row + 0.5;
+            // Vector from start to cell center
+            const vx = cx - ax, vy = cy - ay;
+            // Forward projection (must be >= 0 to be in front of start)
+            const fwd = vx * ux + vy * uy;
+            // Strictly exclude behind start and past end
+            if (fwd < 0 || fwd > len) continue;
+            // Perpendicular distance from center to corridor axis
+            const perp = Math.abs(vx * (-uy) + vy * ux);
+            // Center-Point Rule: highlight only if center lies within corridor
+            if (perp <= halfW) {
+                cells.push({ col, row });
+            }
         }
     }
+
+    // Sort cells along corridor for consistent ordering
+    cells.sort((a, b) => {
+        const da = ((a.col + 0.5 - ax) * ux + (a.row + 0.5 - ay) * uy);
+        const db = ((b.col + 0.5 - ax) * ux + (b.row + 0.5 - ay) * uy);
+        return da - db;
+    });
+
     return cells;
 }
 
 function circleCells(cc, rc, radiusCells) {
-    const cells = [], r = Math.max(0, radiusCells), ri = Math.ceil(r);
-    for (let dc = -ri; dc <= ri; dc++)
-        for (let dr = -ri; dr <= ri; dr++)
-            if (Math.hypot(dc, dr) <= r) cells.push({ col: cc + dc, row: rc + dr });
+    const cells = [];
+    const r = Math.max(0, radiusCells);
+    const ri = Math.ceil(r);
+
+    // Center of circle in cell coordinates
+    const cx = cc + 0.5, cy = rc + 0.5;
+
+    // Scan bounding box
+    for (let dc = -ri; dc <= ri; dc++) {
+        for (let dr = -ri; dr <= ri; dr++) {
+            const col = cc + dc, row = rc + dr;
+            // Cell center
+            const mx = col + 0.5, my = row + 0.5;
+            // Center-Point Rule: highlight only if cell center lies within circle
+            const dist = Math.hypot(mx - cx, my - cy);
+            if (dist <= r) {
+                cells.push({ col, row });
+            }
+        }
+    }
+
     return cells;
 }
 
 function squareCells(cc, rc, halfSize) {
-    const cells = [], h = Math.max(0, Math.round(halfSize));
-    for (let dc = -h; dc <= h; dc++)
-        for (let dr = -h; dr <= h; dr++)
-            cells.push({ col: cc + dc, row: rc + dr });
+    const cells = [];
+    const h = Math.max(0, Math.round(halfSize));
+
+    // Center of square in cell coordinates
+    const cx = cc + 0.5, cy = rc + 0.5;
+    // Square boundaries (centered on start cell, extending h cells in each direction)
+    const xMin = cx - h - 0.5, xMax = cx + h + 0.5;
+    const yMin = cy - h - 0.5, yMax = cy + h + 0.5;
+
+    // Scan bounding box
+    for (let dc = -h - 1; dc <= h + 1; dc++) {
+        for (let dr = -h - 1; dr <= h + 1; dr++) {
+            const col = cc + dc, row = rc + dr;
+            // Cell center
+            const mx = col + 0.5, my = row + 0.5;
+            // Center-Point Rule: highlight only if cell center lies within square
+            if (mx >= xMin && mx <= xMax && my >= yMin && my <= yMax) {
+                cells.push({ col, row });
+            }
+        }
+    }
+
     return cells;
 }
 
 function coneCells(sc, sr, ec, er) {
-    const ax = sc+0.5, ay = sr+0.5, tx = ec+0.5, ty = er+0.5;
-    const aimX = tx - ax, aimY = ty - ay, radius = Math.hypot(aimX, aimY);
+    const ax = sc + 0.5, ay = sr + 0.5;
+    const tx = ec + 0.5, ty = er + 0.5;
+    const aimX = tx - ax, aimY = ty - ay;
+    const radius = Math.hypot(aimX, aimY);
+
     if (radius < 0.5) return [{ col: sc, row: sr }];
-    const halfAngle = Math.PI / 6, cosHalf = Math.cos(halfAngle);
+
+    const halfAngle = Math.PI / 6;
+    const cosHalf = Math.cos(halfAngle);
     const maxR = Math.ceil(radius) + 1;
-    const cells = [], seen = new Set();
+    const cells = [];
+
+    // Unit vector in aim direction
+    const ux = aimX / radius, uy = aimY / radius;
+
+    // Scan bounding box
     for (let dc = -maxR; dc <= maxR; dc++) {
         for (let dr = -maxR; dr <= maxR; dr++) {
-            const col = sc+dc, row = sr+dr, k = col+','+row;
-            if (seen.has(k)) continue;
-            const px = col+0.5, py = row+0.5;
-            const vx = px-ax, vy = py-ay, dist = Math.hypot(vx, vy);
-            if (dist < 0.5) { seen.add(k); cells.push({ col, row }); continue; }
-            if (dist > radius) continue;
-            if ((vx*aimX + vy*aimY) / (dist*radius) >= cosHalf) { seen.add(k); cells.push({ col, row }); }
+            const col = sc + dc, row = sr + dr;
+            // Cell center
+            const mx = col + 0.5, my = row + 0.5;
+            // Vector from apex to cell center
+            const vx = mx - ax, vy = my - ay;
+            const dist = Math.hypot(vx, vy);
+
+            // Center-Point Rule: highlight only if cell center lies within cone
+            if (dist <= radius) {
+                // Check if cell center is within the cone angle
+                if (dist < 0.5) {
+                    // Apex cell always included
+                    cells.push({ col, row });
+                } else {
+                    // Dot product test: cos(angle) >= cosHalf
+                    const dot = (vx * ux + vy * uy) / dist;
+                    if (dot >= cosHalf) {
+                        cells.push({ col, row });
+                    }
+                }
+            }
         }
     }
+
     return cells;
 }
 
@@ -1590,23 +1992,15 @@ function onDrawStart(sx, sy) {
     const cell  = snapCellFromScreen(sx, sy);
     const shape = (activePhase === 'move') ? 'line' : activeTool;
 
-    if (shape === 'point') {
-        const idx = ghostDrawings.findIndex(d =>
-            d.phase === activePhase && d.shape === 'point' &&
-            d.cells.length === 1 &&
-            d.cells[0].col === cell.col && d.cells[0].row === cell.row
-        );
-        if (idx !== -1) { ghostDrawings.splice(idx, 1); updateSubmitBtn(); }
-        else { ghostDrawings.push({ phase: activePhase, shape: 'point', startCell: cell, endCell: cell, cells: [{ col: cell.col, row: cell.row }] }); updateSubmitBtn(); }
-        scheduleRender(false, true);
-    } else {
-        currentDraw = { phase: activePhase, shape, startCell: cell, endCell: cell, cells: [cell] };
-        scheduleRender(false, true);
-    }
+    // All shapes including point go through currentDraw → onDrawEnd pipeline
+    currentDraw = { phase: activePhase, shape, startCell: cell, endCell: cell, cells: [cell] };
+    scheduleRender(false, true);
 }
 
 function onDrawMove(sx, sy) {
     if (!currentDraw || !mapData) return;
+    // Point tool doesn't drag — skip move
+    if (currentDraw.shape === 'point') return;
     const cell = snapCellFromScreen(sx, sy);
     if (cell.col === currentDraw.endCell.col && cell.row === currentDraw.endCell.row) return;
     currentDraw.endCell = cell;
@@ -1633,14 +2027,36 @@ function onDrawEnd() {
     if (!currentDraw) return;
     const d = currentDraw;
     currentDraw = null;
-    const moved = (d.startCell.col !== d.endCell.col || d.startCell.row !== d.endCell.row);
 
-    if ((d.shape === 'line' || d.shape === 'wideline') && !moved) {
-        if (isGMMode && socket?.connected)
-            socket.emit('gm-live-stroke', { roomId: currentRoom, password: gmModePassword, stroke: null });
-        scheduleRender(false, true); return;
+    // ── Point tool: toggle if same cell exists, otherwise add ─────
+    if (d.shape === 'point') {
+        const idx = ghostDrawings.findIndex(ex =>
+            ex.phase === d.phase && ex.shape === 'point' &&
+            ex.startCell && ex.startCell.col === d.startCell.col && ex.startCell.row === d.startCell.row
+        );
+        if (idx !== -1) {
+            // Remove existing point (toggle off)
+            ghostDrawings.splice(idx, 1);
+            updateSubmitBtn();
+            scheduleRender(false, true);
+            return;
+        }
+        // Fall through to add the new point
     }
 
+    // ── Line/WideLine: ignore if no movement ──────────────────────
+    if ((d.shape === 'line' || d.shape === 'wideline') &&
+        d.startCell.col === d.endCell.col && d.startCell.row === d.endCell.row) {
+        if (isGMMode && socket?.connected)
+            socket.emit('gm-live-stroke', { roomId: currentRoom, password: gmModePassword, stroke: null });
+        scheduleRender(false, true);
+        return;
+    }
+
+    // Ensure cells are computed
+    d.cells = computeCells(d.startCell, d.endCell, d.shape);
+
+    // ── GM mode: send to server immediately ───────────────────────
     if (isGMMode) {
         if (socket?.connected) {
             socket.emit('gm-draw', {
@@ -1662,6 +2078,7 @@ function onDrawEnd() {
         return;
     }
 
+    // ── Player: add to ghost drawings ─────────────────────────────
     ghostDrawings.push(d);
     updateSubmitBtn();
     scheduleRender(false, true);
@@ -1874,6 +2291,14 @@ function setActivePhase(phase) {
 // Dedicated PAN button
 document.getElementById('btnPanTool').addEventListener('click', () => setActiveTool('pan'));
 
+// Tactical Labels toggle
+document.getElementById('btnTacticalLabels').addEventListener('click', () => {
+    tacticalLabelsVisible = !tacticalLabelsVisible;
+    document.getElementById('btnTacticalLabels').classList.toggle('active', tacticalLabelsVisible);
+    scheduleRender(false, true);
+    showToast(tacticalLabelsVisible ? 'TACTICAL LABELS ON' : 'TACTICAL LABELS OFF');
+});
+
 // Drawing tool trigger — toggle pop-out
 document.getElementById('btnActiveTool').addEventListener('click', e => {
     e.stopPropagation();
@@ -1978,15 +2403,84 @@ function updateFocusBtn() {
 
 // Fit / Fullscreen
 document.getElementById('btnFit').addEventListener('click', fitToScreen);
-document.getElementById('btnFullscreen').addEventListener('click', () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
-    else document.exitFullscreen?.();
-});
-document.addEventListener('fullscreenchange', () => {
-    document.getElementById('btnFullscreen').textContent =
-        document.fullscreenElement ? '✕ EXIT FULL' : '⛶ FULL';
+
+// iOS Standalone detection — hide Full button if already in PWA mode, show tip otherwise
+(function initFullscreenBtn() {
+    const btn = document.getElementById('btnFullscreen');
+    const isStandalone = window.navigator.standalone === true;  // iOS Safari only
+
+    if (isStandalone) {
+        // Already running as PWA — no need for the button
+        btn.style.display = 'none';
+        return;
+    }
+
+    // Build the "Add to Home Screen" tip overlay (shown on demand)
+    const tipEl = document.createElement('div');
+    tipEl.id = 'iosFullTip';
+    tipEl.style.cssText = [
+        'position:fixed', 'bottom:80px', 'left:50%', 'transform:translateX(-50%)',
+        'background:rgba(4,8,12,0.96)', 'border:1px solid #00f0ff44',
+        'border-radius:8px', 'padding:12px 20px', 'z-index:9999',
+        'color:#00f0ff', 'font-family:inherit', 'font-size:11px',
+        'letter-spacing:1.5px', 'text-align:center', 'pointer-events:none',
+        'opacity:0', 'transition:opacity .3s', 'white-space:nowrap'
+    ].join(';');
+    tipEl.textContent = '⬆ Add to Home Screen for true Fullscreen';
+    document.body.appendChild(tipEl);
+
+    let tipTimer = null;
+    function showTip() {
+        clearTimeout(tipTimer);
+        tipEl.style.opacity = '1';
+        tipTimer = setTimeout(() => { tipEl.style.opacity = '0'; }, 5000);
+    }
+
+    // On iOS Safari requestFullscreen is not available — show tip instead
+    btn.addEventListener('click', () => {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS || !document.documentElement.requestFullscreen) {
+            showTip();
+            return;
+        }
+        // Non-iOS: real fullscreen toggle
+        if (!getFullscreenElement()) {
+            requestFullscreenEl(document.documentElement).catch(() => showTip());
+        } else {
+            exitFullscreenEl();
+        }
+    });
+})();
+
+// True fullscreen with vendor prefix support (non-iOS)
+function requestFullscreenEl(el) {
+    if (el.requestFullscreen)            return el.requestFullscreen();
+    if (el.webkitRequestFullscreen)      return el.webkitRequestFullscreen();
+    if (el.msRequestFullscreen)          return el.msRequestFullscreen();
+}
+
+function exitFullscreenEl() {
+    if (document.exitFullscreen)            return document.exitFullscreen();
+    if (document.webkitExitFullscreen)      return document.webkitExitFullscreen();
+    if (document.msExitFullscreen)          return document.msExitFullscreen();
+}
+
+function getFullscreenElement() {
+    return document.fullscreenElement
+        || document.webkitFullscreenElement
+        || document.msFullscreenElement
+        || null;
+}
+
+document.addEventListener('fullscreenchange', updateFullscreenBtn);
+document.addEventListener('webkitfullscreenchange', updateFullscreenBtn);
+document.addEventListener('msfullscreenchange', updateFullscreenBtn);
+
+function updateFullscreenBtn() {
+    const btn = document.getElementById('btnFullscreen');
+    if (btn) btn.textContent = getFullscreenElement() ? '✕ EXIT FULL' : '⛶ FULL';
     setTimeout(() => { resizeCanvases(); if (mapData) fitToScreen(); }, 200);
-});
+}
 
 // Connect button on landing
 document.getElementById('btnConnect').addEventListener('click', () => {
@@ -1995,6 +2489,16 @@ document.getElementById('btnConnect').addEventListener('click', () => {
 });
 document.getElementById('roomInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btnConnect').click();
+});
+// Force lowercase + restrict to [a-z0-9-] as user types
+document.getElementById('roomInput').addEventListener('input', e => {
+    const el = e.target;
+    const pos = el.selectionStart;
+    const cleaned = el.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (el.value !== cleaned) {
+        el.value = cleaned;
+        el.setSelectionRange(pos, pos);
+    }
 });
 document.getElementById('callsignInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btnConnect').click();
@@ -2092,6 +2596,7 @@ function applyGMMode() {
     document.getElementById('btnSubmit').style.display = 'none';
     document.getElementById('gmCrownBtn').classList.add('show');
     document.getElementById('gmMapLibBtn').classList.add('show');
+    document.getElementById('btnPlayerLogout').classList.remove('show');
 
     _inviteUrl = `${location.protocol}//${location.host}/tactical_player.html?room=${encodeURIComponent(currentRoom)}`;
 
@@ -2110,7 +2615,7 @@ function applyGMMode() {
 
     document.getElementById('landing').classList.add('hidden');
     setLdStatus('AUTHENTICATED AS GM · ROOM: ' + currentRoom.toUpperCase());
-    document.getElementById('mapLibRoomLabel').textContent = 'ROOM: ' + currentRoom.toUpperCase();
+    document.getElementById('mapLibRoomLabel').textContent = 'PRIVATE LIBRARY — ROOM: ' + currentRoom.toUpperCase();
 }
 
 // ── GM Master Menu ────────────────────────────────────────────────
@@ -2230,7 +2735,9 @@ mapLibDrop.addEventListener('drop', e => {
 });
 
 function loadMapLibrary() {
-    fetch('/api/maps', { headers: { 'x-gm-password': gmModePassword } })
+    fetch(`/api/maps?roomId=${encodeURIComponent(currentRoom)}`, {
+        headers: { 'x-gm-password': gmModePassword }
+    })
         .then(r => r.json())
         .then(files => renderMapLibrary(files))
         .catch(() => showToast('ERROR LOADING MAP LIBRARY'));
@@ -2246,13 +2753,16 @@ function renderMapLibrary(files) {
     }
 
     const activeFilename = mapData?.fileName || null;
+    const prefix = currentRoom + '___';
     list.innerHTML = '';
 
     files.forEach(f => {
+        // Strip room prefix for display only; keep full filename for server operations
+        const displayName = f.filename.startsWith(prefix) ? f.filename.slice(prefix.length) : f.filename;
         const item = document.createElement('div');
         item.className = 'lib-map-item' + (f.filename === activeFilename ? ' active-map' : '');
         item.innerHTML = `
-            <div class="lib-map-name" title="${esc(f.filename)}">${esc(f.filename)}</div>
+            <div class="lib-map-name" title="${esc(f.filename)}">${esc(displayName)}</div>
             <div class="lib-map-size">${formatBytes(f.size)}</div>
             <button class="lib-map-activate">${f.filename === activeFilename ? '● ACTIVE' : 'ACTIVATE'}</button>
             <button class="lib-map-del" title="Delete">✕</button>
@@ -2299,7 +2809,7 @@ function uploadMapFile(file) {
     prog.textContent = `UPLOADING ${file.name.toUpperCase()}…`;
     const fd = new FormData();
     fd.append('map', file);
-    fetch('/api/upload', {
+    fetch(`/api/upload?roomId=${encodeURIComponent(currentRoom)}`, {
         method: 'POST',
         headers: { 'x-gm-password': gmModePassword },
         body: fd
@@ -2324,14 +2834,26 @@ document.getElementById('gmPasswordInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btnConnect').click();
 });
 
-// ── Init from URL + localStorage ─────────────────────────────────
+// ── Logout / Change Room ──────────────────────────────────────────
+function handleLogout() {
+    localStorage.clear();
+    // Signal to the next page load that auto-login should be skipped
+    sessionStorage.setItem('tp_logged_out', '1');
+    if (socket) { try { socket.disconnect(); } catch (_) {} }
+    // Strip URL params so room= doesn't re-trigger auto-login
+    window.location.href = window.location.pathname;
+}
+document.getElementById('gmMenuLogoutBtn').addEventListener('click', handleLogout);
+document.getElementById('btnPlayerLogout').addEventListener('click', handleLogout);
+
+// ── Init from URL + localStorage (Auto-Login) ────────────────────
 (function initFromURL() {
     const params = new URLSearchParams(location.search);
     const urlRoom = params.get('room');
 
-    // Room: URL param takes precedence, then localStorage
+    // Room: URL param takes precedence, then localStorage — always normalize to lowercase
     const savedRoom = localStorage.getItem('tp_room');
-    const room = urlRoom || savedRoom || 'default';
+    const room = (urlRoom || savedRoom || 'default').trim().toLowerCase();
     document.getElementById('roomInput').value = room;
     currentRoom = room;
 
@@ -2341,12 +2863,26 @@ document.getElementById('gmPasswordInput').addEventListener('keydown', e => {
         document.getElementById('callsignInput').value = savedCallsign;
     }
 
-    // GM password from localStorage — pre-fill for convenience
+    // GM password from localStorage — pre-fill and enable checkbox
     const savedGmPw = localStorage.getItem('tp_gm_pw');
     if (savedGmPw) {
         document.getElementById('gmToggle').checked = true;
         document.getElementById('gmPwWrap').classList.add('show');
         document.getElementById('gmPasswordInput').value = savedGmPw;
+    }
+
+    // ── Auto-login: if we have saved creds, bypass the landing modal ──
+    // Skip entirely if the user explicitly logged out this session
+    if (sessionStorage.getItem('tp_logged_out')) {
+        sessionStorage.removeItem('tp_logged_out');
+        return; // show landing modal so user can enter fresh credentials
+    }
+    if (savedRoom || savedCallsign) {
+        // Brief delay for socket.io to initialize
+        requestAnimationFrame(() => {
+            document.getElementById('btnConnect').disabled = true;
+            connectToServer();
+        });
     }
 })();
 
