@@ -291,6 +291,34 @@
             box-shadow: inset 0 0 10px rgba(0,240,255,.08);
         }
 
+        /* ── MY VISIBILITY TOGGLE BUTTON ──────────────── */
+        #btnMyVisibility {
+            width: 100%; flex: 0 0 auto;
+            min-height: 44px; max-height: 60px;
+            background: rgba(6,11,17,0.88);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-dim);
+            font-family: inherit; font-size: 7px; letter-spacing: 1.3px;
+            cursor: pointer; touch-action: manipulation;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 3px;
+            transition: all .15s;
+            flex-shrink: 0;
+        }
+        #btnMyVisibility .icon { font-size: 13px; line-height: 1; font-weight: bold; }
+        #btnMyVisibility:hover:not(.vis-on) { border-color: #1a3040; color: var(--text-mid); }
+        #btnMyVisibility.vis-on {
+            border-color: var(--green); color: var(--green);
+            background: rgba(0,255,80,.07);
+            box-shadow: inset 0 0 10px rgba(0,255,80,.08);
+        }
+        #btnMyVisibility.vis-off {
+            border-color: var(--red); color: var(--red);
+            background: rgba(255,20,50,.07);
+            box-shadow: inset 0 0 10px rgba(255,20,50,.08);
+        }
+
         /* ── ACTIVE TOOL BUTTON (single trigger) ──────── */
         #btnActiveTool {
             width: 50px; height: 50px;
@@ -697,6 +725,317 @@
             padding: 28px; text-align: center;
             font-size: 10px; letter-spacing: 1.5px; color: var(--text-dim);
         }
+
+        /* ═══════════════════════════════════════════════════════ */
+        /* RESPONSIVE: PORTRAIT ORIENTATION                      */
+        /* ═══════════════════════════════════════════════════════ */
+        @media (orientation: portrait) {
+            /* Move tool sidebar to bottom as horizontal bar */
+            #toolSidebar {
+                top: auto;
+                bottom: calc(82px + var(--safe-b));
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: auto;
+                padding: 6px calc(10px + var(--safe-r)) 6px calc(10px + var(--safe-l));
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-items: stretch;
+                gap: 4px;
+                background: linear-gradient(0deg, rgba(4,8,12,0.85) 0%, transparent 100%);
+            }
+            #toolSidebar > * {
+                flex: 0 0 auto;
+                width: 54px;
+                min-height: 44px;
+            }
+            #btnPanTool {
+                width: 54px;
+                min-height: 44px;
+                max-height: none;
+            }
+            #btnTacticalLabels,
+            #btnMyVisibility {
+                width: 54px;
+                min-height: 44px;
+                max-height: none;
+            }
+            .sidebar-btn {
+                width: 54px;
+                min-height: 44px;
+                max-height: none;
+            }
+
+            /* Move tool popup to top of horizontal sidebar */
+            #toolPopup {
+                left: 50%;
+                top: auto;
+                bottom: calc(82px + 62px + var(--safe-b));
+                transform: translateX(-50%) translateY(-10px);
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                max-width: calc(100vw - 20px);
+            }
+            #toolPopup.open {
+                transform: translateX(-50%) translateY(0);
+            }
+            .tool-popup-btn {
+                width: 44px;
+                height: 44px;
+            }
+
+            /* Adjust GM menu position for portrait */
+            #gmMenu {
+                top: calc(46px + var(--safe-t));
+                right: calc(8px + var(--safe-r));
+                max-height: 60vh;
+                overflow-y: auto;
+            }
+
+            /* Adjust landing modal for portrait */
+            .ld-features {
+                grid-template-columns: 1fr;
+                max-width: 280px;
+            }
+            .ld-title {
+                font-size: clamp(18px, 6vw, 28px);
+            }
+
+            /* Adjust map library modal for portrait */
+            #mapLibBox {
+                width: min(95vw, 400px);
+                max-height: 75vh;
+            }
+
+            /* Adjust bottom bar for portrait */
+            #bottomBar {
+                padding-bottom: calc(10px + var(--safe-b));
+            }
+            .phase-btn {
+                min-height: 48px;
+                font-size: 8px;
+            }
+            .action-btn {
+                width: 48px;
+                min-height: 48px;
+                font-size: 18px;
+            }
+            #btnSubmit {
+                min-width: 60px;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════ */
+        /* RESPONSIVE: LANDSCAPE ORIENTATION                     */
+        /* ═══════════════════════════════════════════════════════ */
+        @media (orientation: landscape) {
+            /* Optimize for landscape - sidebar stays vertical */
+            #toolSidebar {
+                width: calc(58px + var(--safe-l));
+                padding: 6px 4px 6px calc(4px + var(--safe-l));
+            }
+
+            /* Adjust tool popup position */
+            #toolPopup {
+                left: calc(58px + var(--safe-l) + 6px);
+                top: calc(54px + var(--safe-t));
+            }
+
+            /* Optimize top bar for landscape */
+            #topbar {
+                padding-top: calc(8px + var(--safe-t));
+            }
+            .top-btn {
+                height: 32px;
+                padding: 0 10px;
+                font-size: 9px;
+            }
+            #mapTitle {
+                font-size: 9px;
+            }
+
+            /* Optimize bottom bar for landscape */
+            #bottomBar {
+                padding: 6px calc(8px + var(--safe-r)) calc(8px + var(--safe-b)) calc(8px + var(--safe-l));
+            }
+            .phase-btn {
+                min-height: 50px;
+                font-size: 8px;
+                letter-spacing: 1.5px;
+            }
+            .phase-btn .icon {
+                font-size: 16px;
+            }
+            .action-btn {
+                width: 50px;
+                min-height: 50px;
+                font-size: 18px;
+            }
+            #btnSubmit {
+                min-width: 70px;
+            }
+
+            /* Adjust GM menu for landscape */
+            #gmMenu {
+                top: calc(42px + var(--safe-t));
+                right: calc(6px + var(--safe-r));
+            }
+
+            /* Optimize landing modal for landscape */
+            .ld-features {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 380px;
+            }
+            .ld-connect-box {
+                min-width: 300px;
+            }
+
+            /* Optimize map library modal for landscape */
+            #mapLibBox {
+                width: min(650px, 90vw);
+                max-height: 80vh;
+            }
+
+            /* Adjust logout button for landscape */
+            #btnPlayerLogout {
+                height: 32px;
+            }
+            #gmCrownBtn, #gmMapLibBtn {
+                height: 32px;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════ */
+        /* RESPONSIVE: SMALL SCREENS (both orientations)         */
+        /* ═══════════════════════════════════════════════════════ */
+        @media (max-width: 480px), (max-height: 500px) {
+            /* Reduce button sizes on small screens */
+            .top-btn {
+                height: 28px;
+                padding: 0 8px;
+                font-size: 8px;
+            }
+            #mapTitle {
+                font-size: 8px;
+                letter-spacing: 2px;
+            }
+            #zoomLabel {
+                font-size: 8px;
+            }
+            .phase-btn {
+                min-height: 44px;
+                font-size: 7px;
+                letter-spacing: 1.2px;
+            }
+            .phase-btn .icon {
+                font-size: 14px;
+            }
+            .action-btn {
+                width: 44px;
+                min-height: 44px;
+                font-size: 16px;
+            }
+            #btnSubmit {
+                min-width: 56px;
+                font-size: 6px;
+            }
+            #btnSubmit .icon {
+                font-size: 14px;
+            }
+            .sidebar-btn,
+            #btnPanTool,
+            #btnTacticalLabels,
+            #btnMyVisibility {
+                min-height: 40px;
+            }
+            .sidebar-btn .icon,
+            #btnPanTool .icon,
+            #btnTacticalLabels .icon,
+            #btnMyVisibility .icon {
+                font-size: 13px;
+            }
+            .sidebar-btn {
+                font-size: 6px;
+            }
+
+            /* Adjust overlays for small screens */
+            #landing {
+                padding: env(safe-area-inset-top, 10px) env(safe-area-inset-right, 10px) env(safe-area-inset-bottom, 10px) env(safe-area-inset-left, 10px);
+            }
+            .ld-eyebrow {
+                font-size: 7px;
+            }
+            .ld-sub {
+                font-size: 8px;
+            }
+            .ld-connect-box {
+                padding: 16px 20px;
+                min-width: 240px;
+            }
+            .ld-input {
+                padding: 7px 10px;
+                font-size: 10px;
+            }
+            .ld-btn {
+                padding: 12px 32px;
+                font-size: 10px;
+            }
+
+            /* Adjust GM menu for small screens */
+            #gmMenu {
+                width: 200px;
+            }
+            .gm-menu-btn {
+                min-height: 36px;
+                font-size: 8px;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════ */
+        /* RESPONSIVE: VERY SMALL HEIGHT (landscape phones)      */
+        /* ═══════════════════════════════════════════════════════ */
+        @media (max-height: 400px) {
+            /* Compact mode for very short screens */
+            #topbar {
+                padding-top: calc(4px + var(--safe-t));
+                padding-bottom: 4px;
+            }
+            .top-btn {
+                height: 26px;
+                padding: 0 6px;
+                font-size: 7px;
+            }
+            #mapTitle {
+                font-size: 7px;
+            }
+            #bottomBar {
+                padding-top: 4px;
+                padding-bottom: calc(4px + var(--safe-b));
+            }
+            .phase-btn {
+                min-height: 38px;
+                font-size: 6px;
+                gap: 2px;
+            }
+            .phase-btn .icon {
+                font-size: 12px;
+            }
+            .action-btn {
+                width: 38px;
+                min-height: 38px;
+                font-size: 14px;
+            }
+            #btnSubmit {
+                min-width: 50px;
+            }
+            #toolSidebar {
+                top: calc(38px + var(--safe-t));
+                bottom: calc(52px + var(--safe-b));
+            }
+        }
     </style>
 </head>
 <body>
@@ -710,7 +1049,6 @@
 <!-- Top bar -->
 <div id="topbar">
     <button class="top-btn" id="btnFit" title="Fit map to screen">⟲ FIT</button>
-    <button class="top-btn" id="btnFocus" title="Focus on my plans only (dims others)">👁 FOCUS</button>
     <span id="mapTitle">AWAITING MAP FROM SERVER</span>
     <span id="zoomLabel">100%</span>
     <div id="connStatus">
@@ -758,6 +1096,10 @@
     <button id="btnTacticalLabels" class="active" title="Toggle tactical sector labels (ABC)">
         <span class="icon">ABC</span>
         <span>LABELS</span>
+    </button>
+    <button id="btnMyVisibility" title="Toggle your plan visibility to others (ON = visible to all)">
+        <span class="icon">VIS</span>
+        <span>VISIBLE</span>
     </button>
 </div>
 
@@ -922,8 +1264,11 @@ let isGMMode        = false;
 let gmModePassword  = '';
 let gmAuthAttempted = false;
 
-// Global focus
-let globalFocusOwner = null;
+// Per-player visibility state: { [callsign]: boolean } — who has their plans visible
+let playerVisibility = {};
+
+// My own visibility toggle state
+let myVisibilityOn = false;
 
 // Tactical labels
 let tacticalLabelsVisible = true;
@@ -981,6 +1326,9 @@ function connectToServer() {
 
     socket.on('disconnect', () => {
         setConnStatus('offline', 'OFFLINE');
+        playerVisibility = {};
+        myVisibilityOn = false;
+        updateVisibilityBtn();
         showToast('DISCONNECTED FROM SERVER');
     });
 
@@ -1031,7 +1379,10 @@ function connectToServer() {
         }
         serverDrawings   = state.drawings || [];
         globalFocusOwner = state.focusOwner || null;
-        updateFocusBtn();
+        playerVisibility = state.playerFocus || {};
+        const myCs = isGMMode ? 'GM' : (callsign || '');
+        myVisibilityOn = !!playerVisibility[myCs];
+        updateVisibilityBtn();
         updateGMDrawCount();
         scheduleRender(false, true);
     });
@@ -1041,6 +1392,9 @@ function connectToServer() {
         loadMapFromUrl(activeMap.url, activeMap.filename);
         ghostDrawings  = [];
         serverDrawings = [];
+        playerVisibility = {};
+        myVisibilityOn = false;
+        updateVisibilityBtn();
         updateSubmitBtn();
         updateGMDrawCount();
         showToast('NEW MAP LOADED BY GM');
@@ -1072,7 +1426,6 @@ function connectToServer() {
 
     socket.on('focus-switched', ownerCallsign => {
         globalFocusOwner = ownerCallsign;
-        updateFocusBtn();
         scheduleRender(false, true);
         const myLabel = isGMMode ? 'GM' : callsign;
         if (ownerCallsign === myLabel) showToast('FOCUS: YOUR PLANS ARE SPOTLIGHTED');
@@ -1081,9 +1434,31 @@ function connectToServer() {
 
     socket.on('focus-cleared', () => {
         globalFocusOwner = null;
-        updateFocusBtn();
         scheduleRender(false, true);
         showToast('FOCUS: SPOTLIGHT OFF');
+    });
+
+    // Per-player visibility changed
+    socket.on('visibility-toggled', ({ callsign, visible }) => {
+        playerVisibility[callsign] = visible;
+        // Update my own visibility state
+        const myCs = isGMMode ? 'GM' : callsign;
+        if (callsign === myCs) {
+            myVisibilityOn = visible;
+            updateVisibilityBtn();
+        }
+        scheduleRender(false, true);
+        const myLabel = isGMMode ? 'GM' : callsign;
+        if (callsign === myLabel) {
+            showToast(visible ? 'YOUR PLAN IS NOW VISIBLE TO ALL' : 'YOUR PLAN IS HIDDEN');
+        } else {
+            showToast(callsign + (visible ? ' PLAN VISIBLE' : ' PLAN HIDDEN'));
+        }
+    });
+
+    // Player submitted/locked their plan
+    socket.on('plan-locked', ({ count }) => {
+        showToast(count + ' PLAN' + (count > 1 ? 'S' : '') + ' LOCKED — USE VISIBLE TO SHARE');
     });
 
     socket.on('client-count', count => {
@@ -1094,6 +1469,7 @@ function connectToServer() {
         if (isGMMode) {
             document.getElementById('gmMenuPlayerCount').textContent = list.length;
         }
+        // No longer used — kept for compatibility
     });
 }
 
@@ -1325,23 +1701,30 @@ function renderDrawings() {
     drawCtx.rect(0, 0, iw, ih);
     drawCtx.clip();
 
-    const focusActive = globalFocusOwner !== null;
+    const mySocketId = socket?.id;
 
+    // Server drawings: show based on visibility toggle
     for (const d of serverDrawings) {
         const ownerCs = d.isGM ? 'GM' : (d.callsign || '');
-        const dimmed  = focusActive && ownerCs !== globalFocusOwner;
-        paintDrawing(drawCtx, d, 'server', dimmed);
+        const isMine  = mySocketId && d.socketId === mySocketId;
+        const isGM    = d.isGM && isGMMode;          // GM always sees own GM drawings
+        const ownerVisible = playerVisibility[ownerCs] === true;
+        // Show if: owner has visibility ON, or it's my own drawing, or GM drawing (for GM)
+        if (ownerVisible || isMine || isGM) {
+            paintDrawing(drawCtx, d, 'server', false);
+        }
     }
 
+    // Ghost drawings: always visible (own, not yet submitted)
     for (const d of ghostDrawings) paintDrawing(drawCtx, d, 'ghost', false);
 
+    // In-progress stroke
     if (currentDraw) paintDrawing(drawCtx, currentDraw, 'live', false);
 
-    if (gmLiveStroke) {
-        const gmDimmed = focusActive && globalFocusOwner !== 'GM';
-        paintDrawing(drawCtx, gmLiveStroke, 'live', gmDimmed);
-    }
+    // GM live stroke
+    if (gmLiveStroke) paintDrawing(drawCtx, gmLiveStroke, 'live', false);
 
+    // Tactical labels on top-most layer, above all template outlines and fills
     drawTacticalLabels(drawCtx);
 
     drawCtx.restore();
@@ -1354,21 +1737,37 @@ const PHASE_COLORS = {
 };
 
 // ── Tactical Labels ───────────────────────────────────────────────
-// Returns the drawings that should have tactical labels rendered.
-// Triggered by: (1) live draw in progress, (2) focused server drawings.
+// Shows labels ONLY for drawings that are currently visible:
+//   (1) currentDraw — in-progress stroke (always)
+//   (2) ghostDrawings — local, not yet submitted (always)
+//   (3) own serverDrawings — own submitted plans (always visible to owner)
+//   (4) other's serverDrawings — only if owner has focus ON
 function getActiveLabelDrawings() {
     const result = [];
+    const mySocketId = socket?.id;
+
+    // In-progress stroke (user is actively drawing right now)
     if (currentDraw && currentDraw.cells && currentDraw.cells.length > 0)
         result.push(currentDraw);
-    if (gmLiveStroke && gmLiveStroke.cells && globalFocusOwner === 'GM')
-        result.push(gmLiveStroke);
-    if (globalFocusOwner !== null) {
-        for (const d of serverDrawings) {
-            const ownerCs = d.isGM ? 'GM' : (d.callsign || '');
-            if (ownerCs === globalFocusOwner && d.cells && d.cells.length > 0)
-                result.push(d);
+
+    // Own ghost drawings — local plans not yet submitted
+    for (const d of ghostDrawings) {
+        if (d.cells && d.cells.length > 0) result.push(d);
+    }
+
+    // Server drawings — only if visible
+    for (const d of serverDrawings) {
+        if (!d.cells || d.cells.length === 0) continue;
+        const ownerCs = d.isGM ? 'GM' : (d.callsign || '');
+        const isMine  = mySocketId && d.socketId === mySocketId;
+        const isGM    = d.isGM && isGMMode;
+        const ownerVisible = playerVisibility[ownerCs] === true;
+        // Show labels if: owner has visibility ON, or it's my own drawing, or GM drawing
+        if (ownerVisible || isMine || isGM) {
+            result.push(d);
         }
     }
+
     return result;
 }
 
@@ -2220,8 +2619,9 @@ drawCanvas.addEventListener('touchend', e => {
             panViewStart = { x: view.x, y: view.y };
         }
     } else if (ids.length === 0 && !pinchActive) {
-        if (isPanning) isPanning = false;
-        else           onDrawEnd();
+        if (isPanning) { isPanning = false; }
+        else           { onDrawEnd(); }
+        scheduleRender(false, true);
     }
 }, { passive: false });
 
@@ -2267,7 +2667,8 @@ function setActiveTool(tool) {
     document.getElementById('toolPopup').classList.remove('open');
     if (tool === 'pan') { drawCanvas.classList.remove('drawing', 'grabbing'); }
     else                { drawCanvas.classList.add('drawing'); drawCanvas.classList.remove('grabbing'); }
-    currentDraw = null; scheduleRender(false, true);
+    currentDraw = null;
+    scheduleRender(false, true);
 }
 
 function setActivePhase(phase) {
@@ -2285,7 +2686,8 @@ function setActivePhase(phase) {
         b.classList.toggle('tool-disabled', moveOnly && b.dataset.tool !== 'line');
     });
     if (moveOnly && activeTool !== 'pan' && activeTool !== 'line') setActiveTool('line');
-    currentDraw = null; scheduleRender(false, true);
+    currentDraw = null;
+    scheduleRender(false, true);
 }
 
 // Dedicated PAN button
@@ -2375,29 +2777,25 @@ document.getElementById('confirmNo').addEventListener('click', () => {
 // Submit Plan
 document.getElementById('btnSubmit').addEventListener('click', submitPlan);
 
-// Focus Mode
-document.getElementById('btnFocus').addEventListener('click', () => {
+// ── My Visibility Toggle ──────────────────────────────────────
+document.getElementById('btnMyVisibility').addEventListener('click', () => {
     if (!socket?.connected) { showToast('NOT CONNECTED'); return; }
-    const myLabel = isGMMode ? 'GM' : (callsign || socket.id?.slice(0, 6) || '?');
-    if (globalFocusOwner === myLabel) {
-        socket.emit('clear-focus', { roomId: currentRoom });
-    } else {
-        socket.emit('set-global-focus', { roomId: currentRoom, callsign: myLabel });
-    }
+    socket.emit('toggle-my-visibility', { roomId: currentRoom });
 });
 
-function updateFocusBtn() {
-    const btn = document.getElementById('btnFocus');
-    const myLabel = isGMMode ? 'GM' : callsign;
-    if (globalFocusOwner === null) {
-        btn.classList.remove('focus-active');
-        btn.textContent = '👁 FOCUS';
-    } else if (globalFocusOwner === myLabel) {
-        btn.classList.add('focus-active');
-        btn.textContent = '👁 RELEASE';
+function updateVisibilityBtn() {
+    const btn = document.getElementById('btnMyVisibility');
+    if (!btn) return;
+    if (myVisibilityOn) {
+        btn.classList.remove('vis-off');
+        btn.classList.add('vis-on');
+        btn.querySelector('.icon').textContent = 'VIS';
+        btn.querySelector('span:last-child').textContent = 'VISIBLE';
     } else {
-        btn.classList.remove('focus-active');
-        btn.textContent = '👁 ' + globalFocusOwner;
+        btn.classList.remove('vis-on');
+        btn.classList.add('vis-off');
+        btn.querySelector('.icon').textContent = 'HID';
+        btn.querySelector('span:last-child').textContent = 'HIDDEN';
     }
 }
 

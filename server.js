@@ -118,6 +118,7 @@ function sanitizeId(id) {
  *   activeMap      : { filename, url } | null,
  *   drawings       : Array<DrawingRecord>,
  *   drawingsVisible: boolean,
+ *   playerFocus    : { [callsign]: boolean }  // per-player focus toggle
  *   players        : Map<socketId, { callsign, isGM }>
  * }
  */
@@ -145,7 +146,8 @@ function getRoom(roomId) {
             activeMap:       null,
             drawings:        [],
             drawingsVisible: true,
-            focusOwner:      null,
+            focusOwner:      null,       // legacy: kept for backward compatibility
+            playerFocus:     {},         // { [callsign]: boolean } — per-player focus
             players:         new Map()
         };
     }
@@ -158,7 +160,10 @@ function broadcastPlayerList(roomId) {
     if (!room) return;
     const list = Array.from(room.players.values())
         .filter(p => !p.isGM)
-        .map(p => p.callsign);
+        .map(p => ({
+            callsign: p.callsign,
+            focused:  !!room.playerFocus[p.callsign]
+        }));
     const count = io.sockets.adapter.rooms.get(roomId)?.size || 0;
     io.to(roomId).emit('player-list', list);
     io.to(roomId).emit('client-count', count);
@@ -292,6 +297,7 @@ app.post('/api/activate', requireRoomGM, (req, res) => {
         url: `/uploads/${encodeURIComponent(filename)}`
     };
     room.drawings = []; // reset drawings for new map
+    room.playerFocus = {}; // reset per-player focus
     resetInactivityTimer(roomId);
 
     io.to(roomId).emit('map-changed', room.activeMap);
@@ -361,49 +367,49 @@ io.on('connection', socket => {
             drawings:        visibleDrawings(room, clientIsGM),
             drawingsVisible: room.drawingsVisible,
             focusOwner:      room.focusOwner,
+            playerFocus:     room.playerFocus,  // per-player focus state
             isGM:            clientIsGM
         });
 
         broadcastPlayerList(roomId);
     });
 
-    // Player submits their ghost plan
+    // Player submits their ghost plan — locks it locally, broadcasts to room
     socket.on('submit-plan', ({ roomId: _rsub = 'default', drawings: incoming } = {}) => {
         const roomId = sanitizeId(_rsub) || 'default';
         if (!Array.isArray(incoming)) return;
         const room = getRoom(roomId);
         resetInactivityTimer(roomId);
 
+        const player = room.players.get(socket.id);
+        const playerCallsign = player ? player.callsign : `P-${socket.id.slice(0, 4).toUpperCase()}`;
+
         incoming.forEach(d => {
             room.drawings.push({
                 ...d,
                 id:       `${socket.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
                 socketId: socket.id,
-                isGM:     false
+                callsign: playerCallsign,
+                isGM:     false,
+                submitted: true
             });
         });
 
-        if (room.drawingsVisible) {
-            io.to(roomId).emit('drawings-updated', room.drawings);
-        } else {
-            socket.to(roomId).emit('drawings-updated-gm', room.drawings);
-            socket.emit('drawings-updated', room.drawings);
-        }
+        io.to(roomId).emit('drawings-updated', room.drawings);
+        socket.emit('plan-locked', { count: incoming.length });
     });
 
-    // ── Global focus ("Look at me!") ──────────────────────────────
-    socket.on('set-global-focus', ({ roomId: _rfoc = 'default', callsign: cs } = {}) => {
-        const roomId = sanitizeId(_rfoc) || 'default';
+    // ── Per-player visibility toggle ──────────────────────────────
+    // Simple toggle: ON = my plans visible to all, OFF = hidden from all
+    socket.on('toggle-my-visibility', ({ roomId: _rtv = 'default' } = {}) => {
+        const roomId = sanitizeId(_rtv) || 'default';
         const room = getRoom(roomId);
-        room.focusOwner = cs || null;
-        io.to(roomId).emit('focus-switched', room.focusOwner);
-    });
-
-    socket.on('clear-focus', ({ roomId: _rcf = 'default' } = {}) => {
-        const roomId = sanitizeId(_rcf) || 'default';
-        const room = getRoom(roomId);
-        room.focusOwner = null;
-        io.to(roomId).emit('focus-cleared');
+        const player = room.players.get(socket.id);
+        if (!player) return;
+        const cs = player.isGM ? 'GM' : player.callsign;
+        const nowOn = !room.playerFocus[cs];
+        room.playerFocus[cs] = nowOn;
+        io.to(roomId).emit('visibility-toggled', { callsign: cs, visible: nowOn });
     });
 
     // GM broadcasts a live in-progress stroke (uses authenticated clientIsGM flag)
@@ -463,6 +469,12 @@ io.on('connection', socket => {
         if (currentRoom) {
             const room = rooms[currentRoom];
             if (room) {
+                const player = room.players.get(socket.id);
+                // Clean up playerFocus for disconnected player
+                if (player && player.callsign) {
+                    delete room.playerFocus[player.callsign];
+                    io.to(currentRoom).emit('player-focus-changed', { callsign: player.callsign, focused: false });
+                }
                 room.players.delete(socket.id);
                 broadcastPlayerList(currentRoom);
             }
